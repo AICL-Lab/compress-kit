@@ -1,211 +1,242 @@
-# encoding 编码算法集合
+# encoding 编码算法集合 | Encoding Algorithms Collection
 
-这是一个用多种语言实现经典压缩编码算法的学习与对比项目。目前包含：
+[![CI](https://github.com/YOUR_USERNAME/encoding/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/encoding/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![C++](https://img.shields.io/badge/C++-17-blue.svg)
+![Go](https://img.shields.io/badge/Go-1.19+-00ADD8.svg)
+![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)
 
-- Huffman 编码
-- 算术编码 (Arithmetic coding)
-- 区间编码 (Range coder)
-- Run-Length 编码 (RLE)
-
-所有实现均以 **字节流** 为输入/输出，重点关注：
-
-- 实现的可读性与教学性
-- 不同语言之间的性能对比
-- 简单一致的命令行接口与基准测试脚本
-
----
-
-## 目录结构
-
-- **huffman/**
-  - **cpp/**  C++ 实现，`main.cpp` 提供 `huffman_encode_file` / `huffman_decode_file` 以及 CLI
-  - **go/**   Go 实现，`main.go` 提供 `HuffmanEncodeFile` / `HuffmanDecodeFile` 以及 CLI
-  - **rust/** Rust 实现，`main.rs` 提供 `huffman_encode_file` / `huffman_decode_file` 以及 CLI
-  - **benchmark/**  跨语言 benchmark 脚本 `bench.py`
-- **arithmetic/**
-  - **cpp/** C++ 算术编码实现，`main.cpp` 提供文件级 encode/decode 与 CLI
-- **range/**
-  - **cpp/**  C++ 实现，`main.cpp` 提供 CLI（`rangecoder_cpp`）
-  - **go/**   Go 区间编码库 `rangecoder.go`，以及 `rangecoder_test.go` 中的基准测试
-  - **rust/** Rust crate `rangecoder`，`src/lib.rs` 为库，`src/bin/bench.rs` 为基准程序
-- **Run-Length/**
-  - **cpp/**  C++ RLE 实现，`main.cpp` 提供 `rle_encode_file` / `rle_decode_file` 与 CLI
-  - **go/**   Go RLE 实现，`main.go` 提供 `RLEEncodeFile` / `RLEDecodeFile` 与 CLI
-  - **rust/** Rust RLE 实现，`main.rs` 提供 `rle_encode_file` / `rle_decode_file` 与 CLI
-  - **benchmark/**  跨语言 RLE benchmark 脚本 `bench.py`
-
----
-
-## 各算法简介
-
-### Huffman 编码
-
-- 基于前缀码的无损压缩算法。
-- 实现中先扫描输入统计频率，构建 Huffman 树，再按位写入编码结果。
-- 三种语言实现共享相同的文件头与频率表格式，支持交叉验证和对比。
-
-### 算术编码 (Arithmetic coding)
-
-- 使用区间逐步细分表示整段消息的概率，压缩效率更接近信息熵上界。
-- 当前提供 C++ 版本，使用固定精度区间与频率缩放策略，支持文件级 encode/decode。
-
-### 区间编码 (Range coder)
-
-- 一种等价于算术编码的实现方式，但常在实践中更高效。
-- Go 与 Rust 版本以 **字节切片** 为输入/输出，提供 `Encode` / `Decode` 两个核心 API：
-  - Go: `rangecoder.Encode(data []byte) ([]byte, error)` / `rangecoder.Decode(encoded []byte) ([]byte, error)`
-  - Rust: `rangecoder::encode(input: &[u8]) -> Result<Vec<u8>, RangeError>` / `rangecoder::decode(encoded: &[u8]) -> Result<Vec<u8>, RangeError>`
-- Rust 通过 `src/bin/bench.rs` 提供基准程序；Go 在 `rangecoder_test.go` 中提供 `go test -bench` 基准。
-
-### Run-Length 编码 (RLE)
-
-- 适用于包含大量 **相同字节连续重复** 的数据。
-- 本项目中三种语言使用完全一致且极其简单的二进制格式：
-  - 反复写入 `(count, value)` 对，直到文件结束；
-  - `count` 为 4 字节无符号整数，小端序 (little-endian)，表示 `value` 的重复次数，`count > 0`；
-  - `value` 为 1 字节，表示要重复输出的字节值。
-- C++ / Go / Rust 版本都提供文件级接口：
-  - C++: `void rle_encode_file(const std::string& input, const std::string& output);`
-  - Go:  `func RLEEncodeFile(inputPath, outputPath string)` / `RLEDecodeFile(...)`
-  - Rust: `pub fn rle_encode_file(input: &str, output: &str) -> io::Result<()>` / `rle_decode_file(...)`
-- 三种实现都按相同格式编码，因此任意语言编码的结果都可以被其他语言正确解码。
-
----
-
-## 构建与运行示例
-
-下面示例均假设当前工作目录为仓库根目录 `encoding/`。
-
-### Huffman 跨语言 benchmark
-
-- **运行 benchmark：**
-
-```bash
-cd huffman/benchmark
-python3 bench.py            # 自动生成随机输入数据
-# 或
-python3 bench.py /path/to/input.bin
-```
-
-脚本会：
-
-- **编译** C++ / Go / Rust 三个实现；
-- 分别执行 `encode` 和 `decode`，校验解码结果是否与原始输入一致；
-- 打印每种语言的 **编译时间、编码/解码耗时、压缩比**。
-
-### Range coder 基准测试
-
-- **Rust：**
-
-```bash
-cd range/rust
-cargo run --bin bench --release
-```
-
-- **Go：**
-
-```bash
-cd range/go
-go test -bench .
-```
-
-### Run-Length (RLE) CLI 使用
-
-以 Linux 为例：
-
-- **C++：**
-
-```bash
-cd Run-Length/cpp
-g++ -std=c++17 -O2 main.cpp -o rle_cpp
-
-# 编码
-./rle_cpp encode ../../huffman/benchmark/tmp/bench_input.bin out.rle
-# 解码
-./rle_cpp decode out.rle restored.bin
-```
-
-- **Go：**
-
-```bash
-cd Run-Length/go
-go build -o rle_go .
-
-./rle_go encode ../../huffman/benchmark/tmp/bench_input.bin out.rle
-./rle_go decode out.rle restored.bin
-```
-
-- **Rust：**
-
-```bash
-cd Run-Length/rust
-rustc -O main.rs -o rle_rust
-
-./rle_rust encode ../../huffman/benchmark/tmp/bench_input.bin out.rle
-./rle_rust decode out.rle restored.bin
-```
-
-在三种语言中，命令行接口保持一致：
-
-```text
-<程序名> encode input_file output_file
-<程序名> decode input_file output_file
-```
-
-### Run-Length 跨语言 benchmark
-
-- **运行 benchmark：**
-
-```bash
-cd Run-Length/benchmark
-python3 bench.py            # 默认生成 10 MiB 随机输入
-# 或
-python3 bench.py /path/to/input.bin
-```
-
-输出与 Huffman 的 benchmark 类似，会显示：
-
-- 每种语言的构建时间；
-- 编码/解码耗时以及总耗时；
-- RLE 压缩后的文件大小与原始大小的比值（压缩比）。
-
----
-
-## 性能测试报告（示例）
-
-本仓库提供统一脚本 `scripts/run_all_bench.py`，会：
-
-- **生成测试数据**：调用 `tests/gen_testdata.py`（数据会生成到 `tests/data/`，其中的 `.bin` 文件默认不纳入版本控制）。
-- **依次运行** Huffman / Arithmetic / Range coder / Run-Length 的基准测试。
-- **将原始输出** 写入 `reports/*.txt`，文件名中包含时间戳（`reports/` 默认不纳入版本控制）。
-
-下面是一次在本机运行 `python scripts/run_all_bench.py` 的示例输出节选，主要用于展示输出格式与量级，**不同环境上的绝对数值会有差异**。
-
-### 算术编码 C++（10 MiB 随机数据）
-
-示例输出（节选）：
-
-| 算法       | 语言 | 输入大小 (bytes) | 编译时间 (s) | 编码时间 (s) | 解码时间 (s) | 总时间 (s) | 压缩比 (压缩后/原始) |
-| ---------- | ---- | ---------------- | ------------ | ------------ | ------------ | ---------- | --------------------- |
-| Arithmetic | C++  | 10,485,760       | 0.4749       | 0.6376       | 0.9303       | 1.5679     | 1.000                 |
-
-### Range coder Rust（1 MiB 合成数据 × 20 次）
-
-示例输出（节选）：
-
-| 算法        | 语言 | 单次输入大小 (bytes) | 迭代次数 | 编码时间 (s) | 编码吞吐 (MiB/s) | 解码时间 (s) | 解码吞吐 (MiB/s) | 编码后大小 (bytes) |
-| ----------- | ---- | -------------------- | -------- | ------------ | ---------------- | ------------ | ---------------- | ------------------- |
-| Range coder | Rust | 1,048,576            | 20       | 0.168215     | 118.90           | 0.204225     | 97.93            | 1,049,618           |
-
-> 提示：
+> 🎓 一个用多种语言实现经典压缩编码算法的学习与对比项目
 >
-> - 若想获取最新结果，可在仓库根目录运行：`python scripts/run_all_bench.py`。
-> - 更详细的构建时间、错误信息和其他算法（如 Huffman、RLE、Go/Rust 版本）的输出，请查看脚本运行后本地生成的 `reports/` 目录下对应的 `.txt` 文件（该目录默认不纳入版本控制）。
+> 🎓 A multi-language implementation of classic compression encoding algorithms for learning and comparison
 
 ---
 
-## 后续扩展建议
+## 🎯 Why This Project | 为什么做这个项目
 
-- **更多数据集**：引入实际文本、图像或日志数据进行更真实的压缩效果对比。
-- **错误处理**：在需要时对截断/损坏数据提供更细粒度的错误类型。
-- **API 扩展**：为 RLE 和 Huffman 等实现增加基于内存缓冲区的 `encode(Vec<u8>) -> Vec<u8>` 接口，便于嵌入其他项目。
+**中文**：
+- 📚 **学习导向**：通过阅读和对比不同语言的实现，深入理解压缩算法原理
+- 🔬 **性能对比**：在相同算法下对比 C++、Go、Rust 的性能差异
+- 🔄 **跨语言兼容**：所有实现使用相同的文件格式，支持交叉验证
+- 🛠️ **实践友好**：简单一致的 CLI 接口，便于快速上手和实验
+
+**English**:
+- 📚 **Learning-oriented**: Understand compression algorithms by reading and comparing implementations across languages
+- 🔬 **Performance comparison**: Compare C++, Go, and Rust performance for the same algorithms
+- 🔄 **Cross-language compatible**: All implementations use the same file format for cross-validation
+- 🛠️ **Practice-friendly**: Simple and consistent CLI interface for quick experimentation
+
+---
+
+## 📊 Algorithm Comparison | 算法对比
+
+| Algorithm | Best For | Compression Ratio | Speed | Languages |
+|-----------|----------|-------------------|-------|-----------|
+| **Huffman** | General purpose, text | Medium | Fast | C++, Go, Rust |
+| **Arithmetic** | Maximum compression | High | Medium | C++ |
+| **Range Coder** | Balanced performance | High | Fast | C++, Go, Rust |
+| **RLE** | Repetitive data | Variable* | Very Fast | C++, Go, Rust |
+
+\* RLE compression ratio depends heavily on input data characteristics
+
+| 算法 | 适用场景 | 压缩率 | 速度 | 支持语言 |
+|------|----------|--------|------|----------|
+| **Huffman** | 通用、文本 | 中等 | 快 | C++, Go, Rust |
+| **Arithmetic** | 追求最大压缩 | 高 | 中等 | C++ |
+| **Range Coder** | 平衡性能 | 高 | 快 | C++, Go, Rust |
+| **RLE** | 重复数据 | 可变* | 非常快 | C++, Go, Rust |
+
+\* RLE 压缩率高度依赖输入数据特征
+
+---
+
+## 🚀 Quick Start | 快速开始
+
+### Prerequisites | 前置要求
+
+- C++ compiler (g++ 9+ or clang++ 10+)
+- Go 1.19+
+- Rust 1.70+
+- Python 3.8+ (for benchmarks)
+
+### Build & Run | 构建与运行
+
+```bash
+# Clone the repository | 克隆仓库
+git clone https://github.com/YOUR_USERNAME/encoding.git
+cd encoding
+
+# Example: Huffman encoding | 示例：Huffman 编码
+cd huffman/cpp
+g++ -std=c++17 -O2 main.cpp -o huffman_cpp
+
+# Encode | 编码
+./huffman_cpp encode input.bin output.huf
+
+# Decode | 解码
+./huffman_cpp decode output.huf restored.bin
+```
+
+### Run Benchmarks | 运行基准测试
+
+```bash
+# Generate test data and run all benchmarks
+# 生成测试数据并运行所有基准测试
+python3 scripts/run_all_bench.py
+```
+
+---
+
+## 📁 Project Structure | 项目结构
+
+```
+encoding/
+├── huffman/           # Huffman encoding | Huffman 编码
+│   ├── cpp/          # C++ implementation
+│   ├── go/           # Go implementation
+│   ├── rust/         # Rust implementation
+│   └── benchmark/    # Cross-language benchmark
+├── arithmetic/        # Arithmetic coding | 算术编码
+│   └── cpp/          # C++ implementation
+├── range/            # Range coder | 区间编码
+│   ├── cpp/          # C++ implementation
+│   ├── go/           # Go implementation
+│   └── rust/         # Rust implementation
+├── Run-Length/       # RLE encoding | 游程编码
+│   ├── cpp/          # C++ implementation
+│   ├── go/           # Go implementation
+│   ├── rust/         # Rust implementation
+│   └── benchmark/    # Cross-language benchmark
+├── scripts/          # Utility scripts | 工具脚本
+└── tests/            # Test data generation | 测试数据生成
+```
+
+---
+
+## 📖 Algorithm Details | 算法详解
+
+### Huffman Encoding | Huffman 编码
+
+基于前缀码的无损压缩算法。实现中先扫描输入统计频率，构建 Huffman 树，再按位写入编码结果。
+
+A lossless compression algorithm based on prefix codes. The implementation scans input to build frequency statistics, constructs a Huffman tree, and writes bit-encoded output.
+
+**File Format | 文件格式**:
+- Magic: `HFMN` (4 bytes)
+- Frequency table (257 × 4 bytes, little-endian)
+- Encoded data (bit stream)
+
+### Arithmetic Coding | 算术编码
+
+使用区间逐步细分表示整段消息的概率，压缩效率更接近信息熵上界。
+
+Uses interval subdivision to represent message probability, achieving compression efficiency closer to the entropy limit.
+
+### Range Coder | 区间编码
+
+一种等价于算术编码的实现方式，但常在实践中更高效。
+
+An implementation equivalent to arithmetic coding but often more efficient in practice.
+
+**API**:
+- Go: `rangecoder.Encode(data []byte) ([]byte, error)`
+- Rust: `rangecoder::encode(input: &[u8]) -> Result<Vec<u8>, RangeError>`
+
+### Run-Length Encoding (RLE) | 游程编码
+
+适用于包含大量相同字节连续重复的数据。
+
+Suitable for data with many consecutive repeated bytes.
+
+**File Format | 文件格式**:
+- Repeated `(count, value)` pairs
+- `count`: 4 bytes, little-endian, unsigned integer
+- `value`: 1 byte
+
+---
+
+## 🧪 Testing | 测试
+
+### Correctness Verification | 正确性验证
+
+All implementations pass encode-decode round-trip tests:
+
+所有实现都通过编码-解码往返测试：
+
+```bash
+# Encode with C++, decode with Go (cross-language test)
+./huffman_cpp encode input.bin encoded.huf
+./huffman_go decode encoded.huf decoded.bin
+diff input.bin decoded.bin  # Should produce no output
+```
+
+### Benchmark Results | 基准测试结果
+
+Run `python scripts/run_all_bench.py` to generate benchmark reports in `reports/` directory.
+
+运行 `python scripts/run_all_bench.py` 在 `reports/` 目录生成基准测试报告。
+
+---
+
+## 🤝 Contributing | 贡献
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+欢迎贡献！请查看 [CONTRIBUTING.md](CONTRIBUTING.md) 了解贡献指南。
+
+### Quick Contribution Guide | 快速贡献指南
+
+1. Fork the repository | Fork 仓库
+2. Create a feature branch | 创建功能分支
+3. Make your changes | 进行修改
+4. Run tests | 运行测试
+5. Submit a PR | 提交 PR
+
+---
+
+## 📜 Code of Conduct | 行为准则
+
+This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).
+
+本项目遵循 [Contributor Covenant 行为准则](CODE_OF_CONDUCT.md)。
+
+---
+
+## 🔒 Security | 安全
+
+For security issues, please see [SECURITY.md](SECURITY.md).
+
+安全问题请查看 [SECURITY.md](SECURITY.md)。
+
+---
+
+## 📄 License | 许可证
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件。
+
+---
+
+## 🙏 Acknowledgments | 致谢
+
+- Classic compression algorithm literature and textbooks
+- The open source community for inspiration and best practices
+
+---
+
+## 📈 Roadmap | 路线图
+
+- [ ] Add more compression algorithms (LZ77, LZ78, LZSS)
+- [ ] Add Python implementations
+- [ ] Add WebAssembly builds for browser demos
+- [ ] Add interactive visualization of compression process
+- [ ] Add more real-world test datasets
+
+---
+
+<p align="center">
+  Made with ❤️ for learning compression algorithms
+  <br>
+  用 ❤️ 制作，为了学习压缩算法
+</p>

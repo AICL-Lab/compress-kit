@@ -147,9 +147,7 @@ impl<'a> RangeEncoder<'a> {
         self.high = self
             .low
             .wrapping_add(((range * sym_high) / total - 1) as u32);
-        self.low = self
-            .low
-            .wrapping_add(((range * sym_low) / total) as u32);
+        self.low = self.low.wrapping_add(((range * sym_low) / total) as u32);
 
         while (self.low ^ self.high) < RENORM_THRESHOLD {
             let byte = (self.low >> 24) as u8;
@@ -226,9 +224,7 @@ impl<'a> RangeDecoder<'a> {
         self.high = self
             .low
             .wrapping_add(((range * sym_high) / total - 1) as u32);
-        self.low = self
-            .low
-            .wrapping_add(((range * sym_low) / total) as u32);
+        self.low = self.low.wrapping_add(((range * sym_low) / total) as u32);
 
         while (self.low ^ self.high) < RENORM_THRESHOLD {
             self.low <<= 8;

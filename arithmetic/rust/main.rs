@@ -434,7 +434,10 @@ mod tests {
             .unwrap()
             .as_nanos();
         dir.push(format!(
-            "encoding_arith_{}_{}_{}", prefix, std::process::id(), stamp
+            "encoding_arith_{}_{}_{}",
+            prefix,
+            std::process::id(),
+            stamp
         ));
         fs::create_dir_all(&dir).unwrap();
         let input = dir.join("input.bin");

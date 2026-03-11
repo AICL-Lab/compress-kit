@@ -3,10 +3,10 @@ package rangecoder
 import "errors"
 
 const (
-	symbolLimit     = 257
-	eofSymbol       = symbolLimit - 1
-	maxTotal  uint32 = 1 << 24
-	renormThreshold  = uint32(1) << 24
+	symbolLimit            = 257
+	eofSymbol              = symbolLimit - 1
+	maxTotal        uint32 = 1 << 24
+	renormThreshold        = uint32(1) << 24
 )
 
 func scaleFrequencies(freq []uint32) {

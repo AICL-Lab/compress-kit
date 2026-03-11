@@ -46,12 +46,20 @@ fn read_u32_le<R: Read>(r: &mut R) -> io::Result<Option<u32>> {
 
 // 对整个文件进行 Run-Length 编码。
 pub fn rle_encode_file(input_path: &str, output_path: &str) -> io::Result<()> {
-    let input = File::open(input_path)
-        .map_err(|e| io::Error::new(e.kind(), format!("无法打开输入文件用于读取: {input_path}: {e}")))?;
+    let input = File::open(input_path).map_err(|e| {
+        io::Error::new(
+            e.kind(),
+            format!("无法打开输入文件用于读取: {input_path}: {e}"),
+        )
+    })?;
     let mut reader = BufReader::new(input);
 
-    let output = File::create(output_path)
-        .map_err(|e| io::Error::new(e.kind(), format!("无法打开输出文件用于写入: {output_path}: {e}")))?;
+    let output = File::create(output_path).map_err(|e| {
+        io::Error::new(
+            e.kind(),
+            format!("无法打开输出文件用于写入: {output_path}: {e}"),
+        )
+    })?;
     let mut writer = BufWriter::new(output);
 
     let mut first = [0u8; 1];
@@ -92,12 +100,20 @@ pub fn rle_encode_file(input_path: &str, output_path: &str) -> io::Result<()> {
 
 // 将 RLE 编码文件解码回原始字节流。
 pub fn rle_decode_file(input_path: &str, output_path: &str) -> io::Result<()> {
-    let input = File::open(input_path)
-        .map_err(|e| io::Error::new(e.kind(), format!("无法打开输入文件用于读取: {input_path}: {e}")))?;
+    let input = File::open(input_path).map_err(|e| {
+        io::Error::new(
+            e.kind(),
+            format!("无法打开输入文件用于读取: {input_path}: {e}"),
+        )
+    })?;
     let mut reader = BufReader::new(input);
 
-    let output = File::create(output_path)
-        .map_err(|e| io::Error::new(e.kind(), format!("无法打开输出文件用于写入: {output_path}: {e}")))?;
+    let output = File::create(output_path).map_err(|e| {
+        io::Error::new(
+            e.kind(),
+            format!("无法打开输出文件用于写入: {output_path}: {e}"),
+        )
+    })?;
     let mut writer = BufWriter::new(output);
 
     const BUF_SIZE: usize = 4096;
@@ -117,12 +133,9 @@ pub fn rle_decode_file(input_path: &str, output_path: &str) -> io::Result<()> {
         }
 
         let mut value_buf = [0u8; 1];
-        reader.read_exact(&mut value_buf).map_err(|e| {
-            io::Error::new(
-                e.kind(),
-                "RLE 数据截断：缺少 value 字节",
-            )
-        })?;
+        reader
+            .read_exact(&mut value_buf)
+            .map_err(|e| io::Error::new(e.kind(), "RLE 数据截断：缺少 value 字节"))?;
         let value = value_buf[0];
 
         let mut remaining = count;
@@ -153,7 +166,12 @@ mod tests {
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        dir.push(format!("encoding_rle_{}_{}_{}", prefix, std::process::id(), stamp));
+        dir.push(format!(
+            "encoding_rle_{}_{}_{}",
+            prefix,
+            std::process::id(),
+            stamp
+        ));
         fs::create_dir_all(&dir).unwrap();
         let input = dir.join("input.bin");
         let encoded = dir.join("encoded.rle");

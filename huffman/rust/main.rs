@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::env;
 use std::fs::File;
-use std::io::{self, Read, Write, BufReader, BufWriter};
+use std::io::{self, BufReader, BufWriter, Read, Write};
 use std::process;
 
 const SYMBOL_LIMIT: usize = 257;
@@ -35,7 +35,10 @@ impl PartialEq for HeapItem {
 
 impl Ord for HeapItem {
     fn cmp(&self, other: &Self) -> Ordering {
-        other.freq.cmp(&self.freq).then_with(|| other.symbol.cmp(&self.symbol))
+        other
+            .freq
+            .cmp(&self.freq)
+            .then_with(|| other.symbol.cmp(&self.symbol))
     }
 }
 
@@ -305,7 +308,10 @@ fn decompress_file(input_path: &str, output_path: &str) -> io::Result<()> {
     let mut magic = [0u8; 4];
     reader.read_exact(&mut magic)?;
     if &magic != b"HFMN" {
-        return Err(io::Error::new(io::ErrorKind::InvalidData, "输入文件格式非法"));
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "输入文件格式非法",
+        ));
     }
     let freq = read_frequencies(&mut reader)?;
     let root = build_tree(&freq);
@@ -324,7 +330,10 @@ fn decompress_file(input_path: &str, output_path: &str) -> io::Result<()> {
                     node_ref = left;
                 }
                 None => {
-                    return Err(io::Error::new(io::ErrorKind::InvalidData, "输入数据损坏或截断"));
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidData,
+                        "输入数据损坏或截断",
+                    ));
                 }
             }
         } else {
@@ -333,7 +342,10 @@ fn decompress_file(input_path: &str, output_path: &str) -> io::Result<()> {
                     node_ref = right;
                 }
                 None => {
-                    return Err(io::Error::new(io::ErrorKind::InvalidData, "输入数据损坏或截断"));
+                    return Err(io::Error::new(
+                        io::ErrorKind::InvalidData,
+                        "输入数据损坏或截断",
+                    ));
                 }
             }
         }
@@ -351,7 +363,10 @@ fn decompress_file(input_path: &str, output_path: &str) -> io::Result<()> {
     }
 
     if !saw_eof {
-        return Err(io::Error::new(io::ErrorKind::InvalidData, "输入数据损坏或截断"));
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "输入数据损坏或截断",
+        ));
     }
     writer.flush()?;
     Ok(())
@@ -378,7 +393,12 @@ mod tests {
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_nanos();
-        dir.push(format!("encoding_huffman_{}_{}_{}", prefix, std::process::id(), stamp));
+        dir.push(format!(
+            "encoding_huffman_{}_{}_{}",
+            prefix,
+            std::process::id(),
+            stamp
+        ));
         fs::create_dir_all(&dir).unwrap();
         let input = dir.join("input.bin");
         let encoded = dir.join("encoded.huf");

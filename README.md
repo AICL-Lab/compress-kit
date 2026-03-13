@@ -1,4 +1,4 @@
-# Encoding Algorithms Collection
+# Encoding
 
 [![CI](https://github.com/LessUp/encoding/actions/workflows/ci.yml/badge.svg)](https://github.com/LessUp/encoding/actions/workflows/ci.yml)
 [![Deploy Docs](https://github.com/LessUp/encoding/actions/workflows/pages.yml/badge.svg)](https://github.com/LessUp/encoding/actions/workflows/pages.yml)
@@ -7,75 +7,41 @@
 ![Go](https://img.shields.io/badge/Go-1.21+-00ADD8.svg)
 ![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)
 
-English | [简体中文](README.zh-CN.md)
+English | [简体中文](README.zh-CN.md) | [Docs](https://lessup.github.io/encoding/)
 
-> 📖 **Docs**: [https://lessup.github.io/encoding/](https://lessup.github.io/encoding/)
+Encoding is a multi-language collection of classic compression algorithms for learning, implementation comparison, and cross-language verification.
 
-A multi-language implementation of classic compression encoding algorithms for learning and comparison.
+## Repository Overview
 
-## Algorithms
-
-| Algorithm | C++ | Go | Rust | Description |
-|-----------|-----|-----|------|-------------|
-| **Arithmetic Coding** | ✅ | ✅ | ✅ | Entropy-optimal encoding with fractional bit precision |
-| **Huffman Coding** | ✅ | ✅ | ✅ | Classic prefix-free variable-length encoding |
-| **Range Coder** | ✅ | ✅ | ✅ | Arithmetic coding variant, balanced speed & ratio |
-| **Run-Length Encoding** | ✅ | ✅ | ✅ | Simple repeated symbol compression |
-
-## Features
-
-- **Multi-Language**: Same algorithms in C++17, Go, and Rust for cross-language comparison
-- **Cross-Platform**: Verified on Linux, macOS, and Windows
-- **Benchmarked**: Performance comparison across implementations
-- **Well-Tested**: Unit tests, property tests, and cross-language verification
-- **Educational**: Clear, documented implementations focused on learning
+- Four algorithms: Huffman, Arithmetic Coding, Range Coder, and RLE
+- Three language tracks: C++17, Go, and Rust
+- Unified CLI conventions and shared binary formats for cross-language validation
+- Dedicated docs site for getting started, algorithm guides, and project structure
 
 ## Quick Start
 
-### C++ (Arithmetic Coding)
+```bash
+make build
+make test
+make bench
+```
+
+If you want to start from a single algorithm first:
 
 ```bash
-cd arithmetic/cpp
-mkdir build && cd build
-cmake .. && make
-./arithmetic_codec encode input.txt output.bin
-./arithmetic_codec decode output.bin restored.txt
+cd huffman/cpp
+g++ -std=c++17 -O2 main.cpp -o huffman_cpp
+./huffman_cpp encode input.bin output.huf
+./huffman_cpp decode output.huf restored.bin
 ```
 
-### Go
+## Read Next
 
-```bash
-cd arithmetic/go
-go build ./...
-go test ./...
-```
-
-### Rust
-
-```bash
-cd arithmetic/rust
-cargo build --release
-cargo test
-```
-
-## Project Structure
-
-```
-encoding/
-├── arithmetic/         # Arithmetic coding (C++, Go, Rust)
-├── huffman/            # Huffman coding (C++, Go, Rust)
-├── range/             # Range coder (C++, Go, Rust)
-├── rle/               # Run-length encoding (C++, Go, Rust)
-├── docs/              # Documentation
-└── .github/workflows/ # CI
-```
-
-## Documentation
-
-- [Online Docs](https://lessup.github.io/encoding/)
-- [Algorithm Deep Dives](https://lessup.github.io/encoding/guide/algorithms)
+- [Documentation Home](https://lessup.github.io/encoding/)
+- [Getting Started](https://lessup.github.io/encoding/guide/getting-started)
+- [Algorithms Guide](https://lessup.github.io/encoding/guide/algorithms)
 - [Project Structure](https://lessup.github.io/encoding/guide/project-structure)
 
 ## License
 
-MIT License
+MIT License.

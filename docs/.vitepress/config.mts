@@ -8,10 +8,12 @@ export default defineConfig({
   cleanUrls: true,
 
   sitemap: {
-    hostname: 'https://lessup.github.io',
+    hostname: 'https://lessup.github.io/encoding/',
   },
 
   head: [
+    ['link', { rel: 'canonical', href: 'https://lessup.github.io/encoding/' }],
+    ['meta', { name: 'theme-color', content: '#0f172a' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'Encoding | 编码算法集合' }],
     ['meta', { property: 'og:description', content: '用 C++、Go、Rust 多语言实现经典压缩算法，用于学习、对比与跨语言验证' }],

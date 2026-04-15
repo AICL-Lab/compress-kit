@@ -12,6 +12,8 @@ static const uint32_t SYMBOL_LIMIT = 257;
 static const uint32_t EOF_SYMBOL = SYMBOL_LIMIT - 1;
 static const uint32_t MAX_TOTAL = 1u << 24;
 static const uint32_t RENORM_THRESHOLD = 1u << 24;
+static const uint64_t MAX_INPUT_SIZE = 4ULL * 1024 * 1024 * 1024;  // 4 GiB max
+static const uint64_t MAX_OUTPUT_SIZE = 1ULL * 1024 * 1024 * 1024; // 1 GiB max
 
 static void scale_frequencies(std::vector<uint32_t>& freq) {
     uint64_t total = 0;
@@ -222,6 +224,11 @@ private:
 };
 
 std::vector<uint8_t> encode(const std::vector<uint8_t>& data) {
+    // Check input size to prevent memory exhaustion and frequency overflow
+    if (data.size() > MAX_INPUT_SIZE) {
+        throw std::runtime_error("Input too large (max 4 GiB)");
+    }
+
     std::vector<uint32_t> freq = build_frequencies_from_data(data);
     std::vector<uint32_t> cumulative = build_cumulative(freq);
 
@@ -261,6 +268,10 @@ std::vector<uint8_t> decode(const std::vector<uint8_t>& encoded) {
             break;
         }
         out.push_back(static_cast<uint8_t>(sym));
+        // Check output size limit after appending
+        if (out.size() > MAX_OUTPUT_SIZE) {
+            throw std::runtime_error("Output size limit exceeded (max 1 GiB)");
+        }
     }
 
     return out;

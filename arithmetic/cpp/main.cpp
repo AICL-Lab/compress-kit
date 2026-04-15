@@ -197,6 +197,7 @@ private:
 static const uint32_t SYMBOL_LIMIT = 257;
 static const uint32_t EOF_SYMBOL = SYMBOL_LIMIT - 1;
 static const uint32_t MAX_TOTAL = 1u << 24;
+static const uint64_t MAX_INPUT_SIZE = 4ULL * 1024 * 1024 * 1024; // 4 GiB max
 
 static void scale_frequencies(std::vector<uint32_t>& freq) {
     uint64_t total = 0;
@@ -293,6 +294,18 @@ static bool read_frequencies(std::istream& in, std::vector<uint32_t>& freq) {
 }
 
 static bool compress_file(const std::string& input_path, const std::string& output_path) {
+    // Check input file size to prevent frequency overflow
+    {
+        std::ifstream check(input_path, std::ios::binary | std::ios::ate);
+        if (check) {
+            auto size = check.tellg();
+            if (size > 0 && static_cast<uint64_t>(size) > MAX_INPUT_SIZE) {
+                std::cerr << "Input file too large (max " << MAX_INPUT_SIZE << " bytes)\n";
+                return false;
+            }
+        }
+    }
+
     std::vector<uint32_t> freq = build_frequencies_from_file(input_path);
     std::vector<uint32_t> cumulative = build_cumulative(freq);
 

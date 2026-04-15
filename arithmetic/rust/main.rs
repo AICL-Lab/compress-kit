@@ -3,15 +3,16 @@ use std::fs::File;
 use std::io::{self, BufReader, BufWriter, Read, Write};
 use std::process;
 
-// 算术编码 Rust 实现。
-// 文件格式与 C++/Go 实现完全一致，支持交叉编解码验证。
+// Arithmetic coding Rust implementation.
+// File format is fully compatible with C++/Go implementations, supports cross-language encode/decode verification.
 // Magic: AENC (4 bytes)
-// 频率表: count(4 bytes LE) + count × freq(4 bytes LE)
-// 算术编码比特流
+// Frequency table: count(4 bytes LE) + count × freq(4 bytes LE)
+// Arithmetic coding bitstream
 
 const SYMBOL_LIMIT: usize = 257;
 const EOF_SYMBOL: u32 = (SYMBOL_LIMIT - 1) as u32;
 const MAX_TOTAL: u32 = 1 << 24;
+const MAX_INPUT_SIZE: u64 = 4 * 1024 * 1024 * 1024; // 4 GiB max
 
 const STATE_BITS: u64 = 32;
 const FULL_RANGE: u64 = 1u64 << STATE_BITS;
@@ -240,7 +241,7 @@ impl<R: Read> ArithmeticDecoder<R> {
 }
 
 // ---------------------------------------------------------------------------
-// 频率表处理
+// Frequency table processing
 // ---------------------------------------------------------------------------
 
 fn scale_frequencies(freq: &mut [u32]) {
@@ -280,7 +281,17 @@ fn scale_frequencies(freq: &mut [u32]) {
 fn build_frequencies_from_file(path: &str) -> io::Result<Vec<u32>> {
     let mut freq = vec![0u32; SYMBOL_LIMIT];
     let file = File::open(path)
-        .map_err(|e| io::Error::new(e.kind(), format!("无法打开输入文件用于读取: {path}: {e}")))?;
+        .map_err(|e| io::Error::new(e.kind(), format!("cannot open input file for reading: {path}: {e}")))?;
+
+    // Check file size to prevent frequency overflow
+    let metadata = file.metadata()?;
+    if metadata.len() > MAX_INPUT_SIZE {
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            format!("input file too large (max {} bytes)", MAX_INPUT_SIZE),
+        ));
+    }
+
     let mut reader = BufReader::new(file);
     let mut buf = [0u8; 4096];
     loop {
@@ -291,7 +302,7 @@ fn build_frequencies_from_file(path: &str) -> io::Result<Vec<u32>> {
                     freq[b as usize] += 1;
                 }
             }
-            Err(_) => break,
+            Err(e) => return Err(e),
         }
     }
     freq[EOF_SYMBOL as usize] = 1;
@@ -327,12 +338,12 @@ fn read_frequencies<R: Read>(reader: &mut R) -> io::Result<Vec<u32>> {
     let mut count_bytes = [0u8; 4];
     reader
         .read_exact(&mut count_bytes)
-        .map_err(|e| io::Error::new(e.kind(), format!("读取频率表失败: {e}")))?;
+        .map_err(|e| io::Error::new(e.kind(), format!("failed to read frequency table: {e}")))?;
     let count = u32::from_le_bytes(count_bytes) as usize;
     if count != SYMBOL_LIMIT {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
-            format!("频率表大小异常: {count}"),
+            format!("invalid frequency table size: {count}"),
         ));
     }
     let mut freq = vec![0u32; count];
@@ -340,14 +351,14 @@ fn read_frequencies<R: Read>(reader: &mut R) -> io::Result<Vec<u32>> {
         let mut arr = [0u8; 4];
         reader
             .read_exact(&mut arr)
-            .map_err(|e| io::Error::new(e.kind(), format!("读取频率表失败: {e}")))?;
+            .map_err(|e| io::Error::new(e.kind(), format!("failed to read frequency table: {e}")))?;
         *f = u32::from_le_bytes(arr);
     }
     Ok(freq)
 }
 
 // ---------------------------------------------------------------------------
-// 压缩 / 解压
+// Compression / Decompression
 // ---------------------------------------------------------------------------
 
 fn compress_file(input_path: &str, output_path: &str) -> io::Result<()> {
@@ -388,7 +399,7 @@ fn decompress_file(input_path: &str, output_path: &str) -> io::Result<()> {
     if &magic != b"AENC" {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
-            "输入文件格式非法",
+            "invalid input file format",
         ));
     }
     let freq = read_frequencies(&mut reader)?;
@@ -505,7 +516,7 @@ mod tests {
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() != 4 {
-        eprintln!("用法: {} encode|decode input output", args[0]);
+        eprintln!("usage: {} encode|decode input output", args[0]);
         process::exit(1);
     }
     let mode = &args[1];
@@ -516,13 +527,13 @@ fn main() {
         "encode" => arithmetic_encode_file(input_path, output_path),
         "decode" => arithmetic_decode_file(input_path, output_path),
         _ => {
-            eprintln!("未知模式，应为 encode 或 decode");
+            eprintln!("unknown mode, expected encode or decode");
             process::exit(1);
         }
     };
 
     if let Err(e) = result {
-        eprintln!("运行失败: {e}");
+        eprintln!("execution failed: {e}");
         process::exit(1);
     }
 }

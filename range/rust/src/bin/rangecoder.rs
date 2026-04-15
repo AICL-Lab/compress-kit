@@ -4,13 +4,13 @@ use std::fs;
 use std::process;
 
 // Range coder CLI 封装。
-// 读取整个文件到内存，调用 rangecoder 库执行编解码，写出结果。
-// 文件格式与 C++/Go 实现完全一致，支持交叉编解码验证。
+// Read entire file into memory，调用 rangecoder 库执行编解码，写出结果。
+// File format is fully compatible with C++/Go implementations，supports cross-language encode/decode verification。
 
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() != 4 {
-        eprintln!("用法: {} encode|decode input output", args[0]);
+        eprintln!("usage: {} encode|decode input output", args[0]);
         process::exit(1);
     }
     let mode = &args[1];
@@ -21,13 +21,13 @@ fn main() {
         "encode" => run_encode(input_path, output_path),
         "decode" => run_decode(input_path, output_path),
         _ => {
-            eprintln!("未知模式，应为 encode 或 decode");
+            eprintln!("unknown mode, expected encode or decode");
             process::exit(1);
         }
     };
 
     if let Err(e) = result {
-        eprintln!("运行失败: {e}");
+        eprintln!("execution failed: {e}");
         process::exit(1);
     }
 }

@@ -8,22 +8,22 @@
 build: build-huffman build-arithmetic build-range build-rle
 
 build-huffman:
-	g++ -std=c++17 -O2 huffman/cpp/main.cpp -o huffman/cpp/huffman_cpp
+	g++ -std=c++17 -O2 -Wall -Wextra -Werror huffman/cpp/main.cpp -o huffman/cpp/huffman_cpp
 	go build -o huffman/go/huffman_go ./huffman/go
 	rustc -O huffman/rust/main.rs -o huffman/rust/huffman_rust
 
 build-arithmetic:
-	g++ -std=c++17 -O2 arithmetic/cpp/main.cpp -o arithmetic/cpp/arithmetic_cpp
+	g++ -std=c++17 -O2 -Wall -Wextra -Werror arithmetic/cpp/main.cpp -o arithmetic/cpp/arithmetic_cpp
 	go build -o arithmetic/go/arithmetic_go ./arithmetic/go
 	rustc -O arithmetic/rust/main.rs -o arithmetic/rust/arithmetic_rust
 
 build-range:
-	g++ -std=c++17 -O2 range/cpp/main.cpp -o range/cpp/rangecoder_cpp
+	g++ -std=c++17 -O2 -Wall -Wextra -Werror range/cpp/main.cpp -o range/cpp/rangecoder_cpp
 	go build -o range/go/rangecoder_go ./range/go/cmd
 	cargo build --manifest-path range/rust/Cargo.toml --release
 
 build-rle:
-	g++ -std=c++17 -O2 rle/cpp/main.cpp -o rle/cpp/rle_cpp
+	g++ -std=c++17 -O2 -Wall -Wextra -Werror rle/cpp/main.cpp -o rle/cpp/rle_cpp
 	go build -o rle/go/rle_go ./rle/go
 	rustc -O rle/rust/main.rs -o rle/rust/rle_rust
 

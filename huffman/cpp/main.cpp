@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <queue>
+#include <memory>
 
 class BitWriter {
 public:
@@ -65,6 +66,7 @@ private:
 
 static const uint32_t SYMBOL_LIMIT = 257;
 static const uint32_t EOF_SYMBOL = SYMBOL_LIMIT - 1;
+static const uint64_t MAX_INPUT_SIZE = 4ULL * 1024 * 1024 * 1024; // 4 GiB max
 
 struct Node {
     uint32_t symbol;
@@ -72,6 +74,21 @@ struct Node {
     Node* left;
     Node* right;
 };
+
+// Custom deleter for Node pointers to enable RAII with smart pointers
+struct NodeDeleter {
+    void operator()(Node* node) const {
+        if (!node) return;
+        // Recursively delete children
+        NodeDeleter deleter;
+        if (node->left) deleter(node->left);
+        if (node->right) deleter(node->right);
+        delete node;
+    }
+};
+
+// RAII wrapper for Node pointers
+using UniqueNode = std::unique_ptr<Node, NodeDeleter>;
 
 static bool is_leaf(const Node* node) {
     return node->left == nullptr && node->right == nullptr;
@@ -130,15 +147,6 @@ static Node* build_tree(const std::vector<uint32_t>& freq) {
         pq.push(parent);
     }
     return pq.top();
-}
-
-static void destroy_tree(Node* node) {
-    if (!node) {
-        return;
-    }
-    destroy_tree(node->left);
-    destroy_tree(node->right);
-    delete node;
 }
 
 static void build_codes(Node* node, std::vector<std::string>& codes, std::string& prefix) {
@@ -205,22 +213,32 @@ static bool read_frequencies(std::istream& in, std::vector<uint32_t>& freq) {
 }
 
 static bool compress_file(const std::string& input_path, const std::string& output_path) {
+    // Check input file size to prevent frequency overflow
+    {
+        std::ifstream check(input_path, std::ios::binary | std::ios::ate);
+        if (check) {
+            auto size = check.tellg();
+            if (size > 0 && static_cast<uint64_t>(size) > MAX_INPUT_SIZE) {
+                std::cerr << "Input file too large (max " << MAX_INPUT_SIZE << " bytes)\n";
+                return false;
+            }
+        }
+    }
+
     std::vector<uint32_t> freq = build_frequencies_from_file(input_path);
-    Node* root = build_tree(freq);
+    UniqueNode root(build_tree(freq));  // RAII: automatic cleanup
     std::vector<std::string> codes(SYMBOL_LIMIT);
     std::string prefix;
-    build_codes(root, codes, prefix);
+    build_codes(root.get(), codes, prefix);
 
     std::ifstream in(input_path, std::ios::binary);
     if (!in) {
         std::cerr << "Cannot open input file for reading\n";
-        destroy_tree(root);
         return false;
     }
     std::ofstream out(output_path, std::ios::binary);
     if (!out) {
         std::cerr << "Cannot open output file for writing\n";
-        destroy_tree(root);
         return false;
     }
 
@@ -245,16 +263,13 @@ static bool compress_file(const std::string& input_path, const std::string& outp
 
     if (in.bad()) {
         std::cerr << "Failed to read input file\n";
-        destroy_tree(root);
         return false;
     }
     if (!out) {
         std::cerr << "Failed to write output file\n";
-        destroy_tree(root);
         return false;
     }
 
-    destroy_tree(root);
     return true;
 }
 
@@ -275,7 +290,7 @@ static bool decompress_file(const std::string& input_path, const std::string& ou
     if (!read_frequencies(in, freq)) {
         return false;
     }
-    Node* root = build_tree(freq);
+    UniqueNode root(build_tree(freq));  // RAII: automatic cleanup
     if (!root) {
         return false;
     }
@@ -283,12 +298,11 @@ static bool decompress_file(const std::string& input_path, const std::string& ou
     std::ofstream out(output_path, std::ios::binary);
     if (!out) {
         std::cerr << "Cannot open output file for writing\n";
-        destroy_tree(root);
         return false;
     }
 
     BitReader bit_reader(in);
-    Node* node = root;
+    Node* node = root.get();  // Raw pointer for traversal
     bool saw_eof = false;
     bool ok = true;
     while (true) {
@@ -315,9 +329,9 @@ static bool decompress_file(const std::string& input_path, const std::string& ou
                 ok = false;
                 break;
             }
-            node = root;
+            node = root.get();
         }
-        if (bit_reader.eof() && node == root) {
+        if (bit_reader.eof() && node == root.get()) {
             break;
         }
     }
@@ -326,7 +340,6 @@ static bool decompress_file(const std::string& input_path, const std::string& ou
         std::cerr << "Input data corrupted or truncated\n";
         ok = false;
     }
-    destroy_tree(root);
     return ok;
 }
 

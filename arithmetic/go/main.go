@@ -8,16 +8,17 @@ import (
 	"os"
 )
 
-// 算术编码 Go 实现。
-// 文件格式与 C++ 实现完全一致，支持交叉编解码验证。
+// Arithmetic coding Go implementation.
+// File format is fully compatible with C++ implementation, supports cross-language encode/decode verification.
 // Magic: AENC (4 bytes)
-// 频率表: count(4 bytes LE) + count × freq(4 bytes LE)
-// 算术编码比特流
+// Frequency table: count(4 bytes LE) + count × freq(4 bytes LE)
+// Arithmetic coding bitstream
 
 const (
-	SymbolLimit = 257
-	EOFSymbol   = SymbolLimit - 1
-	MaxTotal    = uint32(1) << 24
+	SymbolLimit  = 257
+	EOFSymbol    = SymbolLimit - 1
+	MaxTotal     = uint32(1) << 24
+	MaxInputSize = 4 * 1024 * 1024 * 1024 // 4 GiB max to prevent frequency overflow
 
 	stateBits    = 32
 	fullRange    = uint64(1) << stateBits
@@ -240,7 +241,7 @@ func (d *ArithmeticDecoder) DecodeSymbol(cumulative []uint32) uint32 {
 }
 
 // ---------------------------------------------------------------------------
-// 频率表处理
+// Frequency table processing
 // ---------------------------------------------------------------------------
 
 func scaleFrequencies(freq []uint32) {
@@ -284,9 +285,19 @@ func buildFrequenciesFromFile(path string) ([]uint32, error) {
 	freq := make([]uint32, SymbolLimit)
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("无法打开输入文件用于读取: %s: %w", path, err)
+		return nil, fmt.Errorf("cannot open input file for reading: %s: %w", path, err)
 	}
 	defer f.Close()
+
+	// Check file size to prevent frequency overflow
+	stat, err := f.Stat()
+	if err != nil {
+		return nil, fmt.Errorf("cannot stat input file: %w", err)
+	}
+	if stat.Size() > MaxInputSize {
+		return nil, fmt.Errorf("input file too large (max %d bytes)", MaxInputSize)
+	}
+
 	r := bufio.NewReader(f)
 	for {
 		b, err := r.ReadByte()
@@ -329,20 +340,20 @@ func writeFrequencies(w io.Writer, freq []uint32) error {
 func readFrequencies(r io.Reader) ([]uint32, error) {
 	var count uint32
 	if err := binary.Read(r, binary.LittleEndian, &count); err != nil {
-		return nil, fmt.Errorf("读取频率表失败: %w", err)
+		return nil, fmt.Errorf("failed to read frequency table: %w", err)
 	}
 	if count != uint32(SymbolLimit) {
-		return nil, fmt.Errorf("频率表大小异常: %d", count)
+		return nil, fmt.Errorf("invalid frequency table size: %d", count)
 	}
 	freq := make([]uint32, count)
 	if err := binary.Read(r, binary.LittleEndian, freq); err != nil {
-		return nil, fmt.Errorf("读取频率表失败: %w", err)
+		return nil, fmt.Errorf("failed to read frequency table: %w", err)
 	}
 	return freq, nil
 }
 
 // ---------------------------------------------------------------------------
-// 压缩 / 解压
+// Compression / Decompression
 // ---------------------------------------------------------------------------
 
 func compressFile(inputPath, outputPath string) error {
@@ -354,13 +365,13 @@ func compressFile(inputPath, outputPath string) error {
 
 	inFile, err := os.Open(inputPath)
 	if err != nil {
-		return fmt.Errorf("无法打开输入文件用于读取: %s: %w", inputPath, err)
+		return fmt.Errorf("cannot open input file for reading: %s: %w", inputPath, err)
 	}
 	defer inFile.Close()
 
 	outFile, err := os.Create(outputPath)
 	if err != nil {
-		return fmt.Errorf("无法打开输出文件用于写入: %s: %w", outputPath, err)
+		return fmt.Errorf("cannot open output file for writing: %s: %w", outputPath, err)
 	}
 	defer outFile.Close()
 
@@ -381,7 +392,7 @@ func compressFile(inputPath, outputPath string) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("读取输入文件失败: %w", err)
+			return fmt.Errorf("failed to read input file: %w", err)
 		}
 		if err := encoder.EncodeSymbol(uint32(b), cumulative); err != nil {
 			return err
@@ -396,14 +407,14 @@ func compressFile(inputPath, outputPath string) error {
 func decompressFile(inputPath, outputPath string) error {
 	inFile, err := os.Open(inputPath)
 	if err != nil {
-		return fmt.Errorf("无法打开输入文件用于读取: %s: %w", inputPath, err)
+		return fmt.Errorf("cannot open input file for reading: %s: %w", inputPath, err)
 	}
 	defer inFile.Close()
 	r := bufio.NewReader(inFile)
 
 	magic := make([]byte, 4)
 	if _, err := io.ReadFull(r, magic); err != nil || magic[0] != 'A' || magic[1] != 'E' || magic[2] != 'N' || magic[3] != 'C' {
-		return fmt.Errorf("输入文件格式非法")
+		return fmt.Errorf("invalid input file format")
 	}
 
 	freq, err := readFrequencies(r)
@@ -414,7 +425,7 @@ func decompressFile(inputPath, outputPath string) error {
 
 	outFile, err := os.Create(outputPath)
 	if err != nil {
-		return fmt.Errorf("无法打开输出文件用于写入: %s: %w", outputPath, err)
+		return fmt.Errorf("cannot open output file for writing: %s: %w", outputPath, err)
 	}
 	defer outFile.Close()
 	w := bufio.NewWriter(outFile)
@@ -451,7 +462,7 @@ func main() {
 	} else if mode == "decode" {
 		err = decompressFile(inputPath, outputPath)
 	} else {
-		fmt.Fprintln(os.Stderr, "未知模式，应为 encode 或 decode")
+		fmt.Fprintln(os.Stderr, "unknown mode, expected encode or decode")
 		os.Exit(1)
 	}
 	if err != nil {

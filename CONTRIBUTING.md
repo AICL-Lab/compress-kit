@@ -175,6 +175,34 @@ Files encoded by one language implementation should be decodable by others:
 diff input.bin decoded.bin
 ```
 
+## Spec-Driven Development | 规范驱动开发
+
+This project follows **Spec-Driven Development (SDD)**. All code implementations must be based on the specification documents in `/specs/`.
+
+本项目遵循**规范驱动开发（SDD）**。所有代码实现必须以 `/specs/` 目录下的规范文档为依据。
+
+### Workflow | 工作流
+
+1. **Review Specs First | 先审查规范**: Before writing any code, read the relevant documents in `/specs/product/`, `/specs/rfc/`, or `/specs/testing/`.
+   
+   编写代码前，请先阅读 `/specs/product/`、`/specs/rfc/` 或 `/specs/testing/` 中的相关文档。
+
+2. **Update Specs First | 先更新规范**: For new features or interface changes, propose spec changes first. Wait for confirmation before coding.
+   
+   对于新功能或接口变更，请先提议更新规范文档，确认后再编写代码。
+
+3. **Implement to Spec | 按规范实现**: Code must 100% adhere to spec definitions (naming, API paths, data types, etc.).
+   
+   代码必须 100% 遵守规范定义（命名、API 路径、数据类型等）。
+
+4. **Test Against Spec | 按规范测试**: Write tests based on the acceptance criteria in `/specs/`.
+   
+   根据 `/specs/` 中的验收标准编写测试。
+
+See [AGENTS.md](AGENTS.md) for the complete AI workflow instructions.
+
+完整的 AI 工作流指令，请参阅 [AGENTS.md](AGENTS.md)。
+
 ## Pull Request Process | PR 流程
 
 1. **Create a feature branch | 创建功能分支**

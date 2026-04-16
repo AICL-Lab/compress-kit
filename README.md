@@ -71,6 +71,7 @@ make bench
 | Resource | Description | Link |
 |----------|-------------|------|
 | **Documentation Site** | Full documentation with bilingual support | [lessup.github.io/encoding](https://lessup.github.io/encoding/) |
+| **Project Specs** | Product requirements, RFCs, and technical specs | [specs/](specs/) |
 | **Getting Started** | Setup, build, and basic usage | [Guide →](https://lessup.github.io/encoding/guide/getting-started) |
 | **Algorithms** | Algorithm explanations and comparisons | [Guide →](https://lessup.github.io/encoding/guide/algorithms) |
 | **Project Structure** | Directory layout and conventions | [Guide →](https://lessup.github.io/encoding/guide/project-structure) |

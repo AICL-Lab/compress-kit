@@ -243,9 +243,9 @@ fn read_frequencies<R: Read>(reader: &mut R) -> io::Result<Vec<u32>> {
     let mut freq = vec![0u32; count];
     for f in freq.iter_mut() {
         let mut arr = [0u8; 4];
-        reader
-            .read_exact(&mut arr)
-            .map_err(|e| io::Error::new(e.kind(), format!("failed to read frequency table: {e}")))?;
+        reader.read_exact(&mut arr).map_err(|e| {
+            io::Error::new(e.kind(), format!("failed to read frequency table: {e}"))
+        })?;
         *f = u32::from_le_bytes(arr);
     }
 

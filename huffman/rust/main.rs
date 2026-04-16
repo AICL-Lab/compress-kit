@@ -76,7 +76,8 @@ fn build_tree(freq: &[u32]) -> Box<Node> {
         });
     }
     if heap.len() == 1 {
-        let item = heap.pop().unwrap();
+        // Safe: we just checked heap.len() == 1
+        let item = heap.pop().expect("heap should have one element");
         let only = item.node;
         let parent = Box::new(Node {
             symbol: only.symbol,
@@ -91,8 +92,9 @@ fn build_tree(freq: &[u32]) -> Box<Node> {
         });
     }
     while heap.len() > 1 {
-        let a = heap.pop().unwrap().node;
-        let b = heap.pop().unwrap().node;
+        // Safe: loop condition ensures at least 2 elements
+        let a = heap.pop().expect("heap should have element").node;
+        let b = heap.pop().expect("heap should have element").node;
         let freq_sum = a.freq + b.freq;
         let parent = Box::new(Node {
             symbol: a.symbol.min(b.symbol),
@@ -107,7 +109,8 @@ fn build_tree(freq: &[u32]) -> Box<Node> {
             node: parent,
         });
     }
-    heap.pop().unwrap().node
+    // Safe: loop exits when heap.len() == 1, or we have the single element from the len()==1 case
+    heap.pop().expect("heap should have final element").node
 }
 
 struct BitWriter<W: Write> {

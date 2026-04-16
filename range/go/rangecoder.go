@@ -182,6 +182,9 @@ func (d *decoder) readByte() byte {
 	return 0
 }
 
+// Note: This binary search has O(log n) complexity per symbol.
+// For better performance with large files, consider using a lookup table
+// or prefix-sum index to achieve O(1) symbol lookup.
 func (d *decoder) decodeSymbol(cumulative []uint32) uint32 {
 	rangeVal := uint64(d.high) - uint64(d.low) + 1
 	total := uint64(cumulative[len(cumulative)-1])

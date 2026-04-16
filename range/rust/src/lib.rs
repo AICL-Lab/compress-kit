@@ -138,9 +138,9 @@ impl<'a> RangeEncoder<'a> {
         }
     }
 
-    fn encode_symbol(&mut self, symbol: u32, cumulative: &[u32]) {
+    fn encode_symbol(&mut self, symbol: u32, cumulative: &[u32]) -> Result<(), RangeError> {
         let range = (self.high as u64).wrapping_sub(self.low as u64) + 1;
-        let total = *cumulative.last().unwrap() as u64;
+        let total = *cumulative.last().ok_or(RangeError("range: empty cumulative"))? as u64;
         let sym_low = cumulative[symbol as usize] as u64;
         let sym_high = cumulative[symbol as usize + 1] as u64;
 
@@ -155,6 +155,7 @@ impl<'a> RangeEncoder<'a> {
             self.low <<= 8;
             self.high = (self.high << 8) | 0xFF;
         }
+        Ok(())
     }
 
     fn finish(&mut self) {
@@ -200,9 +201,12 @@ impl<'a> RangeDecoder<'a> {
         }
     }
 
-    fn decode_symbol(&mut self, cumulative: &[u32]) -> u32 {
+    // Note: This binary search has O(log n) complexity per symbol.
+    // For better performance with large files, consider using a lookup table
+    // or prefix-sum index to achieve O(1) symbol lookup.
+    fn decode_symbol(&mut self, cumulative: &[u32]) -> Result<u32, RangeError> {
         let range = (self.high as u64).wrapping_sub(self.low as u64) + 1;
-        let total = *cumulative.last().unwrap() as u64;
+        let total = *cumulative.last().ok_or(RangeError("range: empty cumulative"))? as u64;
         let offset = (self.code as u64).wrapping_sub(self.low as u64);
         let value = ((offset + 1) * total - 1) / range;
 
@@ -233,7 +237,7 @@ impl<'a> RangeDecoder<'a> {
             self.code = (self.code << 8) | b;
         }
 
-        symbol
+        Ok(symbol)
     }
 }
 
@@ -247,9 +251,9 @@ pub fn encode(input: &[u8]) -> Result<Vec<u8>, RangeError> {
     {
         let mut enc = RangeEncoder::new(&mut out);
         for &b in input {
-            enc.encode_symbol(b as u32, &cumulative);
+            enc.encode_symbol(b as u32, &cumulative)?;
         }
-        enc.encode_symbol(EOF_SYMBOL as u32, &cumulative);
+        enc.encode_symbol(EOF_SYMBOL as u32, &cumulative)?;
         enc.finish();
     }
 
@@ -271,7 +275,7 @@ pub fn decode(encoded: &[u8]) -> Result<Vec<u8>, RangeError> {
     let mut dec = RangeDecoder::new(&encoded[pos..]);
     let mut out = Vec::with_capacity(encoded.len());
     loop {
-        let sym = dec.decode_symbol(&cumulative);
+        let sym = dec.decode_symbol(&cumulative)?;
         if sym as usize == EOF_SYMBOL {
             break;
         }

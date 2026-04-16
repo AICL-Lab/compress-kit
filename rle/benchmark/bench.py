@@ -5,12 +5,24 @@ import time
 import subprocess
 from pathlib import Path
 
+# RLE 跨语言 benchmark 脚本
+# - 编译 C++, Go, Rust 三种实现
+# - 在指定输入文件上执行 encode/decode
+# - 校验解码结果与原始输入是否一致
+# - 比较三种语言的性能差异
+#
+# 用法：
+#   python3 bench.py [/path/to/input.bin]
+# 若未提供参数，则默认使用项目根目录下 tests/data/repetitive_10MiB.bin (RLE 对重复数据效果好)
+
 ROOT = Path(__file__).resolve().parent.parent
 CPP_DIR = ROOT / "cpp"
 GO_DIR = ROOT / "go"
 RUST_DIR = ROOT / "rust"
 BENCH_DIR = ROOT / "benchmark"
 TMP_DIR = BENCH_DIR / "tmp"
+PROJECT_ROOT = ROOT.parent
+TEST_DATA_DIR = PROJECT_ROOT / "tests" / "data"
 
 
 def run(cmd, cwd):
@@ -70,8 +82,12 @@ def main():
             sys.stderr.write("Input file does not exist\n")
             sys.exit(1)
     else:
-        input_path = TMP_DIR / "bench_input.bin"
-        generate_input(input_path)
+        input_path = TEST_DATA_DIR / "repetitive_10MiB.bin"
+
+    if not input_path.is_file():
+        sys.stderr.write(f"Input file not found: {input_path}\n")
+        sys.stderr.write("请先运行 tests/gen_testdata.py 生成测试数据\n")
+        sys.exit(1)
 
     build_times = compile_all()
     original_size = input_path.stat().st_size

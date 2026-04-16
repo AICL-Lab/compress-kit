@@ -120,7 +120,9 @@ impl<W: Write> ArithmeticEncoder<W> {
 
     fn encode_symbol(&mut self, symbol: u32, cumulative: &[u32]) -> io::Result<()> {
         let range = self.high - self.low + 1;
-        let total = *cumulative.last().unwrap() as u64;
+        let total = *cumulative.last().ok_or_else(|| {
+            io::Error::new(io::ErrorKind::InvalidData, "empty cumulative frequency table")
+        })? as u64;
         let sym_low = cumulative[symbol as usize] as u64;
         let sym_high = cumulative[symbol as usize + 1] as u64;
 
@@ -193,9 +195,11 @@ impl<R: Read> ArithmeticDecoder<R> {
         }
     }
 
-    fn decode_symbol(&mut self, cumulative: &[u32]) -> u32 {
+    fn decode_symbol(&mut self, cumulative: &[u32]) -> io::Result<u32> {
         let range = self.high - self.low + 1;
-        let total = *cumulative.last().unwrap() as u64;
+        let total = *cumulative.last().ok_or_else(|| {
+            io::Error::new(io::ErrorKind::InvalidData, "empty cumulative frequency table")
+        })? as u64;
         let offset = self.code - self.low;
         let value = ((offset + 1) * total - 1) / range;
 
@@ -236,7 +240,7 @@ impl<R: Read> ArithmeticDecoder<R> {
             self.code = (self.code << 1) | self.reader.read_bit() as u64;
         }
 
-        symbol
+        Ok(symbol)
     }
 }
 
@@ -412,7 +416,7 @@ fn decompress_file(input_path: &str, output_path: &str) -> io::Result<()> {
     let mut decoder = ArithmeticDecoder::new(bit_reader);
 
     loop {
-        let sym = decoder.decode_symbol(&cumulative);
+        let sym = decoder.decode_symbol(&cumulative)?;
         if sym == EOF_SYMBOL {
             break;
         }

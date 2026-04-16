@@ -63,10 +63,10 @@ test-rle-rust:
 # ── Data / Bench / Clean ──────────────────────────────────────────────────
 
 test-data:
-	python tests/gen_testdata.py
+	python3 tests/gen_testdata.py
 
 bench: test-data
-	python scripts/run_all_bench.py
+	python3 scripts/run_all_bench.py
 
 clean:
 	rm -rf reports tests/data

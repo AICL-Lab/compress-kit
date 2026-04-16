@@ -174,6 +174,9 @@ public:
         }
     }
 
+    // Note: This binary search has O(log n) complexity per symbol.
+    // For better performance with large files, consider using a lookup table
+    // or prefix-sum index to achieve O(1) symbol lookup.
     uint32_t decode_symbol(const std::vector<uint32_t>& cumulative) {
         uint64_t range = static_cast<uint64_t>(high_) - low_ + 1;
         uint64_t total = cumulative.back();

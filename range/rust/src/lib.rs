@@ -140,7 +140,9 @@ impl<'a> RangeEncoder<'a> {
 
     fn encode_symbol(&mut self, symbol: u32, cumulative: &[u32]) -> Result<(), RangeError> {
         let range = (self.high as u64).wrapping_sub(self.low as u64) + 1;
-        let total = *cumulative.last().ok_or(RangeError("range: empty cumulative"))? as u64;
+        let total = *cumulative
+            .last()
+            .ok_or(RangeError("range: empty cumulative"))? as u64;
         let sym_low = cumulative[symbol as usize] as u64;
         let sym_high = cumulative[symbol as usize + 1] as u64;
 
@@ -206,7 +208,9 @@ impl<'a> RangeDecoder<'a> {
     // or prefix-sum index to achieve O(1) symbol lookup.
     fn decode_symbol(&mut self, cumulative: &[u32]) -> Result<u32, RangeError> {
         let range = (self.high as u64).wrapping_sub(self.low as u64) + 1;
-        let total = *cumulative.last().ok_or(RangeError("range: empty cumulative"))? as u64;
+        let total = *cumulative
+            .last()
+            .ok_or(RangeError("range: empty cumulative"))? as u64;
         let offset = (self.code as u64).wrapping_sub(self.low as u64);
         let value = ((offset + 1) * total - 1) / range;
 

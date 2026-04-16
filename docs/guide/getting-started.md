@@ -1,37 +1,39 @@
-# 快速开始
+# Getting Started
 
-## 环境要求
+## Environment Requirements
 
-| 工具 | 最低版本 | 用途 |
-|------|---------|------|
-| g++ / clang++ | 9+ / 10+ | C++17 实现编译 |
-| Go | 1.21+ | Go 实现 |
-| Rust (cargo) | 1.70+ | Rust 实现 |
-| Python | 3.8+ | 基准测试脚本 |
+| Tool | Minimum Version | Purpose |
+|------|----------------|---------|
+| g++ / clang++ | 9+ / 10+ | C++17 compilation |
+| Go | 1.21+ | Go implementation |
+| Rust (cargo) | 1.70+ | Rust implementation |
+| Python | 3.8+ | Benchmark scripts |
+| Node.js | 18+ | Documentation site (optional) |
+| Make | Any | Build automation |
 
-## 克隆与构建
+## Clone and Build
 
 ```bash
 git clone https://github.com/LessUp/encoding.git
 cd encoding
 ```
 
-### 一键构建所有实现
+### Build All Implementations
 
 ```bash
 make build
 ```
 
-### 单独构建某个算法
+### Build Specific Algorithm
 
 ```bash
 make build-huffman      # Huffman (C++, Go, Rust)
-make build-arithmetic   # 算术编码
-make build-range        # 区间编码
-make build-rle          # 游程编码
+make build-arithmetic   # Arithmetic coding
+make build-range        # Range coder
+make build-rle          # Run-length encoding
 ```
 
-### 手动编译示例
+### Manual Compilation Examples
 
 ::: code-group
 ```bash [C++]
@@ -54,39 +56,121 @@ rustc -O main.rs -o huffman_rust
 ```
 :::
 
-## 跨语言验证
+## Cross-Language Verification
 
-所有实现使用相同文件格式，可以交叉验证：
-
-```bash
-# C++ 编码，Go 解码
-./huffman_cpp encode input.bin encoded.huf
-./huffman_go decode encoded.huf decoded.bin
-diff input.bin decoded.bin  # 无输出表示一致
-```
-
-支持任意方向的组合：C++ ↔ Go ↔ Rust。
-
-## 运行测试
+All implementations use identical file formats, enabling cross-verification:
 
 ```bash
-make test          # 运行所有 Go + Rust 单元测试
+# C++ encode, Go decode
+./huffman/cpp/huffman_cpp encode input.bin encoded.huf
+./huffman/go/huffman_go decode encoded.huf decoded.bin
+diff input.bin decoded.bin  # No output = identical
 ```
 
-## 运行基准测试
+Supports any combination: C++ ↔ Go ↔ Rust
+
+## Running Tests
 
 ```bash
-make bench         # 自动生成测试数据 + 运行所有基准
+make test          # Run all Go + Rust unit tests
 ```
 
-报告输出到 `reports/` 目录。
+### Individual Algorithm Tests
 
-## Makefile 命令速查
+```bash
+cd huffman/go && go test ./... && cd ../..
+cd huffman/rust && rustc --test main.rs -o test && ./test && cd ../..
+```
 
-| 命令 | 说明 |
-|------|------|
-| `make build` | 构建所有语言的所有算法实现 |
-| `make test` | 运行所有 Go 和 Rust 单元测试 |
-| `make bench` | 生成测试数据并运行跨语言基准测试 |
-| `make test-data` | 仅生成测试数据 |
-| `make clean` | 清理所有构建产物和报告 |
+## Running Benchmarks
+
+```bash
+make bench         # Generate test data + run all benchmarks
+```
+
+Reports output to `reports/` directory.
+
+### Benchmark Output Example
+
+```
+Algorithm: Huffman
+Language: C++
+Input: 10 MiB random data
+Encode: 245 ms (40.8 MiB/s)
+Decode: 198 ms (50.5 MiB/s)
+Compression ratio: 1.23
+```
+
+## Documentation Site
+
+### Local Preview
+
+```bash
+npm install
+npm run docs:dev
+```
+
+Opens at `http://localhost:5173/encoding/`
+
+### Build for Production
+
+```bash
+npm run docs:build
+```
+
+Output in `docs/.vitepress/dist/`
+
+## Makefile Commands Reference
+
+| Command | Description |
+|---------|-------------|
+| `make build` | Build all algorithm implementations |
+| `make test` | Run all Go and Rust unit tests |
+| `make bench` | Generate test data and run benchmarks |
+| `make test-data` | Generate test data only |
+| `make clean` | Remove all build artifacts and reports |
+
+## Troubleshooting
+
+### C++ Compilation Errors
+
+```bash
+# Check compiler version
+g++ --version  # Need 9+
+
+# Try with clang
+clang++ -std=c++17 -O2 main.cpp -o huffman_cpp
+```
+
+### Go Module Issues
+
+```bash
+# Ensure Go workspace is active
+go work use ./huffman/go
+go work use ./arithmetic/go
+go work use ./range/go
+go work use ./rle/go
+```
+
+### Rust Build Errors
+
+```bash
+# Update toolchain
+rustup update stable
+
+# Check version
+rustc --version  # Need 1.70+
+```
+
+### Range Coder Slow Decode
+
+The range coder has a known performance issue for files >500KB. Use smaller test files:
+
+```bash
+# Create smaller test file
+dd if=tests/data/random_10MiB.bin of=/tmp/small.bin bs=1024 count=100
+
+# Test with smaller file
+./range/cpp/rangecoder_cpp encode /tmp/small.bin /tmp/small.enc
+./range/cpp/rangecoder_cpp decode /tmp/small.enc /tmp/small.dec
+```

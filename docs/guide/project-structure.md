@@ -1,77 +1,109 @@
-# 项目结构
+# Project Structure
 
-## 总览
+## Overview
 
 ```
 encoding/
-├── huffman/              # Huffman 编码
-│   ├── cpp/              #   C++ 单文件实现
-│   ├── go/               #   Go 实现 (go.mod)
-│   ├── rust/             #   Rust 实现
-│   ├── benchmark/        #   跨语言基准测试
-│   └── changelog/        #   变更记录
-├── arithmetic/           # 算术编码
-│   ├── cpp/              #   C++ 单文件实现
-│   ├── go/               #   Go 实现
-│   ├── rust/             #   Rust 实现
-│   └── benchmark/        #   跨语言基准测试
-├── range/                # 区间编码 (Range Coder)
-│   ├── cpp/              #   C++ 单文件实现
-│   ├── go/               #   Go 库 + CLI
-│   ├── rust/             #   Rust 库 crate + CLI
-│   └── benchmark/        #   跨语言基准测试
-├── rle/                  # 游程编码 (RLE)
-│   ├── cpp/              #   C++ 单文件实现
-│   ├── go/               #   Go 实现
-│   ├── rust/             #   Rust 实现
-│   └── benchmark/        #   跨语言基准测试
-├── scripts/              # 工具脚本 (run_all_bench.py)
-├── tests/                # 测试数据生成 (gen_testdata.py)
-├── docs/                 # VitePress 文档站
-├── .github/workflows/    # CI + Pages 部署
-├── Makefile              # 构建/测试/基准一体化入口
-└── go.work               # Go workspace（多模块）
+├── huffman/              # Huffman coding
+│   ├── cpp/              #   C++ single-file implementation
+│   ├── go/               #   Go implementation (go.mod)
+│   ├── rust/             #   Rust implementation
+│   └── benchmark/        #   Cross-language benchmark
+├── arithmetic/           # Arithmetic coding
+│   ├── cpp/              #   C++ single-file implementation
+│   ├── go/               #   Go implementation
+│   ├── rust/             #   Rust implementation
+│   └── benchmark/        #   Cross-language benchmark
+├── range/                # Range coder
+│   ├── cpp/              #   C++ single-file implementation
+│   ├── go/               #   Go library + CLI
+│   ├── rust/             #   Rust library crate + CLI
+│   └── benchmark/        #   Cross-language benchmark
+├── rle/                  # Run-length encoding
+│   ├── cpp/              #   C++ single-file implementation
+│   ├── go/               #   Go implementation
+│   ├── rust/             #   Rust implementation
+│   └── benchmark/        #   Cross-language benchmark
+├── tests/                # Test data generation
+│   ├── gen_testdata.py   #   Generate benchmark test files
+│   └── data/             #   Generated test data
+├── docs/                 # VitePress documentation site
+│   ├── .vitepress/       #   VitePress config
+│   ├── guide/            #   User guides
+│   └── public/           #   Static assets
+├── .github/workflows/    # CI + Pages deployment
+├── Makefile              # Build/test/bench entry point
+├── package.json          # npm scripts for docs
+└── go.work               # Go workspace (multi-module)
 ```
 
-## 各语言实现约定
+## Language Implementation Conventions
 
-| 语言 | 版本 | 构建方式 | 特点 |
-|------|------|---------|------|
-| C++ | C++17 | `g++ -std=c++17 -O2` | 单文件实现，零依赖 |
-| Go | 1.21+ | Go modules (`go.mod`) | Range Coder 提供 library API |
-| Rust | 1.70+ | Cargo / rustc | Range Coder 提供 library crate |
+| Language | Version | Build Method | Characteristics |
+|----------|---------|--------------|-----------------|
+| C++ | C++17 | `g++ -std=c++17 -O2` | Single-file, zero dependencies |
+| Go | 1.21+ | Go modules (`go.mod`) | Range Coder provides library API |
+| Rust | 1.70+ | Cargo / rustc | Range Coder provides library crate |
 
-## CLI 接口统一
+## Unified CLI Interface
 
-所有实现遵循相同的 CLI 接口：
+All implementations follow the same CLI pattern:
 
 ```bash
 <algorithm>_<lang> encode <input> <output>
 <algorithm>_<lang> decode <input> <output>
 ```
 
-示例：`huffman_cpp`、`arithmetic_go`、`rangecoder_rust`、`rle_cpp`
+Examples: `huffman_cpp`, `arithmetic_go`, `rangecoder_rust`, `rle_cpp`
 
-## 文件格式兼容
+## File Format Compatibility
 
-同一算法的所有语言实现使用相同的二进制文件格式：
+All language implementations of the same algorithm use identical binary formats:
 
-| 算法 | Magic | 扩展名 |
-|------|-------|--------|
-| Huffman | `HFMN` | `.huf` |
-| Arithmetic | — | `.aenc` |
-| Range Coder | — | `.rcnc` |
-| RLE | — | `.rle` |
+| Algorithm | Magic Header | Extension | Format |
+|-----------|--------------|-----------|--------|
+| Huffman | `HFMN` | `.huf` | Magic + freq table + bit stream |
+| Arithmetic | `AENC` | `.aenc` | Magic + freq table + bit stream |
+| Range Coder | `RCNC` | `.rcnc` | Magic + freq table + byte stream |
+| RLE | None | `.rle` | (count: 4B LE, value: 1B) pairs |
 
-跨语言验证矩阵：
+### Cross-Language Verification Matrix
 
-- C++ 编码 → Go 解码 ✓
-- Go 编码 → Rust 解码 ✓
-- Rust 编码 → C++ 解码 ✓
+| Encode ↓ / Decode → | C++ | Go | Rust |
+|---------------------|-----|-----|------|
+| C++ | ✓ | ✓ | ✓ |
+| Go | ✓ | ✓ | ✓ |
+| Rust | ✓ | ✓ | ✓ |
 
-## CI/CD
+## CI/CD Pipeline
 
-| 工作流 | 文件 | 触发条件 |
-|--------|------|---------|
-| CI 测试 | `ci.yml` | 代码推送 / PR |
-| Pages 部署 | `pages.yml` | `docs/` 变更 / 手动触发 |
+| Workflow | File | Trigger | Purpose |
+|----------|------|---------|---------|
+| CI | `ci.yml` | Push / PR | Build, test, correctness |
+| Pages | `pages.yml` | `docs/` change | Deploy documentation |
+
+### CI Job Matrix
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  build-cpp  │     │  build-go   │     │ build-rust  │
+│  Ubuntu     │     │  Ubuntu     │     │  Ubuntu     │
+│  macOS      │     │             │     │             │
+└──────┬──────┘     └──────┬──────┘     └──────┬──────┘
+       │                   │                   │
+       └───────────────────┼───────────────────┘
+                           │
+                    ┌──────▼──────┐
+                    │ correctness │
+                    │   tests     │
+                    └─────────────┘
+```
+
+## Security Limits
+
+All implementations enforce:
+
+| Limit | Value | Purpose |
+|-------|-------|---------|
+| Max input size | 4 GiB | Prevent frequency overflow |
+| Max output size | 1 GiB | Prevent decompression bombs |

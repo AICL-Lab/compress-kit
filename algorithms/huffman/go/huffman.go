@@ -35,7 +35,7 @@ func (n *Node) IsLeaf() bool {
 
 type nodeHeap []*Node
 
-func (h nodeHeap) Len() int           { return len(h) }
+func (h nodeHeap) Len() int { return len(h) }
 func (h nodeHeap) Less(i, j int) bool {
 	if h[i].Freq != h[j].Freq {
 		return h[i].Freq < h[j].Freq

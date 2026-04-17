@@ -1,4 +1,4 @@
-package main
+package rle
 
 import (
 	"bytes"
@@ -21,10 +21,10 @@ func TestRLERoundTrip(t *testing.T) {
 	if err := os.WriteFile(inputPath, data, 0o644); err != nil {
 		t.Fatalf("write input: %v", err)
 	}
-	if err := rleEncodeFile(inputPath, encodedPath); err != nil {
+	if err := EncodeFile(inputPath, encodedPath); err != nil {
 		t.Fatalf("encode: %v", err)
 	}
-	if err := rleDecodeFile(encodedPath, outputPath); err != nil {
+	if err := DecodeFile(encodedPath, outputPath); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
 
@@ -49,7 +49,7 @@ func TestRLEDecodeRejectsZeroCount(t *testing.T) {
 		t.Fatalf("write invalid input: %v", err)
 	}
 
-	if err := rleDecodeFile(inputPath, outputPath); err == nil {
+	if err := DecodeFile(inputPath, outputPath); err == nil {
 		t.Fatalf("expected decode error for zero count")
 	}
 }

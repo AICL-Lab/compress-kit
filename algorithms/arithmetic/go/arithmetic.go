@@ -1,4 +1,5 @@
-package main
+// Package arithmetic provides arithmetic encoding and decoding implementations.
+package arithmetic
 
 import (
 	"bufio"
@@ -8,17 +9,15 @@ import (
 	"os"
 )
 
-// Arithmetic coding Go implementation.
-// File format is fully compatible with C++ implementation, supports cross-language encode/decode verification.
-// Magic: AENC (4 bytes)
-// Frequency table: count(4 bytes LE) + count × freq(4 bytes LE)
-// Arithmetic coding bitstream
-
 const (
-	SymbolLimit  = 257
-	EOFSymbol    = SymbolLimit - 1
-	MaxTotal     = uint32(1) << 24
-	MaxInputSize = 4 * 1024 * 1024 * 1024 // 4 GiB max to prevent frequency overflow
+	// SymbolLimit is the number of possible symbols (256 bytes + 1 EOF symbol).
+	SymbolLimit = 257
+	// EOFSymbol is the symbol index used to mark end-of-stream.
+	EOFSymbol = SymbolLimit - 1
+	// MaxTotal is the maximum total frequency value for numerical stability.
+	MaxTotal = uint32(1) << 24
+	// MaxInputSize is the maximum allowed input file size (4 GiB).
+	MaxInputSize = 4 * 1024 * 1024 * 1024
 
 	stateBits    = 32
 	fullRange    = uint64(1) << stateBits
@@ -27,20 +26,19 @@ const (
 	thirdQuarter = firstQuarter * 3
 )
 
-// ---------------------------------------------------------------------------
-// BitWriter / BitReader
-// ---------------------------------------------------------------------------
-
+// BitWriter writes individual bits to an underlying writer.
 type BitWriter struct {
 	w            *bufio.Writer
 	buffer       byte
 	bitsInBuffer uint8
 }
 
+// NewBitWriter creates a BitWriter wrapping the given io.Writer.
 func NewBitWriter(w io.Writer) *BitWriter {
 	return &BitWriter{w: bufio.NewWriter(w)}
 }
 
+// WriteBit queues a single bit for writing.
 func (b *BitWriter) WriteBit(bit int) error {
 	b.buffer = (b.buffer << 1) | byte(bit&1)
 	b.bitsInBuffer++
@@ -54,6 +52,7 @@ func (b *BitWriter) WriteBit(bit int) error {
 	return nil
 }
 
+// Flush writes any pending bits and flushes the underlying writer.
 func (b *BitWriter) Flush() error {
 	if b.bitsInBuffer > 0 {
 		b.buffer <<= (8 - b.bitsInBuffer)
@@ -66,6 +65,7 @@ func (b *BitWriter) Flush() error {
 	return b.w.Flush()
 }
 
+// BitReader reads individual bits from an underlying buffered reader.
 type BitReader struct {
 	r             *bufio.Reader
 	currentByte   byte
@@ -73,10 +73,12 @@ type BitReader struct {
 	reachedEOF    bool
 }
 
+// NewBitReader creates a BitReader wrapping the given bufio.Reader.
 func NewBitReader(r *bufio.Reader) *BitReader {
 	return &BitReader{r: r}
 }
 
+// ReadBit returns the next bit (0 or 1).
 func (b *BitReader) ReadBit() int {
 	if b.bitsRemaining == 0 {
 		c, err := b.r.ReadByte()
@@ -91,10 +93,12 @@ func (b *BitReader) ReadBit() int {
 	return int((b.currentByte >> b.bitsRemaining) & 1)
 }
 
-// ---------------------------------------------------------------------------
-// ArithmeticEncoder
-// ---------------------------------------------------------------------------
+// EOF returns true if the underlying reader has been exhausted.
+func (b *BitReader) EOF() bool {
+	return b.reachedEOF
+}
 
+// ArithmeticEncoder encodes symbols using arithmetic coding.
 type ArithmeticEncoder struct {
 	writer      *BitWriter
 	low         uint64
@@ -102,6 +106,7 @@ type ArithmeticEncoder struct {
 	pendingBits uint64
 }
 
+// NewArithmeticEncoder creates a new encoder wrapping a BitWriter.
 func NewArithmeticEncoder(w *BitWriter) *ArithmeticEncoder {
 	return &ArithmeticEncoder{
 		writer: w,
@@ -110,6 +115,7 @@ func NewArithmeticEncoder(w *BitWriter) *ArithmeticEncoder {
 	}
 }
 
+// EncodeSymbol encodes a single symbol using the cumulative frequency table.
 func (e *ArithmeticEncoder) EncodeSymbol(symbol uint32, cumulative []uint32) error {
 	rangeVal := e.high - e.low + 1
 	total := uint64(cumulative[len(cumulative)-1])
@@ -143,6 +149,7 @@ func (e *ArithmeticEncoder) EncodeSymbol(symbol uint32, cumulative []uint32) err
 	return nil
 }
 
+// Finish flushes the encoder and writes any remaining bits.
 func (e *ArithmeticEncoder) Finish() error {
 	e.pendingBits++
 	if e.low < firstQuarter {
@@ -171,10 +178,7 @@ func (e *ArithmeticEncoder) outputBit(bit int) error {
 	return nil
 }
 
-// ---------------------------------------------------------------------------
-// ArithmeticDecoder
-// ---------------------------------------------------------------------------
-
+// ArithmeticDecoder decodes symbols using arithmetic coding.
 type ArithmeticDecoder struct {
 	reader *BitReader
 	low    uint64
@@ -182,6 +186,7 @@ type ArithmeticDecoder struct {
 	code   uint64
 }
 
+// NewArithmeticDecoder creates a new decoder wrapping a BitReader.
 func NewArithmeticDecoder(r *BitReader) *ArithmeticDecoder {
 	d := &ArithmeticDecoder{
 		reader: r,
@@ -194,6 +199,7 @@ func NewArithmeticDecoder(r *BitReader) *ArithmeticDecoder {
 	return d
 }
 
+// DecodeSymbol decodes the next symbol using the cumulative frequency table.
 func (d *ArithmeticDecoder) DecodeSymbol(cumulative []uint32) uint32 {
 	rangeVal := d.high - d.low + 1
 	total := uint64(cumulative[len(cumulative)-1])
@@ -240,11 +246,8 @@ func (d *ArithmeticDecoder) DecodeSymbol(cumulative []uint32) uint32 {
 	return symbol
 }
 
-// ---------------------------------------------------------------------------
-// Frequency table processing
-// ---------------------------------------------------------------------------
-
-func scaleFrequencies(freq []uint32) {
+// ScaleFrequencies normalizes frequencies to fit within MaxTotal.
+func ScaleFrequencies(freq []uint32) {
 	var total uint64
 	for _, f := range freq {
 		total += uint64(f)
@@ -281,7 +284,8 @@ func scaleFrequencies(freq []uint32) {
 	}
 }
 
-func buildFrequenciesFromFile(path string) ([]uint32, error) {
+// BuildFrequenciesFromFile reads a file and counts byte frequencies.
+func BuildFrequenciesFromFile(path string) ([]uint32, error) {
 	freq := make([]uint32, SymbolLimit)
 	f, err := os.Open(path)
 	if err != nil {
@@ -289,7 +293,6 @@ func buildFrequenciesFromFile(path string) ([]uint32, error) {
 	}
 	defer f.Close()
 
-	// Check file size to prevent frequency overflow
 	stat, err := f.Stat()
 	if err != nil {
 		return nil, fmt.Errorf("cannot stat input file: %w", err)
@@ -307,11 +310,12 @@ func buildFrequenciesFromFile(path string) ([]uint32, error) {
 		freq[int(b)]++
 	}
 	freq[EOFSymbol] = 1
-	scaleFrequencies(freq)
+	ScaleFrequencies(freq)
 	return freq, nil
 }
 
-func buildCumulative(freq []uint32) []uint32 {
+// BuildCumulative builds a cumulative frequency table from frequencies.
+func BuildCumulative(freq []uint32) []uint32 {
 	cum := make([]uint32, len(freq)+1)
 	for i, f := range freq {
 		cum[i+1] = cum[i] + f
@@ -324,7 +328,8 @@ func buildCumulative(freq []uint32) []uint32 {
 	return cum
 }
 
-func writeFrequencies(w io.Writer, freq []uint32) error {
+// WriteFrequencies serializes a frequency table to the writer.
+func WriteFrequencies(w io.Writer, freq []uint32) error {
 	count := uint32(len(freq))
 	if err := binary.Write(w, binary.LittleEndian, count); err != nil {
 		return err
@@ -337,7 +342,8 @@ func writeFrequencies(w io.Writer, freq []uint32) error {
 	return nil
 }
 
-func readFrequencies(r io.Reader) ([]uint32, error) {
+// ReadFrequencies deserializes a frequency table from the reader.
+func ReadFrequencies(r io.Reader) ([]uint32, error) {
 	var count uint32
 	if err := binary.Read(r, binary.LittleEndian, &count); err != nil {
 		return nil, fmt.Errorf("failed to read frequency table: %w", err)
@@ -352,48 +358,35 @@ func readFrequencies(r io.Reader) ([]uint32, error) {
 	return freq, nil
 }
 
-// ---------------------------------------------------------------------------
-// Compression / Decompression
-// ---------------------------------------------------------------------------
-
-func compressFile(inputPath, outputPath string) error {
-	freq, err := buildFrequenciesFromFile(inputPath)
+// Encode reads from input and writes the arithmetic encoded output to w.
+func Encode(input io.Reader, w io.Writer) error {
+	data, err := io.ReadAll(input)
 	if err != nil {
+		return fmt.Errorf("failed to read input: %w", err)
+	}
+	if int64(len(data)) > MaxInputSize {
+		return fmt.Errorf("input too large (max %d bytes)", MaxInputSize)
+	}
+
+	freq := make([]uint32, SymbolLimit)
+	for _, b := range data {
+		freq[int(b)]++
+	}
+	freq[EOFSymbol] = 1
+	ScaleFrequencies(freq)
+	cumulative := BuildCumulative(freq)
+
+	if _, err := w.Write([]byte{'A', 'E', 'N', 'C'}); err != nil {
 		return err
 	}
-	cumulative := buildCumulative(freq)
-
-	inFile, err := os.Open(inputPath)
-	if err != nil {
-		return fmt.Errorf("cannot open input file for reading: %s: %w", inputPath, err)
-	}
-	defer inFile.Close()
-
-	outFile, err := os.Create(outputPath)
-	if err != nil {
-		return fmt.Errorf("cannot open output file for writing: %s: %w", outputPath, err)
-	}
-	defer outFile.Close()
-
-	if _, err := outFile.Write([]byte{'A', 'E', 'N', 'C'}); err != nil {
-		return err
-	}
-	if err := writeFrequencies(outFile, freq); err != nil {
+	if err := WriteFrequencies(w, freq); err != nil {
 		return err
 	}
 
-	bw := NewBitWriter(outFile)
+	bw := NewBitWriter(w)
 	encoder := NewArithmeticEncoder(bw)
 
-	r := bufio.NewReader(inFile)
-	for {
-		b, err := r.ReadByte()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return fmt.Errorf("failed to read input file: %w", err)
-		}
+	for _, b := range data {
 		if err := encoder.EncodeSymbol(uint32(b), cumulative); err != nil {
 			return err
 		}
@@ -404,69 +397,68 @@ func compressFile(inputPath, outputPath string) error {
 	return encoder.Finish()
 }
 
-func decompressFile(inputPath, outputPath string) error {
-	inFile, err := os.Open(inputPath)
-	if err != nil {
-		return fmt.Errorf("cannot open input file for reading: %s: %w", inputPath, err)
-	}
-	defer inFile.Close()
-	r := bufio.NewReader(inFile)
+// Decode reads from r and writes the decoded output to w.
+func Decode(r io.Reader, w io.Writer) error {
+	br := bufio.NewReader(r)
 
 	magic := make([]byte, 4)
-	if _, err := io.ReadFull(r, magic); err != nil || magic[0] != 'A' || magic[1] != 'E' || magic[2] != 'N' || magic[3] != 'C' {
+	if _, err := io.ReadFull(br, magic); err != nil || string(magic) != "AENC" {
 		return fmt.Errorf("invalid input file format")
 	}
 
-	freq, err := readFrequencies(r)
+	freq, err := ReadFrequencies(br)
 	if err != nil {
 		return err
 	}
-	cumulative := buildCumulative(freq)
+	cumulative := BuildCumulative(freq)
 
-	outFile, err := os.Create(outputPath)
-	if err != nil {
-		return fmt.Errorf("cannot open output file for writing: %s: %w", outputPath, err)
-	}
-	defer outFile.Close()
-	w := bufio.NewWriter(outFile)
-
-	br := NewBitReader(r)
-	decoder := NewArithmeticDecoder(br)
+	bw := bufio.NewWriter(w)
+	bitReader := NewBitReader(br)
+	decoder := NewArithmeticDecoder(bitReader)
 
 	for {
 		sym := decoder.DecodeSymbol(cumulative)
 		if sym == uint32(EOFSymbol) {
 			break
 		}
-		if err := w.WriteByte(byte(sym)); err != nil {
+		if err := bw.WriteByte(byte(sym)); err != nil {
 			return err
 		}
 	}
 
-	return w.Flush()
+	return bw.Flush()
 }
 
-func main() {
-	if len(os.Args) != 4 {
-		fmt.Fprintf(os.Stderr, "Usage: %s encode|decode input output\n", os.Args[0])
-		os.Exit(1)
-	}
-	mode := os.Args[1]
-	inputPath := os.Args[2]
-	outputPath := os.Args[3]
-
-	var err error
-
-	if mode == "encode" {
-		err = compressFile(inputPath, outputPath)
-	} else if mode == "decode" {
-		err = decompressFile(inputPath, outputPath)
-	} else {
-		fmt.Fprintln(os.Stderr, "unknown mode, expected encode or decode")
-		os.Exit(1)
-	}
+// EncodeFile is a convenience function for file-based encoding.
+func EncodeFile(inputPath, outputPath string) error {
+	in, err := os.Open(inputPath)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		return fmt.Errorf("cannot open input file: %s: %w", inputPath, err)
 	}
+	defer in.Close()
+
+	out, err := os.Create(outputPath)
+	if err != nil {
+		return fmt.Errorf("cannot open output file: %s: %w", outputPath, err)
+	}
+	defer out.Close()
+
+	return Encode(in, out)
+}
+
+// DecodeFile is a convenience function for file-based decoding.
+func DecodeFile(inputPath, outputPath string) error {
+	in, err := os.Open(inputPath)
+	if err != nil {
+		return fmt.Errorf("cannot open input file: %s: %w", inputPath, err)
+	}
+	defer in.Close()
+
+	out, err := os.Create(outputPath)
+	if err != nil {
+		return fmt.Errorf("cannot open output file: %s: %w", outputPath, err)
+	}
+	defer out.Close()
+
+	return Decode(in, out)
 }

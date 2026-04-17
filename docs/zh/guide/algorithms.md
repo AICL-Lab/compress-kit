@@ -110,7 +110,7 @@
 
 **Go 库**:
 ```go
-import "github.com/LessUp/encoding/range/go/rangecoder"
+import "github.com/LessUp/encoding/algorithms/range/go/rangecoder"
 
 // 编码数据
 encoded, err := rangecoder.Encode(data)

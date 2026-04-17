@@ -31,19 +31,19 @@ encoding/
 │   │   ├── algorithms.md
 │   │   └── project-structure.md
 │   └── public/
-├── huffman/
+├── algorithms/huffman/
 │   ├── cpp/main.cpp
 │   ├── go/main.go
 │   └── rust/main.rs
-├── arithmetic/
+├── algorithms/arithmetic/
 │   ├── cpp/main.cpp
 │   ├── go/main.go
 │   └── rust/main.rs
-├── range/
+├── algorithms/range/
 │   ├── cpp/main.cpp
 │   ├── go/ (library + cmd/)
 │   └── rust/ (Cargo.toml + src/)
-├── rle/
+├── algorithms/rle/
 │   ├── cpp/main.cpp
 │   ├── go/main.go
 │   └── rust/main.rs

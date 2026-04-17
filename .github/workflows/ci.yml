@@ -29,25 +29,25 @@ jobs:
 
       - name: Build Huffman C++
         run: |
-          cd huffman/cpp
+          cd algorithms/huffman/cpp
           g++ -std=c++17 -O2 -Wall -Wextra main.cpp -o huffman_cpp
           ./huffman_cpp || true  # Show usage
 
       - name: Build Arithmetic C++
         run: |
-          cd arithmetic/cpp
+          cd algorithms/arithmetic/cpp
           g++ -std=c++17 -O2 -Wall -Wextra main.cpp -o arithmetic_cpp
           ./arithmetic_cpp || true
 
       - name: Build Range coder C++
         run: |
-          cd range/cpp
+          cd algorithms/range/cpp
           g++ -std=c++17 -O2 -Wall -Wextra main.cpp -o rangecoder_cpp
           ./rangecoder_cpp || true
 
       - name: Build RLE C++
         run: |
-          cd rle/cpp
+          cd algorithms/rle/cpp
           g++ -std=c++17 -O2 -Wall -Wextra main.cpp -o rle_cpp
           ./rle_cpp || true
 
@@ -79,28 +79,28 @@ jobs:
 
       - name: Build Huffman Go
         run: |
-          cd huffman/go
+          cd algorithms/huffman/go
           go vet ./...
           go test ./...
           go build -o huffman_go .
 
       - name: Build Arithmetic Go
         run: |
-          cd arithmetic/go
+          cd algorithms/arithmetic/go
           go vet ./...
           go test ./...
           go build -o arithmetic_go .
 
       - name: Build Range coder Go
         run: |
-          cd range/go
+          cd algorithms/range/go
           go vet ./...
           go test ./...
           go build -o rangecoder_go ./cmd
 
       - name: Build RLE Go
         run: |
-          cd rle/go
+          cd algorithms/rle/go
           go vet ./...
           go test ./...
           go build -o rle_go .
@@ -121,39 +121,39 @@ jobs:
 
       - name: Check Rust formatting
         run: |
-          for file in huffman/rust/main.rs arithmetic/rust/main.rs rle/rust/main.rs; do
+          for file in algorithms/huffman/rust/main.rs algorithms/arithmetic/rust/main.rs algorithms/rle/rust/main.rs; do
             if [ -f "$file" ]; then
               rustfmt --check "$file" || exit 1
             fi
           done
-          if [ -f "range/rust/Cargo.toml" ]; then
-            cd range/rust && cargo fmt --check
+          if [ -f "algorithms/range/rust/Cargo.toml" ]; then
+            cd algorithms/range/rust && cargo fmt --check
           fi
 
       - name: Build Huffman Rust
         run: |
-          cd huffman/rust
+          cd algorithms/huffman/rust
           rustc -O main.rs -o huffman_rust
           rustc --test main.rs -o huffman_rust_test
           ./huffman_rust_test
 
       - name: Build Arithmetic Rust
         run: |
-          cd arithmetic/rust
+          cd algorithms/arithmetic/rust
           rustc -O main.rs -o arithmetic_rust
           rustc --test main.rs -o arithmetic_rust_test
           ./arithmetic_rust_test
 
       - name: Build and check Range coder Rust
         run: |
-          cd range/rust
+          cd algorithms/range/rust
           cargo clippy -- -D warnings
           cargo test
           cargo build --release
 
       - name: Build RLE Rust
         run: |
-          cd rle/rust
+          cd algorithms/rle/rust
           rustc -O main.rs -o rle_rust
           rustc --test main.rs -o rle_rust_test
           ./rle_rust_test
@@ -188,48 +188,48 @@ jobs:
       - name: Build all implementations
         run: |
           # C++
-          cd huffman/cpp && g++ -std=c++17 -O2 main.cpp -o huffman_cpp && cd ../..
-          cd arithmetic/cpp && g++ -std=c++17 -O2 main.cpp -o arithmetic_cpp && cd ../..
-          cd range/cpp && g++ -std=c++17 -O2 main.cpp -o rangecoder_cpp && cd ../..
-          cd rle/cpp && g++ -std=c++17 -O2 main.cpp -o rle_cpp && cd ../..
+          cd algorithms/huffman/cpp && g++ -std=c++17 -O2 main.cpp -o huffman_cpp && cd ../..
+          cd algorithms/arithmetic/cpp && g++ -std=c++17 -O2 main.cpp -o arithmetic_cpp && cd ../..
+          cd algorithms/range/cpp && g++ -std=c++17 -O2 main.cpp -o rangecoder_cpp && cd ../..
+          cd algorithms/rle/cpp && g++ -std=c++17 -O2 main.cpp -o rle_cpp && cd ../..
 
           # Go
-          cd huffman/go && go build -o huffman_go . && cd ../..
-          cd arithmetic/go && go build -o arithmetic_go . && cd ../..
-          cd range/go && go build -o rangecoder_go ./cmd && cd ../..
-          cd rle/go && go build -o rle_go . && cd ../..
+          cd algorithms/huffman/go && go build -o huffman_go . && cd ../..
+          cd algorithms/arithmetic/go && go build -o arithmetic_go . && cd ../..
+          cd algorithms/range/go && go build -o rangecoder_go ./cmd && cd ../..
+          cd algorithms/rle/go && go build -o rle_go . && cd ../..
 
           # Rust
-          cd huffman/rust && rustc -O main.rs -o huffman_rust && cd ../..
-          cd arithmetic/rust && rustc -O main.rs -o arithmetic_rust && cd ../..
-          cd range/rust && cargo build --bin rangecoder --release && cd ../..
-          cd rle/rust && rustc -O main.rs -o rle_rust && cd ../..
+          cd algorithms/huffman/rust && rustc -O main.rs -o huffman_rust && cd ../..
+          cd algorithms/arithmetic/rust && rustc -O main.rs -o arithmetic_rust && cd ../..
+          cd algorithms/range/rust && cargo build --bin rangecoder --release && cd ../..
+          cd algorithms/rle/rust && rustc -O main.rs -o rle_rust && cd ../..
 
       - name: Test Huffman correctness
         run: |
           TEST_FILE="tests/data/random_1MiB.bin"
 
           echo "Testing Huffman C++..."
-          ./huffman/cpp/huffman_cpp encode "$TEST_FILE" /tmp/huf_cpp.enc
-          ./huffman/cpp/huffman_cpp decode /tmp/huf_cpp.enc /tmp/huf_cpp.dec
+          ./algorithms/huffman/cpp/huffman_cpp encode "$TEST_FILE" /tmp/huf_cpp.enc
+          ./algorithms/huffman/cpp/huffman_cpp decode /tmp/huf_cpp.enc /tmp/huf_cpp.dec
           diff "$TEST_FILE" /tmp/huf_cpp.dec
 
           echo "Testing Huffman Go..."
-          ./huffman/go/huffman_go encode "$TEST_FILE" /tmp/huf_go.enc
-          ./huffman/go/huffman_go decode /tmp/huf_go.enc /tmp/huf_go.dec
+          ./algorithms/huffman/go/huffman_go encode "$TEST_FILE" /tmp/huf_go.enc
+          ./algorithms/huffman/go/huffman_go decode /tmp/huf_go.enc /tmp/huf_go.dec
           diff "$TEST_FILE" /tmp/huf_go.dec
 
           echo "Testing Huffman Rust..."
-          ./huffman/rust/huffman_rust encode "$TEST_FILE" /tmp/huf_rust.enc
-          ./huffman/rust/huffman_rust decode /tmp/huf_rust.enc /tmp/huf_rust.dec
+          ./algorithms/huffman/rust/huffman_rust encode "$TEST_FILE" /tmp/huf_rust.enc
+          ./algorithms/huffman/rust/huffman_rust decode /tmp/huf_rust.enc /tmp/huf_rust.dec
           diff "$TEST_FILE" /tmp/huf_rust.dec
 
           echo "Testing cross-language (C++ encode -> Go decode)..."
-          ./huffman/go/huffman_go decode /tmp/huf_cpp.enc /tmp/huf_cross_go.dec
+          ./algorithms/huffman/go/huffman_go decode /tmp/huf_cpp.enc /tmp/huf_cross_go.dec
           diff "$TEST_FILE" /tmp/huf_cross_go.dec
 
           echo "Testing cross-language (C++ encode -> Rust decode)..."
-          ./huffman/rust/huffman_rust decode /tmp/huf_cpp.enc /tmp/huf_cross_rust.dec
+          ./algorithms/huffman/rust/huffman_rust decode /tmp/huf_cpp.enc /tmp/huf_cross_rust.dec
           diff "$TEST_FILE" /tmp/huf_cross_rust.dec
 
           echo "Huffman tests passed!"
@@ -239,26 +239,26 @@ jobs:
           TEST_FILE="tests/data/random_1MiB.bin"
 
           echo "Testing Arithmetic C++..."
-          ./arithmetic/cpp/arithmetic_cpp encode "$TEST_FILE" /tmp/arith_cpp.enc
-          ./arithmetic/cpp/arithmetic_cpp decode /tmp/arith_cpp.enc /tmp/arith_cpp.dec
+          ./algorithms/arithmetic/cpp/arithmetic_cpp encode "$TEST_FILE" /tmp/arith_cpp.enc
+          ./algorithms/arithmetic/cpp/arithmetic_cpp decode /tmp/arith_cpp.enc /tmp/arith_cpp.dec
           diff "$TEST_FILE" /tmp/arith_cpp.dec
 
           echo "Testing Arithmetic Go..."
-          ./arithmetic/go/arithmetic_go encode "$TEST_FILE" /tmp/arith_go.enc
-          ./arithmetic/go/arithmetic_go decode /tmp/arith_go.enc /tmp/arith_go.dec
+          ./algorithms/arithmetic/go/arithmetic_go encode "$TEST_FILE" /tmp/arith_go.enc
+          ./algorithms/arithmetic/go/arithmetic_go decode /tmp/arith_go.enc /tmp/arith_go.dec
           diff "$TEST_FILE" /tmp/arith_go.dec
 
           echo "Testing Arithmetic Rust..."
-          ./arithmetic/rust/arithmetic_rust encode "$TEST_FILE" /tmp/arith_rust.enc
-          ./arithmetic/rust/arithmetic_rust decode /tmp/arith_rust.enc /tmp/arith_rust.dec
+          ./algorithms/arithmetic/rust/arithmetic_rust encode "$TEST_FILE" /tmp/arith_rust.enc
+          ./algorithms/arithmetic/rust/arithmetic_rust decode /tmp/arith_rust.enc /tmp/arith_rust.dec
           diff "$TEST_FILE" /tmp/arith_rust.dec
 
           echo "Testing cross-language (C++ encode -> Go decode)..."
-          ./arithmetic/go/arithmetic_go decode /tmp/arith_cpp.enc /tmp/arith_cross_go.dec
+          ./algorithms/arithmetic/go/arithmetic_go decode /tmp/arith_cpp.enc /tmp/arith_cross_go.dec
           diff "$TEST_FILE" /tmp/arith_cross_go.dec
 
           echo "Testing cross-language (C++ encode -> Rust decode)..."
-          ./arithmetic/rust/arithmetic_rust decode /tmp/arith_cpp.enc /tmp/arith_cross_rust.dec
+          ./algorithms/arithmetic/rust/arithmetic_rust decode /tmp/arith_cpp.enc /tmp/arith_cross_rust.dec
           diff "$TEST_FILE" /tmp/arith_cross_rust.dec
 
           echo "Arithmetic tests passed!"
@@ -269,19 +269,19 @@ jobs:
           # Using smaller test file until this is fixed
           TEST_FILE="tests/data/random_10MiB.bin"
           SMALL_TEST_FILE="/tmp/range_small.bin"
-          RANGE_RUST="./range/rust/target/release/rangecoder"
+          RANGE_RUST="./algorithms/range/rust/target/release/rangecoder"
 
           # Create 100KB test file for range coder
           dd if="$TEST_FILE" of="$SMALL_TEST_FILE" bs=1024 count=100 2>/dev/null
 
           echo "Testing Range coder C++..."
-          ./range/cpp/rangecoder_cpp encode "$SMALL_TEST_FILE" /tmp/range_cpp.enc
-          ./range/cpp/rangecoder_cpp decode /tmp/range_cpp.enc /tmp/range_cpp.dec
+          ./algorithms/range/cpp/rangecoder_cpp encode "$SMALL_TEST_FILE" /tmp/range_cpp.enc
+          ./algorithms/range/cpp/rangecoder_cpp decode /tmp/range_cpp.enc /tmp/range_cpp.dec
           diff "$SMALL_TEST_FILE" /tmp/range_cpp.dec
 
           echo "Testing Range coder Go..."
-          ./range/go/rangecoder_go encode "$SMALL_TEST_FILE" /tmp/range_go.enc
-          ./range/go/rangecoder_go decode /tmp/range_go.enc /tmp/range_go.dec
+          ./algorithms/range/go/rangecoder_go encode "$SMALL_TEST_FILE" /tmp/range_go.enc
+          ./algorithms/range/go/rangecoder_go decode /tmp/range_go.enc /tmp/range_go.dec
           diff "$SMALL_TEST_FILE" /tmp/range_go.dec
 
           echo "Testing Range coder Rust..."
@@ -290,7 +290,7 @@ jobs:
           diff "$SMALL_TEST_FILE" /tmp/range_rust.dec
 
           echo "Testing cross-language (C++ encode -> Go decode)..."
-          ./range/go/rangecoder_go decode /tmp/range_cpp.enc /tmp/range_cross_go.dec
+          ./algorithms/range/go/rangecoder_go decode /tmp/range_cpp.enc /tmp/range_cross_go.dec
           diff "$SMALL_TEST_FILE" /tmp/range_cross_go.dec
 
           echo "Testing cross-language (C++ encode -> Rust decode)..."
@@ -304,26 +304,26 @@ jobs:
           TEST_FILE="tests/data/repetitive_10MiB.bin"
 
           echo "Testing RLE C++..."
-          ./rle/cpp/rle_cpp encode "$TEST_FILE" /tmp/rle_cpp.enc
-          ./rle/cpp/rle_cpp decode /tmp/rle_cpp.enc /tmp/rle_cpp.dec
+          ./algorithms/rle/cpp/rle_cpp encode "$TEST_FILE" /tmp/rle_cpp.enc
+          ./algorithms/rle/cpp/rle_cpp decode /tmp/rle_cpp.enc /tmp/rle_cpp.dec
           diff "$TEST_FILE" /tmp/rle_cpp.dec
 
           echo "Testing RLE Go..."
-          ./rle/go/rle_go encode "$TEST_FILE" /tmp/rle_go.enc
-          ./rle/go/rle_go decode /tmp/rle_go.enc /tmp/rle_go.dec
+          ./algorithms/rle/go/rle_go encode "$TEST_FILE" /tmp/rle_go.enc
+          ./algorithms/rle/go/rle_go decode /tmp/rle_go.enc /tmp/rle_go.dec
           diff "$TEST_FILE" /tmp/rle_go.dec
 
           echo "Testing RLE Rust..."
-          ./rle/rust/rle_rust encode "$TEST_FILE" /tmp/rle_rust.enc
-          ./rle/rust/rle_rust decode /tmp/rle_rust.enc /tmp/rle_rust.dec
+          ./algorithms/rle/rust/rle_rust encode "$TEST_FILE" /tmp/rle_rust.enc
+          ./algorithms/rle/rust/rle_rust decode /tmp/rle_rust.enc /tmp/rle_rust.dec
           diff "$TEST_FILE" /tmp/rle_rust.dec
 
           echo "Testing cross-language (C++ encode -> Go decode)..."
-          ./rle/go/rle_go decode /tmp/rle_cpp.enc /tmp/rle_cross_go.dec
+          ./algorithms/rle/go/rle_go decode /tmp/rle_cpp.enc /tmp/rle_cross_go.dec
           diff "$TEST_FILE" /tmp/rle_cross_go.dec
 
           echo "Testing cross-language (C++ encode -> Rust decode)..."
-          ./rle/rust/rle_rust decode /tmp/rle_cpp.enc /tmp/rle_cross_rust.dec
+          ./algorithms/rle/rust/rle_rust decode /tmp/rle_cpp.enc /tmp/rle_cross_rust.dec
           diff "$TEST_FILE" /tmp/rle_cross_rust.dec
 
           echo "RLE tests passed!"

@@ -8,24 +8,24 @@
 build: build-huffman build-arithmetic build-range build-rle
 
 build-huffman:
-	g++ -std=c++17 -O2 -Wall -Wextra -Werror huffman/cpp/main.cpp -o huffman/cpp/huffman_cpp
-	go build -o huffman/go/huffman_go ./huffman/go
-	rustc -O huffman/rust/main.rs -o huffman/rust/huffman_rust
+	g++ -std=c++17 -O2 -Wall -Wextra -Werror algorithms/huffman/cpp/main.cpp -o algorithms/huffman/cpp/huffman_cpp
+	go build -o algorithms/huffman/go/huffman_go ./algorithms/huffman/go
+	rustc -O algorithms/huffman/rust/main.rs -o algorithms/huffman/rust/huffman_rust
 
 build-arithmetic:
-	g++ -std=c++17 -O2 -Wall -Wextra -Werror arithmetic/cpp/main.cpp -o arithmetic/cpp/arithmetic_cpp
-	go build -o arithmetic/go/arithmetic_go ./arithmetic/go
-	rustc -O arithmetic/rust/main.rs -o arithmetic/rust/arithmetic_rust
+	g++ -std=c++17 -O2 -Wall -Wextra -Werror algorithms/arithmetic/cpp/main.cpp -o algorithms/arithmetic/cpp/arithmetic_cpp
+	go build -o algorithms/arithmetic/go/arithmetic_go ./algorithms/arithmetic/go
+	rustc -O algorithms/arithmetic/rust/main.rs -o algorithms/arithmetic/rust/arithmetic_rust
 
 build-range:
-	g++ -std=c++17 -O2 -Wall -Wextra -Werror range/cpp/main.cpp -o range/cpp/rangecoder_cpp
-	go build -o range/go/rangecoder_go ./range/go/cmd
-	cargo build --manifest-path range/rust/Cargo.toml --release
+	g++ -std=c++17 -O2 -Wall -Wextra -Werror algorithms/range/cpp/main.cpp -o algorithms/range/cpp/rangecoder_cpp
+	go build -o algorithms/range/go/rangecoder_go ./algorithms/range/go/cmd
+	cargo build --manifest-path algorithms/range/rust/Cargo.toml --release
 
 build-rle:
-	g++ -std=c++17 -O2 -Wall -Wextra -Werror rle/cpp/main.cpp -o rle/cpp/rle_cpp
-	go build -o rle/go/rle_go ./rle/go
-	rustc -O rle/rust/main.rs -o rle/rust/rle_rust
+	g++ -std=c++17 -O2 -Wall -Wextra -Werror algorithms/rle/cpp/main.cpp -o algorithms/rle/cpp/rle_cpp
+	go build -o algorithms/rle/go/rle_go ./algorithms/rle/go
+	rustc -O algorithms/rle/rust/main.rs -o algorithms/rle/rust/rle_rust
 
 # ── Test ───────────────────────────────────────────────────────────────────
 
@@ -34,31 +34,31 @@ test: test-data \
       test-huffman-rust test-arithmetic-rust test-range-rust test-rle-rust
 
 test-huffman-go:
-	go test ./huffman/go/...
+	go test ./algorithms/huffman/go/...
 
 test-arithmetic-go:
-	go test ./arithmetic/go/...
+	go test ./algorithms/arithmetic/go/...
 
 test-range-go:
-	go test ./range/go/...
+	go test ./algorithms/range/go/...
 
 test-rle-go:
-	go test ./rle/go/...
+	go test ./algorithms/rle/go/...
 
 test-huffman-rust:
-	rustc --test huffman/rust/main.rs -o huffman/rust/huffman_rust_test
-	./huffman/rust/huffman_rust_test
+	rustc --test algorithms/huffman/rust/main.rs -o algorithms/huffman/rust/huffman_rust_test
+	./algorithms/huffman/rust/huffman_rust_test
 
 test-arithmetic-rust:
-	rustc --test arithmetic/rust/main.rs -o arithmetic/rust/arithmetic_rust_test
-	./arithmetic/rust/arithmetic_rust_test
+	rustc --test algorithms/arithmetic/rust/main.rs -o algorithms/arithmetic/rust/arithmetic_rust_test
+	./algorithms/arithmetic/rust/arithmetic_rust_test
 
 test-range-rust:
-	cargo test --manifest-path range/rust/Cargo.toml
+	cargo test --manifest-path algorithms/range/rust/Cargo.toml
 
 test-rle-rust:
-	rustc --test rle/rust/main.rs -o rle/rust/rle_rust_test
-	./rle/rust/rle_rust_test
+	rustc --test algorithms/rle/rust/main.rs -o algorithms/rle/rust/rle_rust_test
+	./algorithms/rle/rust/rle_rust_test
 
 # ── Data / Bench / Clean ──────────────────────────────────────────────────
 
@@ -70,9 +70,9 @@ bench: test-data
 
 clean:
 	rm -rf reports tests/data
-	rm -rf huffman/benchmark/tmp arithmetic/benchmark/tmp range/benchmark/tmp rle/benchmark/tmp
-	rm -f huffman/cpp/huffman_cpp huffman/go/huffman_go huffman/rust/huffman_rust huffman/rust/huffman_rust_test
-	rm -f arithmetic/cpp/arithmetic_cpp arithmetic/go/arithmetic_go arithmetic/rust/arithmetic_rust arithmetic/rust/arithmetic_rust_test
-	rm -f range/cpp/rangecoder_cpp range/go/rangecoder_go
-	rm -f rle/cpp/rle_cpp rle/go/rle_go rle/rust/rle_rust rle/rust/rle_rust_test
-	cargo clean --manifest-path range/rust/Cargo.toml 2>/dev/null || true
+	rm -rf algorithms/huffman/benchmark/tmp algorithms/arithmetic/benchmark/tmp algorithms/range/benchmark/tmp algorithms/rle/benchmark/tmp
+	rm -f algorithms/huffman/cpp/huffman_cpp algorithms/huffman/go/huffman_go algorithms/huffman/rust/huffman_rust algorithms/huffman/rust/huffman_rust_test
+	rm -f algorithms/arithmetic/cpp/arithmetic_cpp algorithms/arithmetic/go/arithmetic_go algorithms/arithmetic/rust/arithmetic_rust algorithms/arithmetic/rust/arithmetic_rust_test
+	rm -f algorithms/range/cpp/rangecoder_cpp algorithms/range/go/rangecoder_go
+	rm -f algorithms/rle/cpp/rle_cpp algorithms/rle/go/rle_go algorithms/rle/rust/rle_rust algorithms/rle/rust/rle_rust_test
+	cargo clean --manifest-path algorithms/range/rust/Cargo.toml 2>/dev/null || true

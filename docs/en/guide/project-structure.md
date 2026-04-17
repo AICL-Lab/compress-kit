@@ -6,22 +6,22 @@ This guide explains the project organization, file formats, and conventions used
 
 ```
 encoding/
-├── huffman/              # Huffman coding implementation
+├── algorithms/huffman/              # Huffman coding implementation
 │   ├── cpp/              #   C++ single-file implementation
 │   ├── go/               #   Go module (go.mod)
 │   ├── rust/             #   Rust implementation
 │   └── benchmark/        #   Cross-language benchmark scripts
-├── arithmetic/           # Arithmetic coding implementation
+├── algorithms/arithmetic/           # Arithmetic coding implementation
 │   ├── cpp/              #   C++ single-file implementation
 │   ├── go/               #   Go implementation
 │   ├── rust/             #   Rust implementation
 │   └── benchmark/        #   Cross-language benchmark
-├── range/                # Range coder implementation
+├── algorithms/range/                # Range coder implementation
 │   ├── cpp/              #   C++ single-file implementation
 │   ├── go/               #   Go library + CLI
 │   ├── rust/             #   Rust library crate + CLI
 │   └── benchmark/        #   Cross-language benchmark
-├── rle/                  # Run-length encoding
+├── algorithms/rle/                  # Run-length encoding
 │   ├── cpp/              #   C++ single-file implementation
 │   ├── go/               #   Go implementation
 │   ├── rust/             #   Rust implementation
@@ -177,10 +177,10 @@ The project uses Go workspaces to manage multiple modules:
 go 1.21
 
 use (
-    ./huffman/go
-    ./arithmetic/go
-    ./range/go
-    ./rle/go
+    ./algorithms/huffman/go
+    ./algorithms/arithmetic/go
+    ./algorithms/range/go
+    ./algorithms/rle/go
 )
 ```
 

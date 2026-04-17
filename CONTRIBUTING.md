@@ -77,13 +77,13 @@ python3 --version
 
 ```bash
 # C++ (example: Huffman)
-cd huffman/cpp && g++ -std=c++17 -O2 main.cpp -o huffman_cpp && cd ../..
+cd algorithms/huffman/cpp && g++ -std=c++17 -O2 main.cpp -o huffman_cpp && cd ../..
 
 # Go (example: Huffman)
-cd huffman/go && go build -o huffman_go . && cd ../..
+cd algorithms/huffman/go && go build -o huffman_go . && cd ../..
 
 # Rust (example: Huffman)
-cd huffman/rust && rustc -O main.rs -o huffman_rust && cd ../..
+cd algorithms/huffman/rust && rustc -O main.rs -o huffman_rust && cd ../..
 ```
 
 ## Code Style | 代码风格
@@ -145,8 +145,8 @@ python3 tests/gen_testdata.py
 python3 scripts/run_all_bench.py
 
 # Run specific algorithm benchmark
-cd huffman/benchmark && python3 bench.py
-cd rle/benchmark && python3 bench.py
+cd algorithms/huffman/benchmark && python3 bench.py
+cd algorithms/rle/benchmark && python3 bench.py
 ```
 
 ### Verifying Correctness | 验证正确性

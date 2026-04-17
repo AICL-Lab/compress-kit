@@ -5,14 +5,18 @@
 </p>
 
 <p align="center">
+  <strong>Classic compression algorithms implemented in C++17, Go, and Rust</strong>
+</p>
+
+<p align="center">
   <a href="https://github.com/LessUp/encoding/actions/workflows/ci.yml">
     <img src="https://github.com/LessUp/encoding/actions/workflows/ci.yml/badge.svg" alt="CI">
   </a>
   <a href="https://github.com/LessUp/encoding/actions/workflows/pages.yml">
     <img src="https://github.com/LessUp/encoding/actions/workflows/pages.yml/badge.svg" alt="Docs">
   </a>
-  <a href="https://github.com/LessUp/encoding/releases">
-    <img src="https://img.shields.io/github/v/release/LessUp/encoding?include_prereleases" alt="Release">
+  <a href="https://lessup.github.io/encoding/">
+    <img src="https://img.shields.io/badge/Docs-Online-blue" alt="Docs">
   </a>
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
@@ -32,102 +36,129 @@
 
 ---
 
-## 🚀 Quick Start
+## 🧭 Which Algorithm Should I Use?
 
-```bash
-# Clone the repository
-git clone https://github.com/LessUp/encoding.git
-cd encoding
-
-# Build all implementations
-make build
-
-# Run tests
-make test
-
-# Run benchmarks
-make bench
 ```
-
-## ✨ Features
-
-- **4 Classic Algorithms**: Huffman, Arithmetic Coding, Range Coder, and RLE
-- **3 Languages**: C++17, Go 1.21+, Rust 1.70+
-- **Cross-Language Compatible**: Same binary format across all implementations
-- **Learning-Focused**: Documentation emphasizes algorithm principles and comparisons
-- **Production-Ready**: Complete CI/CD with automated testing and verification
+Is your data highly repetitive?
+├── Yes → Use RLE (fastest, best for repeated patterns)
+└── No →
+    Do you need maximum compression?
+    ├── Yes → Use Arithmetic Coding (closest to entropy limit)
+    └── No →
+        Is speed critical?
+        ├── Yes → Use Range Coder (fast + good compression)
+        └── No → Use Huffman (simple, general purpose)
+```
 
 ## 📊 Algorithm Comparison
 
-| Algorithm | Compression | Speed | Complexity | Best For |
-|-----------|-------------|-------|------------|----------|
-| Huffman | Medium | Fast | O(n log σ) | General purpose |
-| Arithmetic | High | Medium | O(n) | Maximum compression |
-| Range Coder | High | Fast | O(n) | Balanced performance |
-| RLE | Variable | Very Fast | O(n) | Repetitive data |
+| Algorithm | Compression | Speed | Best For | Use When |
+|-----------|-------------|-------|----------|----------|
+| **Huffman** | Medium | Fast | General text/data | You want simple, reliable compression |
+| **Arithmetic** | ★ Highest | Medium | Maximum compression | Every byte matters |
+| **Range Coder** | ★ High | Fast | Balanced performance | Best speed/compression tradeoff |
+| **RLE** | Variable | ★ Fastest | Repeated data (bitmaps, logs) | Data has long runs of identical bytes |
+
+## 🚀 Quick Start
+
+```bash
+git clone https://github.com/LessUp/encoding.git
+cd encoding
+make build && make test
+```
+
+### Cross-Language Verification
+
+```bash
+# Encode with C++
+./algorithms/huffman/cpp/huffman_cpp encode input.txt output.huf
+
+# Decode with Go — any combination works!
+./algorithms/huffman/go/huffman_go decode output.huf restored.txt
+diff input.txt restored.txt  # ✓ No output = identical
+```
+
+**C++ ↔ Go ↔ Rust** — all implementations share identical binary formats.
+
+## 🏗️ Project Structure
+
+```
+encoding/
+├── algorithms/
+│   ├── huffman/          # Prefix-code compression
+│   ├── arithmetic/       # Arithmetic coding
+│   ├── range/            # Range coder (byte-level arithmetic)
+│   └── rle/              # Run-length encoding
+│       ├── cpp/          #   C++17: single file, zero deps
+│       ├── go/           #   Go 1.21+: library + cmd/ CLI
+│       ├── rust/         #   Rust 1.70+: rustc or cargo
+│       └── benchmark/    #   Performance measurement scripts
+├── docs/                 # VitePress site (en + zh)
+├── specs/                # Spec-driven development (RFCs, product specs)
+├── tests/                # Test data generation
+└── Makefile              # Build, test, benchmark entry point
+```
+
+Each algorithm has **3 language implementations** with identical file formats:
+
+| Language | Build | Structure |
+|----------|-------|-----------|
+| **C++17** | `g++ -std=c++17 -O2` | Single file, zero dependencies |
+| **Go** | `go build ./cmd` | Library API (`package <algo>`) + CLI (`cmd/main.go`) |
+| **Rust** | `rustc -O` or `cargo` | `main.rs` with reusable functions |
 
 ## 📖 Documentation
 
-| Resource | Description | Link |
-|----------|-------------|------|
-| **Documentation Site** | Full documentation with bilingual support | [lessup.github.io/encoding](https://lessup.github.io/encoding/) |
-| **Project Specs** | Product requirements, RFCs, and technical specs (Single Source of Truth) | [specs/](specs/) |
-| **Getting Started** | Setup, build, and basic usage | [Guide →](https://lessup.github.io/encoding/guide/getting-started) |
-| **Algorithms** | Algorithm explanations and comparisons | [Guide →](https://lessup.github.io/encoding/guide/algorithms) |
-| **Project Structure** | Directory layout and conventions | [Guide →](https://lessup.github.io/encoding/guide/project-structure) |
-| **Changelog** | Version history and release notes | [View →](CHANGELOG.md) |
+| Resource | Link |
+|----------|------|
+| 📚 **Full Documentation** | [lessup.github.io/encoding](https://lessup.github.io/encoding/) |
+| 🔧 **API Reference** (Go / Rust / C++) | [API Docs](https://lessup.github.io/encoding/en/api/go) |
+| 📈 **Benchmark Results** | [Performance](https://lessup.github.io/encoding/en/benchmarks/results) |
+| 🤝 **Contributing Guide** | [How to Contribute](https://lessup.github.io/encoding/en/guide/contributing) |
+| 📋 **Technical Specs** (RFCs) | [specs/](specs/) |
+| 📝 **Changelog** | [CHANGELOG.md](CHANGELOG.md) |
 
-## 💡 Example Usage
-
-```bash
-# Encode with Huffman (C++)
-./algorithms/huffman/cpp/huffman_cpp encode input.txt output.huf
-
-# Decode with a different language (Go)
-./algorithms/huffman/go/huffman_go decode output.huf restored.txt
-
-# Verify correctness
-diff input.txt restored.txt  # No output = identical
-```
-
-## 🛠️ Build Options
+## 💻 Build & Test Commands
 
 | Command | Description |
 |---------|-------------|
-| `make build` | Build all implementations |
+| `make build` | Build all implementations (C++, Go, Rust) |
 | `make build-huffman` | Build Huffman only |
-| `make build-arithmetic` | Build Arithmetic only |
-| `make build-range` | Build Range Coder only |
-| `make build-rle` | Build RLE only |
-| `make test` | Run all tests |
+| `make test` | Run Go + Rust unit tests |
 | `make bench` | Run performance benchmarks |
-| `make clean` | Clean build artifacts |
+| `make clean` | Remove build artifacts |
+
+## 🔬 Go Library Usage
+
+All Go implementations expose a reusable library API:
+
+```go
+import "huffman" // or "arithmetic", "rle"
+
+// Encode a file
+err := huffman.EncodeFile("input.bin", "output.huf")
+
+// Decode a file
+err := huffman.DecodeFile("output.huf", "decoded.bin")
+```
+
+## 🏅 Why This Project Exists
+
+- **🎓 Learn** — Read clean, well-documented implementations side by side
+- **🔬 Compare** — See how C++, Go, and Rust handle the same algorithm differently
+- **✅ Verify** — Cross-language tests guarantee identical output formats
+- **📐 SDD** — Built with Spec-Driven Development: every feature starts with specs
 
 ## 🤝 Contributing
 
-We welcome contributions! Please read our [Contributing Guide](CONTRIBUTING.md) for details on:
+We welcome contributions! This project follows **Spec-Driven Development (SDD)**:
 
-- Code style guidelines for C++, Go, and Rust
-- Testing requirements
-- Pull request process
+1. **Read specs first** — `/specs/` is the single source of truth
+2. **Update specs before code** — if interfaces change, specs change first
+3. **Test across languages** — verify C++ ↔ Go ↔ Rust compatibility
 
-## 🙏 Acknowledgments
-
-This project is inspired by educational resources on compression algorithms and aims to provide:
-
-- Clean, readable implementations for learning
-- Fair cross-language performance comparisons
-- Verified correct implementations through extensive testing
+See the [Contributing Guide](https://lessup.github.io/encoding/en/guide/contributing) for details.
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
-
-Copyright © 2025-2026 LessUp
-
----
-
-<p align="center">
-  <sub>Built with ❤️ for the open source community</sub>
-</p>
-
+[MIT License](LICENSE) · Copyright © 2025-2026 LessUp

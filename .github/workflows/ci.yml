@@ -188,22 +188,22 @@ jobs:
       - name: Build all implementations
         run: |
           # C++
-          cd algorithms/huffman/cpp && g++ -std=c++17 -O2 main.cpp -o huffman_cpp && cd ../..
-          cd algorithms/arithmetic/cpp && g++ -std=c++17 -O2 main.cpp -o arithmetic_cpp && cd ../..
-          cd algorithms/range/cpp && g++ -std=c++17 -O2 main.cpp -o rangecoder_cpp && cd ../..
-          cd algorithms/rle/cpp && g++ -std=c++17 -O2 main.cpp -o rle_cpp && cd ../..
+          (cd algorithms/huffman/cpp && g++ -std=c++17 -O2 main.cpp -o huffman_cpp)
+          (cd algorithms/arithmetic/cpp && g++ -std=c++17 -O2 main.cpp -o arithmetic_cpp)
+          (cd algorithms/range/cpp && g++ -std=c++17 -O2 main.cpp -o rangecoder_cpp)
+          (cd algorithms/rle/cpp && g++ -std=c++17 -O2 main.cpp -o rle_cpp)
 
           # Go
-          cd algorithms/huffman/go && go build -o huffman_go . && cd ../..
-          cd algorithms/arithmetic/go && go build -o arithmetic_go . && cd ../..
-          cd algorithms/range/go && go build -o rangecoder_go ./cmd && cd ../..
-          cd algorithms/rle/go && go build -o rle_go . && cd ../..
+          (cd algorithms/huffman/go && go build -o huffman_go .)
+          (cd algorithms/arithmetic/go && go build -o arithmetic_go .)
+          (cd algorithms/range/go && go build -o rangecoder_go ./cmd)
+          (cd algorithms/rle/go && go build -o rle_go .)
 
           # Rust
-          cd algorithms/huffman/rust && rustc -O main.rs -o huffman_rust && cd ../..
-          cd algorithms/arithmetic/rust && rustc -O main.rs -o arithmetic_rust && cd ../..
-          cd algorithms/range/rust && cargo build --bin rangecoder --release && cd ../..
-          cd algorithms/rle/rust && rustc -O main.rs -o rle_rust && cd ../..
+          (cd algorithms/huffman/rust && rustc -O main.rs -o huffman_rust)
+          (cd algorithms/arithmetic/rust && rustc -O main.rs -o arithmetic_rust)
+          (cd algorithms/range/rust && cargo build --bin rangecoder --release)
+          (cd algorithms/rle/rust && rustc -O main.rs -o rle_rust)
 
       - name: Test Huffman correctness
         run: |

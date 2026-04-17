@@ -5,17 +5,21 @@
 </p>
 
 <p align="center">
+  <strong>使用 C++17、Go 和 Rust 实现的经典压缩算法</strong>
+</p>
+
+<p align="center">
   <a href="https://github.com/LessUp/encoding/actions/workflows/ci.yml">
     <img src="https://github.com/LessUp/encoding/actions/workflows/ci.yml/badge.svg" alt="CI">
   </a>
   <a href="https://github.com/LessUp/encoding/actions/workflows/pages.yml">
     <img src="https://github.com/LessUp/encoding/actions/workflows/pages.yml/badge.svg" alt="文档">
   </a>
-  <a href="https://github.com/LessUp/encoding/releases">
-    <img src="https://img.shields.io/github/v/release/LessUp/encoding?include_prereleases" alt="发布版本">
+  <a href="https://lessup.github.io/encoding/">
+    <img src="https://img.shields.io/badge/Docs-在线文档-blue" alt="文档">
   </a>
   <a href="https://opensource.org/licenses/MIT">
-    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="许可证: MIT">
+    <img src="https://img.shields.io/badge/许可证-MIT-yellow.svg" alt="许可证: MIT">
   </a>
 </p>
 
@@ -32,101 +36,129 @@
 
 ---
 
-## 🚀 快速开始
+## 🧭 我应该使用哪种算法？
 
-```bash
-# 克隆仓库
-git clone https://github.com/LessUp/encoding.git
-cd encoding
-
-# 构建所有实现
-make build
-
-# 运行测试
-make test
-
-# 运行基准测试
-make bench
 ```
-
-## ✨ 特性
-
-- **4 种经典算法**：Huffman、算术编码、区间编码和 RLE
-- **3 种语言**：C++17、Go 1.21+、Rust 1.70+
-- **跨语言兼容**：所有实现使用相同的二进制格式
-- **面向学习**：文档侧重算法原理和对比
-- **生产就绪**：完整的 CI/CD 与自动化测试验证
+你的数据是否高度重复？
+├── 是 → 使用 RLE（最快，适合重复模式）
+└── 否 →
+    是否需要最大压缩？
+    ├── 是 → 使用算术编码（最接近熵限）
+    └── 否 →
+        速度是否关键？
+        ├── 是 → 使用区间编码（快速 + 压缩好）
+        └── 否 → 使用 Huffman（简单通用）
+```
 
 ## 📊 算法对比
 
-| 算法 | 压缩率 | 速度 | 复杂度 | 适用场景 |
-|------|--------|------|--------|----------|
-| Huffman | 中等 | 快 | O(n log σ) | 通用场景 |
-| 算术编码 | 高 | 中等 | O(n) | 最大压缩 |
-| 区间编码 | 高 | 快 | O(n) | 平衡性能 |
-| RLE | 可变 | 极快 | O(n) | 重复数据 |
+| 算法 | 压缩率 | 速度 | 适用场景 | 使用时机 |
+|------|--------|------|----------|----------|
+| **Huffman** | 中等 | 快 | 通用文本/数据 | 简单可靠的压缩 |
+| **算术编码** | ★ 最高 | 中等 | 最大压缩需求 | 每个字节都很重要 |
+| **区间编码** | ★ 高 | 快 | 平衡性能 | 速度与压缩的最佳平衡 |
+| **RLE** | 可变 | ★ 最快 | 重复数据（位图、日志）| 数据有长串相同字节 |
+
+## 🚀 快速开始
+
+```bash
+git clone https://github.com/LessUp/encoding.git
+cd encoding
+make build && make test
+```
+
+### 跨语言验证
+
+```bash
+# 使用 C++ 编码
+./algorithms/huffman/cpp/huffman_cpp encode input.txt output.huf
+
+# 使用 Go 解码 — 任何组合都可以！
+./algorithms/huffman/go/huffman_go decode output.huf restored.txt
+diff input.txt restored.txt  # ✓ 无输出 = 完全相同
+```
+
+**C++ ↔ Go ↔ Rust** — 所有实现共享相同的二进制格式。
+
+## 🏗️ 项目结构
+
+```
+encoding/
+├── algorithms/
+│   ├── huffman/          # 前缀码压缩
+│   ├── arithmetic/       # 算术编码
+│   ├── range/            # 区间编码（字节级算术编码）
+│   └── rle/              # 行程长度编码
+│       ├── cpp/          #   C++17: 单文件，零依赖
+│       ├── go/           #   Go 1.21+: 库 API + cmd/ CLI
+│       ├── rust/         #   Rust 1.70+: rustc 或 cargo
+│       └── benchmark/    #   性能测量脚本
+├── docs/                 # VitePress 文档站点（en + zh）
+├── specs/                # 规范驱动开发（RFC、产品规范）
+├── tests/                # 测试数据生成
+└── Makefile              # 构建、测试、基准测试入口
+```
+
+每种算法都有 **3 种语言实现**，使用相同的文件格式：
+
+| 语言 | 构建方式 | 结构 |
+|------|----------|------|
+| **C++17** | `g++ -std=c++17 -O2` | 单文件，零依赖 |
+| **Go** | `go build ./cmd` | 库 API（`package <algo>`）+ CLI（`cmd/main.go`） |
+| **Rust** | `rustc -O` 或 `cargo` | `main.rs` 含可复用函数 |
 
 ## 📖 文档
 
-| 资源 | 描述 | 链接 |
-|------|------|------|
-| **文档站点** | 完整的中英文双语文档 | [lessup.github.io/encoding](https://lessup.github.io/encoding/) |
-| **项目规范** | 产品需求、RFC 和技术规范（单一真实来源） | [specs/](specs/) |
-| **快速开始** | 环境配置、构建和基本用法 | [指南 →](https://lessup.github.io/encoding/zh/guide/getting-started) |
-| **算法详解** | 算法说明和对比 | [指南 →](https://lessup.github.io/encoding/zh/guide/algorithms) |
-| **项目结构** | 目录结构和约定 | [指南 →](https://lessup.github.io/encoding/zh/guide/project-structure) |
-| **更新日志** | 版本历史和发布说明 | [查看 →](CHANGELOG.md) |
+| 资源 | 链接 |
+|------|------|
+| 📚 **完整文档** | [lessup.github.io/encoding](https://lessup.github.io/encoding/) |
+| 🔧 **API 参考**（Go / Rust / C++） | [API 文档](https://lessup.github.io/encoding/zh/api/go) |
+| 📈 **基准测试结果** | [性能对比](https://lessup.github.io/encoding/zh/benchmarks/results) |
+| 🤝 **贡献指南** | [如何参与](https://lessup.github.io/encoding/zh/guide/contributing) |
+| 📋 **技术规范**（RFC） | [specs/](specs/) |
+| 📝 **更新日志** | [CHANGELOG.md](CHANGELOG.md) |
 
-## 💡 使用示例
-
-```bash
-# 使用 Huffman (C++) 编码
-./algorithms/huffman/cpp/huffman_cpp encode input.txt output.huf
-
-# 使用另一种语言 (Go) 解码
-./algorithms/huffman/go/huffman_go decode output.huf restored.txt
-
-# 验证正确性
-diff input.txt restored.txt  # 无输出 = 相同
-```
-
-## 🛠️ 构建选项
+## 💻 构建与测试命令
 
 | 命令 | 描述 |
 |------|------|
-| `make build` | 构建所有实现 |
+| `make build` | 构建所有实现（C++、Go、Rust） |
 | `make build-huffman` | 仅构建 Huffman |
-| `make build-arithmetic` | 仅构建算术编码 |
-| `make build-range` | 仅构建区间编码 |
-| `make build-rle` | 仅构建 RLE |
-| `make test` | 运行所有测试 |
+| `make test` | 运行 Go + Rust 单元测试 |
 | `make bench` | 运行性能基准测试 |
 | `make clean` | 清理构建产物 |
 
+## 🔬 Go 库使用示例
+
+所有 Go 实现都提供可复用的库 API：
+
+```go
+import "huffman" // 或 "arithmetic"、"rle"
+
+// 编码文件
+err := huffman.EncodeFile("input.bin", "output.huf")
+
+// 解码文件
+err := huffman.DecodeFile("output.huf", "decoded.bin")
+```
+
+## 🏅 为什么存在这个项目
+
+- **🎓 学习** — 并排阅读清晰、有良好文档的实现
+- **🔬 对比** — 了解 C++、Go 和 Rust 如何处理相同算法
+- **✅ 验证** — 跨语言测试保证输出格式一致
+- **📐 SDD** — 采用规范驱动开发：每个功能都从规范开始
+
 ## 🤝 参与贡献
 
-我们欢迎贡献！请阅读我们的[贡献指南](CONTRIBUTING.md)了解：
+我们欢迎贡献！本项目遵循**规范驱动开发 (SDD)**：
 
-- C++、Go 和 Rust 的代码风格指南
-- 测试要求
-- Pull Request 流程
+1. **先阅读规范** — `/specs/` 是单一真实来源
+2. **代码前先更新规范** — 如果接口有变，规范先改
+3. **跨语言测试** — 验证 C++ ↔ Go ↔ Rust 兼容性
 
-## 🙏 致谢
-
-本项目受压缩算法教育资源的启发，旨在提供：
-
-- 用于学习的清晰、可读实现
-- 公平的跨语言性能对比
-- 通过广泛测试验证的正确实现
+详见 [贡献指南](https://lessup.github.io/encoding/zh/guide/contributing)。
 
 ## 📄 许可证
 
-本项目基于 [MIT 许可证](LICENSE) 开源。
-
-版权所有 © 2025-2026 LessUp
-
----
-
-<p align="center">
-  <sub>用 ❤️ 为开源社区构建</sub>
-</p>
+[MIT 许可证](LICENSE) · 版权所有 © 2025-2026 LessUp

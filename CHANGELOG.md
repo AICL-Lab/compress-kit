@@ -22,8 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Arithmetic coding Go implementation with full test suite
 - Arithmetic coding Rust implementation with full test suite
-- Range coder Go CLI (`range/go/cmd/main.go`) for cross-language testing
-- Range coder Rust CLI (`range/rust/src/bin/rangecoder.rs`) for cross-language testing
+- Range coder Go CLI (`algorithms/range/go/cmd/main.go`) for cross-language testing
+- Range coder Rust CLI (`algorithms/range/rust/src/bin/rangecoder.rs`) for cross-language testing
 
 #### Infrastructure
 
@@ -53,14 +53,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - All error messages standardized to English across all implementations
 - All Chinese comments translated to English for consistency
-- Updated `go.work` to include `arithmetic/go` module
-- Updated `range/rust/Cargo.toml` to include `rangecoder` CLI binary
+- Updated `go.work` to include `algorithms/arithmetic/go` module
+- Updated `algorithms/range/rust/Cargo.toml` to include `rangecoder` CLI binary
 
 ### Fixed
 
 - README badge URL: `docs.yml` → `pages.yml`
 - README algorithm table: corrected "LZ77" → "Range Coder"
-- README project structure: corrected `lz77/` → `range/`
+- README project structure: corrected `algorithms/lz77/` → `algorithms/range/`
 - `.gitignore`: removed bare `Makefile` pattern that could shadow root Makefile
 - Makefile `build-range` target: fixed incorrect `go test` call
 - Makefile `clean` target: replaced fragile Python one-liner with proper `rm` commands

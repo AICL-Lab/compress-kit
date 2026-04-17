@@ -16,7 +16,10 @@ const sharedSidebar = {
     },
     {
       text: 'Reference',
-      items: [{ text: 'Project Structure', link: '/en/guide/project-structure' }],
+      items: [
+        { text: 'Project Structure', link: '/en/guide/project-structure' },
+        { text: 'Specs (SSOT)', link: 'https://github.com/LessUp/encoding/tree/master/specs' },
+      ],
     },
   ],
   '/zh/': [
@@ -33,7 +36,10 @@ const sharedSidebar = {
     },
     {
       text: '参考',
-      items: [{ text: '项目结构', link: '/zh/guide/project-structure' }],
+      items: [
+        { text: '项目结构', link: '/zh/guide/project-structure' },
+        { text: '规范文档 (SSOT)', link: 'https://github.com/LessUp/encoding/tree/master/specs' },
+      ],
     },
   ],
 }

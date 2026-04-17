@@ -71,7 +71,7 @@ make bench
 | Resource | Description | Link |
 |----------|-------------|------|
 | **Documentation Site** | Full documentation with bilingual support | [lessup.github.io/encoding](https://lessup.github.io/encoding/) |
-| **Project Specs** | Product requirements, RFCs, and technical specs | [specs/](specs/) |
+| **Project Specs** | Product requirements, RFCs, and technical specs (Single Source of Truth) | [specs/](specs/) |
 | **Getting Started** | Setup, build, and basic usage | [Guide →](https://lessup.github.io/encoding/guide/getting-started) |
 | **Algorithms** | Algorithm explanations and comparisons | [Guide →](https://lessup.github.io/encoding/guide/algorithms) |
 | **Project Structure** | Directory layout and conventions | [Guide →](https://lessup.github.io/encoding/guide/project-structure) |
@@ -81,10 +81,10 @@ make bench
 
 ```bash
 # Encode with Huffman (C++)
-./huffman/cpp/huffman_cpp encode input.txt output.huf
+./algorithms/huffman/cpp/huffman_cpp encode input.txt output.huf
 
 # Decode with a different language (Go)
-./huffman/go/huffman_go decode output.huf restored.txt
+./algorithms/huffman/go/huffman_go decode output.huf restored.txt
 
 # Verify correctness
 diff input.txt restored.txt  # No output = identical

@@ -71,6 +71,7 @@ make bench
 | 资源 | 描述 | 链接 |
 |------|------|------|
 | **文档站点** | 完整的中英文双语文档 | [lessup.github.io/encoding](https://lessup.github.io/encoding/) |
+| **项目规范** | 产品需求、RFC 和技术规范（单一真实来源） | [specs/](specs/) |
 | **快速开始** | 环境配置、构建和基本用法 | [指南 →](https://lessup.github.io/encoding/zh/guide/getting-started) |
 | **算法详解** | 算法说明和对比 | [指南 →](https://lessup.github.io/encoding/zh/guide/algorithms) |
 | **项目结构** | 目录结构和约定 | [指南 →](https://lessup.github.io/encoding/zh/guide/project-structure) |
@@ -80,10 +81,10 @@ make bench
 
 ```bash
 # 使用 Huffman (C++) 编码
-./huffman/cpp/huffman_cpp encode input.txt output.huf
+./algorithms/huffman/cpp/huffman_cpp encode input.txt output.huf
 
 # 使用另一种语言 (Go) 解码
-./huffman/go/huffman_go decode output.huf restored.txt
+./algorithms/huffman/go/huffman_go decode output.huf restored.txt
 
 # 验证正确性
 diff input.txt restored.txt  # 无输出 = 相同

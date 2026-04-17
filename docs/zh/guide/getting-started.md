@@ -73,21 +73,21 @@ make build-rle          # 行程长度编码
 ::: code-group
 
 ```bash [C++]
-cd huffman/cpp
+cd algorithms/huffman/cpp
 g++ -std=c++17 -O2 main.cpp -o huffman_cpp
 ./huffman_cpp encode input.bin output.huf
 ./huffman_cpp decode output.huf restored.bin
 ```
 
 ```bash [Go]
-cd huffman/go
+cd algorithms/huffman/go
 go build -o huffman_go .
 ./huffman_go encode input.bin output.huf
 ./huffman_go decode output.huf restored.bin
 ```
 
 ```bash [Rust]
-cd huffman/rust
+cd algorithms/huffman/rust
 rustc -O main.rs -o huffman_rust
 ./huffman_rust encode input.bin output.huf
 ./huffman_rust decode output.huf restored.bin
@@ -101,10 +101,10 @@ rustc -O main.rs -o huffman_rust
 
 ```bash
 # 使用 C++ 编码
-./huffman/cpp/huffman_cpp encode input.bin encoded.huf
+./algorithms/huffman/cpp/huffman_cpp encode input.bin encoded.huf
 
 # 使用 Go 解码
-./huffman/go/huffman_go decode encoded.huf decoded.bin
+./algorithms/huffman/go/huffman_go decode encoded.huf decoded.bin
 
 # 验证正确性
 diff input.bin decoded.bin  # 无输出 = 相同
@@ -126,10 +126,10 @@ make test
 
 ```bash
 # Go 测试
-cd huffman/go && go test ./...
+cd algorithms/huffman/go && go test ./...
 
 # Rust 测试
-cd huffman/rust && rustc --test main.rs -o test && ./test
+cd algorithms/huffman/rust && rustc --test main.rs -o test && ./test
 ```
 
 ## 运行基准测试
@@ -185,10 +185,10 @@ clang++ -std=c++17 -O2 main.cpp -o huffman_cpp
 
 ```bash
 # 确保 Go 工作区包含所有模块
-go work use ./huffman/go
-go work use ./arithmetic/go
-go work use ./range/go
-go work use ./rle/go
+go work use ./algorithms/huffman/go
+go work use ./algorithms/arithmetic/go
+go work use ./algorithms/range/go
+go work use ./algorithms/rle/go
 ```
 
 ### Rust 构建错误
@@ -210,8 +210,8 @@ rustc --version  # 应为 1.70+
 dd if=tests/data/random_10MiB.bin of=/tmp/small.bin bs=1024 count=100
 
 # 使用较小文件测试
-./range/cpp/rangecoder_cpp encode /tmp/small.bin /tmp/small.enc
-./range/cpp/rangecoder_cpp decode /tmp/small.enc /tmp/small.dec
+./algorithms/range/cpp/rangecoder_cpp encode /tmp/small.bin /tmp/small.enc
+./algorithms/range/cpp/rangecoder_cpp decode /tmp/small.enc /tmp/small.dec
 ```
 
 ## 下一步

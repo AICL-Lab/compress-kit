@@ -6,22 +6,22 @@
 
 ```
 encoding/
-├── huffman/              # Huffman 编码实现
+├── algorithms/huffman/              # Huffman 编码实现
 │   ├── cpp/              #   C++ 单文件实现
 │   ├── go/               #   Go 模块 (go.mod)
 │   ├── rust/             #   Rust 实现
 │   └── benchmark/        #   跨语言基准测试脚本
-├── arithmetic/           # 算术编码实现
+├── algorithms/arithmetic/           # 算术编码实现
 │   ├── cpp/              #   C++ 单文件实现
 │   ├── go/               #   Go 实现
 │   ├── rust/             #   Rust 实现
 │   └── benchmark/        #   跨语言基准测试
-├── range/                # 区间编码实现
+├── algorithms/range/                # 区间编码实现
 │   ├── cpp/              #   C++ 单文件实现
 │   ├── go/               #   Go 库 + CLI
 │   ├── rust/             #   Rust 库包 + CLI
 │   └── benchmark/        #   跨语言基准测试
-├── rle/                  # 行程长度编码
+├── algorithms/rle/                  # 行程长度编码
 │   ├── cpp/              #   C++ 单文件实现
 │   ├── go/               #   Go 实现
 │   ├── rust/             #   Rust 实现
@@ -177,10 +177,10 @@ encoding/
 go 1.21
 
 use (
-    ./huffman/go
-    ./arithmetic/go
-    ./range/go
-    ./rle/go
+    ./algorithms/huffman/go
+    ./algorithms/arithmetic/go
+    ./algorithms/range/go
+    ./algorithms/rle/go
 )
 ```
 

@@ -1,8 +1,8 @@
 go 1.21
 
 use (
-	./arithmetic/go
-	./huffman/go
-	./range/go
-	./rle/go
+	./algorithms/arithmetic/go
+	./algorithms/huffman/go
+	./algorithms/range/go
+	./algorithms/rle/go
 )

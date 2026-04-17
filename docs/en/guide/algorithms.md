@@ -110,7 +110,7 @@ An integer-based implementation equivalent to arithmetic coding but typically mo
 
 **Go Library**:
 ```go
-import "github.com/LessUp/encoding/range/go/rangecoder"
+import "github.com/LessUp/encoding/algorithms/range/go/rangecoder"
 
 // Encode data
 encoded, err := rangecoder.Encode(data)

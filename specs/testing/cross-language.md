@@ -12,8 +12,8 @@ All implementations must pass cross-language encode/decode tests:
 
 ```bash
 # Encode with language A, decode with language B
-./huffman/cpp/huffman_cpp encode input.txt output.huf
-./huffman/go/huffman_go decode output.huf restored.txt
+./algorithms/huffman/cpp/huffman_cpp encode input.txt output.huf
+./algorithms/huffman/go/huffman_go decode output.huf restored.txt
 diff input.txt restored.txt  # Must be identical
 ```
 

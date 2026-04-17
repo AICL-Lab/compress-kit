@@ -130,3 +130,4 @@ Copyright © 2025-2026 LessUp
 <p align="center">
   <sub>Built with ❤️ for the open source community</sub>
 </p>
+

@@ -8,8 +8,6 @@ This project strictly follows the **Spec-Driven Development (SDD)** paradigm. Al
 |-----------|---------|
 | `/specs/product/` | Product feature definitions and acceptance criteria |
 | `/specs/rfc/` | Technical design documents (architecture, patterns, decisions) |
-| `/specs/api/` | API interface definitions (OpenAPI, GraphQL schemas) |
-| `/specs/db/` | Database model definitions |
 | `/specs/testing/` | Test specifications and BDD test cases |
 | `/docs/` | User-facing documentation (VitePress documentation site) |
 
@@ -43,7 +41,7 @@ When you (AI) are asked to develop a new feature, modify an existing one, or fix
 
 ## Code Generation Rules
 
-- Any externally exposed API changes must synchronously update the relevant spec files in `/specs/api/`.
+- Any changes to binary file formats, CLI interfaces, or error handling must synchronously update the relevant spec files in `/specs/rfc/`.
 - If uncertain about technical details, consult the architecture conventions in `/specs/rfc/`. Do not invent design patterns on your own.
 - All error messages must be in English.
 - Follow language-specific conventions:

@@ -9,12 +9,12 @@ build: build-huffman build-arithmetic build-range build-rle
 
 build-huffman:
 	g++ -std=c++17 -O2 -Wall -Wextra -Werror algorithms/huffman/cpp/main.cpp -o algorithms/huffman/cpp/huffman_cpp
-	go build -o algorithms/huffman/go/huffman_go ./algorithms/huffman/go
+	go build -o algorithms/huffman/go/huffman_go ./algorithms/huffman/go/cmd
 	rustc -O algorithms/huffman/rust/main.rs -o algorithms/huffman/rust/huffman_rust
 
 build-arithmetic:
 	g++ -std=c++17 -O2 -Wall -Wextra -Werror algorithms/arithmetic/cpp/main.cpp -o algorithms/arithmetic/cpp/arithmetic_cpp
-	go build -o algorithms/arithmetic/go/arithmetic_go ./algorithms/arithmetic/go
+	go build -o algorithms/arithmetic/go/arithmetic_go ./algorithms/arithmetic/go/cmd
 	rustc -O algorithms/arithmetic/rust/main.rs -o algorithms/arithmetic/rust/arithmetic_rust
 
 build-range:
@@ -24,7 +24,7 @@ build-range:
 
 build-rle:
 	g++ -std=c++17 -O2 -Wall -Wextra -Werror algorithms/rle/cpp/main.cpp -o algorithms/rle/cpp/rle_cpp
-	go build -o algorithms/rle/go/rle_go ./algorithms/rle/go
+	go build -o algorithms/rle/go/rle_go ./algorithms/rle/go/cmd
 	rustc -O algorithms/rle/rust/main.rs -o algorithms/rle/rust/rle_rust
 
 # ── Test ───────────────────────────────────────────────────────────────────
@@ -34,16 +34,16 @@ test: test-data \
       test-huffman-rust test-arithmetic-rust test-range-rust test-rle-rust
 
 test-huffman-go:
-	go test ./algorithms/huffman/go/...
+	go test ./algorithms/huffman/go/... ./algorithms/huffman/go/cmd/...
 
 test-arithmetic-go:
-	go test ./algorithms/arithmetic/go/...
+	go test ./algorithms/arithmetic/go/... ./algorithms/arithmetic/go/cmd/...
 
 test-range-go:
 	go test ./algorithms/range/go/...
 
 test-rle-go:
-	go test ./algorithms/rle/go/...
+	go test ./algorithms/rle/go/... ./algorithms/rle/go/cmd/...
 
 test-huffman-rust:
 	rustc --test algorithms/huffman/rust/main.rs -o algorithms/huffman/rust/huffman_rust_test

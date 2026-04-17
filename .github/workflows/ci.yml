@@ -194,10 +194,10 @@ jobs:
           (cd algorithms/rle/cpp && g++ -std=c++17 -O2 main.cpp -o rle_cpp)
 
           # Go
-          (cd algorithms/huffman/go && go build -o huffman_go .)
-          (cd algorithms/arithmetic/go && go build -o arithmetic_go .)
+          (cd algorithms/huffman/go && go build -o huffman_go ./cmd)
+          (cd algorithms/arithmetic/go && go build -o arithmetic_go ./cmd)
           (cd algorithms/range/go && go build -o rangecoder_go ./cmd)
-          (cd algorithms/rle/go && go build -o rle_go .)
+          (cd algorithms/rle/go && go build -o rle_go ./cmd)
 
           # Rust
           (cd algorithms/huffman/rust && rustc -O main.rs -o huffman_rust)

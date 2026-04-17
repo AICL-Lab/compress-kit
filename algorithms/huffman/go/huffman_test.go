@@ -1,4 +1,4 @@
-package main
+package huffman
 
 import (
 	"bytes"
@@ -8,21 +8,21 @@ import (
 )
 
 func TestCompressDecompressRoundTrip(t *testing.T) {
-	data := bytes.Repeat([]byte("arithmetic-test-data-"), 256)
+	data := bytes.Repeat([]byte("huffman-test-data-"), 256)
 	data = append(data, []byte{0, 1, 2, 3, 254, 255}...)
 
 	tmpDir := t.TempDir()
 	inputPath := filepath.Join(tmpDir, "input.bin")
-	encodedPath := filepath.Join(tmpDir, "encoded.aenc")
+	encodedPath := filepath.Join(tmpDir, "encoded.huf")
 	outputPath := filepath.Join(tmpDir, "output.bin")
 
 	if err := os.WriteFile(inputPath, data, 0o644); err != nil {
 		t.Fatalf("write input: %v", err)
 	}
-	if err := compressFile(inputPath, encodedPath); err != nil {
+	if err := EncodeFile(inputPath, encodedPath); err != nil {
 		t.Fatalf("compress: %v", err)
 	}
-	if err := decompressFile(encodedPath, outputPath); err != nil {
+	if err := DecodeFile(encodedPath, outputPath); err != nil {
 		t.Fatalf("decompress: %v", err)
 	}
 
@@ -31,23 +31,23 @@ func TestCompressDecompressRoundTrip(t *testing.T) {
 		t.Fatalf("read output: %v", err)
 	}
 	if !bytes.Equal(decoded, data) {
-		t.Fatalf("round-trip mismatch: got %d bytes, want %d bytes", len(decoded), len(data))
+		t.Fatalf("round-trip mismatch")
 	}
 }
 
 func TestCompressDecompressEmptyFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	inputPath := filepath.Join(tmpDir, "empty.bin")
-	encodedPath := filepath.Join(tmpDir, "empty.aenc")
+	encodedPath := filepath.Join(tmpDir, "empty.huf")
 	outputPath := filepath.Join(tmpDir, "empty.out")
 
 	if err := os.WriteFile(inputPath, nil, 0o644); err != nil {
 		t.Fatalf("write input: %v", err)
 	}
-	if err := compressFile(inputPath, encodedPath); err != nil {
+	if err := EncodeFile(inputPath, encodedPath); err != nil {
 		t.Fatalf("compress empty: %v", err)
 	}
-	if err := decompressFile(encodedPath, outputPath); err != nil {
+	if err := DecodeFile(encodedPath, outputPath); err != nil {
 		t.Fatalf("decompress empty: %v", err)
 	}
 
@@ -61,19 +61,19 @@ func TestCompressDecompressEmptyFile(t *testing.T) {
 }
 
 func TestCompressDecompressSingleByte(t *testing.T) {
+	data := []byte{0xAB}
 	tmpDir := t.TempDir()
-	inputPath := filepath.Join(tmpDir, "single.bin")
-	encodedPath := filepath.Join(tmpDir, "single.aenc")
-	outputPath := filepath.Join(tmpDir, "single.out")
+	inputPath := filepath.Join(tmpDir, "input.bin")
+	encodedPath := filepath.Join(tmpDir, "encoded.huf")
+	outputPath := filepath.Join(tmpDir, "output.bin")
 
-	data := []byte{0x42}
 	if err := os.WriteFile(inputPath, data, 0o644); err != nil {
 		t.Fatalf("write input: %v", err)
 	}
-	if err := compressFile(inputPath, encodedPath); err != nil {
+	if err := EncodeFile(inputPath, encodedPath); err != nil {
 		t.Fatalf("compress: %v", err)
 	}
-	if err := decompressFile(encodedPath, outputPath); err != nil {
+	if err := DecodeFile(encodedPath, outputPath); err != nil {
 		t.Fatalf("decompress: %v", err)
 	}
 
@@ -87,22 +87,25 @@ func TestCompressDecompressSingleByte(t *testing.T) {
 }
 
 func TestCompressDecompressAllBytes(t *testing.T) {
-	tmpDir := t.TempDir()
-	inputPath := filepath.Join(tmpDir, "allbytes.bin")
-	encodedPath := filepath.Join(tmpDir, "allbytes.aenc")
-	outputPath := filepath.Join(tmpDir, "allbytes.out")
-
 	data := make([]byte, 256)
-	for i := range data {
+	for i := 0; i < 256; i++ {
 		data[i] = byte(i)
 	}
+	// Repeat to give meaningful compression
+	data = bytes.Repeat(data, 100)
+
+	tmpDir := t.TempDir()
+	inputPath := filepath.Join(tmpDir, "input.bin")
+	encodedPath := filepath.Join(tmpDir, "encoded.huf")
+	outputPath := filepath.Join(tmpDir, "output.bin")
+
 	if err := os.WriteFile(inputPath, data, 0o644); err != nil {
 		t.Fatalf("write input: %v", err)
 	}
-	if err := compressFile(inputPath, encodedPath); err != nil {
+	if err := EncodeFile(inputPath, encodedPath); err != nil {
 		t.Fatalf("compress: %v", err)
 	}
-	if err := decompressFile(encodedPath, outputPath); err != nil {
+	if err := DecodeFile(encodedPath, outputPath); err != nil {
 		t.Fatalf("decompress: %v", err)
 	}
 

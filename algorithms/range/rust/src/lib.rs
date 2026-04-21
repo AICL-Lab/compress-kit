@@ -5,6 +5,7 @@ const SYMBOL_LIMIT: usize = 257;
 const EOF_SYMBOL: usize = SYMBOL_LIMIT - 1;
 const MAX_TOTAL: u32 = 1 << 24;
 const RENORM_THRESHOLD: u32 = 1 << 24;
+const MAX_OUTPUT_SIZE: usize = 1024 * 1024 * 1024;
 
 #[derive(Debug, Clone)]
 pub struct RangeError(&'static str);
@@ -203,9 +204,6 @@ impl<'a> RangeDecoder<'a> {
         }
     }
 
-    // Note: This binary search has O(log n) complexity per symbol.
-    // For better performance with large files, consider using a lookup table
-    // or prefix-sum index to achieve O(1) symbol lookup.
     fn decode_symbol(&mut self, cumulative: &[u32]) -> Result<u32, RangeError> {
         let range = (self.high as u64).wrapping_sub(self.low as u64) + 1;
         let total = *cumulative
@@ -282,6 +280,9 @@ pub fn decode(encoded: &[u8]) -> Result<Vec<u8>, RangeError> {
         let sym = dec.decode_symbol(&cumulative)?;
         if sym as usize == EOF_SYMBOL {
             break;
+        }
+        if out.len() >= MAX_OUTPUT_SIZE {
+            return Err(RangeError("range: output size limit exceeded"));
         }
         out.push(sym as u8);
     }

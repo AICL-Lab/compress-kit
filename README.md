@@ -5,38 +5,55 @@
 </p>
 
 <p align="center">
-  <strong>Classic compression algorithms implemented in C++17, Go, and Rust</strong>
+  <strong>Classic Lossless Compression Algorithms in C++17, Go, and Rust</strong>
 </p>
 
 <p align="center">
   <a href="https://github.com/LessUp/encoding/actions/workflows/ci.yml">
-    <img src="https://github.com/LessUp/encoding/actions/workflows/ci.yml/badge.svg" alt="CI">
-  </a>
-  <a href="https://github.com/LessUp/encoding/actions/workflows/pages.yml">
-    <img src="https://github.com/LessUp/encoding/actions/workflows/pages.yml/badge.svg" alt="Docs">
+    <img src="https://github.com/LessUp/encoding/actions/workflows/ci.yml/badge.svg" alt="CI Status">
   </a>
   <a href="https://lessup.github.io/encoding/">
-    <img src="https://img.shields.io/badge/Docs-Online-blue" alt="Docs">
+    <img src="https://img.shields.io/badge/Docs-Online-blue?logo=readthedocs&logoColor=white" alt="Documentation">
+  </a>
+  <a href="https://github.com/LessUp/encoding/releases">
+    <img src="https://img.shields.io/github/v/release/LessUp/encoding?include_prereleases&label=Release" alt="Release">
   </a>
   <a href="https://opensource.org/licenses/MIT">
-    <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT">
+    <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
   </a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/C++-17-blue.svg" alt="C++17">
-  <img src="https://img.shields.io/badge/Go-1.21+-00ADD8.svg" alt="Go 1.21+">
-  <img src="https://img.shields.io/badge/Rust-1.70+-orange.svg" alt="Rust 1.70+">
-  <img src="https://img.shields.io/badge/Python-3.8+-3776AB.svg" alt="Python 3.8+">
+  <img src="https://img.shields.io/badge/C++-17-00599C.svg?logo=c%2B%2B" alt="C++17">
+  <img src="https://img.shields.io/badge/Go-1.21+-00ADD8.svg?logo=go" alt="Go">
+  <img src="https://img.shields.io/badge/Rust-1.70+-DEA584.svg?logo=rust" alt="Rust">
+  <img src="https://img.shields.io/badge/Python-3.8+-3776AB.svg?logo=python" alt="Python">
 </p>
 
 <p align="center">
-  <b>English</b> | <a href="README.zh-CN.md">简体中文</a> | <a href="https://lessup.github.io/encoding/">Documentation</a>
+  <b>English</b> | <a href="README.zh-CN.md">简体中文</a> | <a href="https://lessup.github.io/encoding/">📖 Documentation</a>
 </p>
 
 ---
 
-## 🧭 Which Algorithm Should I Use?
+## ✨ Features
+
+- 🔤 **Multi-Language** — Identical implementations in C++17, Go 1.21+, and Rust 1.70+
+- 🔗 **Cross-Language Compatible** — Encode with one language, decode with another
+- 📚 **Educational** — Clean, well-documented code for learning and comparison
+- 🧪 **Well-Tested** — Unit tests and cross-language verification in CI
+- 📊 **Benchmarked** — Performance comparison across languages
+
+## 🧮 Algorithms
+
+| Algorithm | Compression | Speed | Best For |
+|-----------|-------------|-------|----------|
+| [**Huffman**](https://lessup.github.io/encoding/en/guide/algorithms#huffman-coding) | Medium | Fast | General text/data |
+| [**Arithmetic**](https://lessup.github.io/encoding/en/guide/algorithms#arithmetic-coding) | Highest | Medium | Maximum compression |
+| [**Range Coder**](https://lessup.github.io/encoding/en/guide/algorithms#range-coder) | High | Fast | Balanced performance |
+| [**RLE**](https://lessup.github.io/encoding/en/guide/algorithms#run-length-encoding-rle) | Variable | Fastest | Repetitive data (bitmaps, logs) |
+
+### Algorithm Selection Guide
 
 ```
 Is your data highly repetitive?
@@ -49,15 +66,6 @@ Is your data highly repetitive?
         ├── Yes → Use Range Coder (fast + good compression)
         └── No → Use Huffman (simple, general purpose)
 ```
-
-## 📊 Algorithm Comparison
-
-| Algorithm | Compression | Speed | Best For | Use When |
-|-----------|-------------|-------|----------|----------|
-| **Huffman** | Medium | Fast | General text/data | You want simple, reliable compression |
-| **Arithmetic** | ★ Highest | Medium | Maximum compression | Every byte matters |
-| **Range Coder** | ★ High | Fast | Balanced performance | Best speed/compression tradeoff |
-| **RLE** | Variable | ★ Fastest | Repeated data (bitmaps, logs) | Data has long runs of identical bytes |
 
 ## 🚀 Quick Start
 
@@ -73,92 +81,76 @@ make build && make test
 # Encode with C++
 ./algorithms/huffman/cpp/huffman_cpp encode input.txt output.huf
 
-# Decode with Go — any combination works!
+# Decode with Go
 ./algorithms/huffman/go/huffman_go decode output.huf restored.txt
-diff input.txt restored.txt  # ✓ No output = identical
+diff input.txt restored.txt  # No output = identical
 ```
 
 **C++ ↔ Go ↔ Rust** — all implementations share identical binary formats.
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 encoding/
-├── algorithms/
-│   ├── huffman/          # Prefix-code compression
-│   ├── arithmetic/       # Arithmetic coding
-│   ├── range/            # Range coder (byte-level arithmetic)
-│   └── rle/              # Run-length encoding
-│       ├── cpp/          #   C++17: single file, zero deps
-│       ├── go/           #   Go 1.21+: library + cmd/ CLI
-│       ├── rust/         #   Rust 1.70+: rustc or cargo
-│       └── benchmark/    #   Performance measurement scripts
-├── docs/                 # VitePress site (en + zh)
-├── specs/                # Spec-driven development (RFCs, product specs)
-├── tests/                # Test data generation
-└── Makefile              # Build, test, benchmark entry point
+├── algorithms/           # Compression algorithm implementations
+│   ├── huffman/         # Prefix-code compression
+│   ├── arithmetic/      # Arithmetic coding
+│   ├── range/           # Range coder (byte-level arithmetic)
+│   └── rle/             # Run-length encoding
+│       ├── cpp/         # C++17: single file, zero deps
+│       ├── go/          # Go 1.21+: library + CLI
+│       ├── rust/        # Rust 1.70+: rustc or cargo
+│       └── benchmark/   # Performance scripts
+├── docs/                # VitePress site (en + zh)
+├── specs/               # Spec-driven development docs
+├── tests/               # Test data generation
+└── Makefile             # Build entry point
 ```
 
-Each algorithm has **3 language implementations** with identical file formats:
-
-| Language | Build | Structure |
-|----------|-------|-----------|
-| **C++17** | `g++ -std=c++17 -O2` | Single file, zero dependencies |
-| **Go** | `go build ./cmd` | Library API (`package <algo>`) + CLI (`cmd/main.go`) |
-| **Rust** | `rustc -O` or `cargo` | `main.rs` with reusable functions |
-
-## 📖 Documentation
-
-| Resource | Link |
-|----------|------|
-| 📚 **Full Documentation** | [lessup.github.io/encoding](https://lessup.github.io/encoding/) |
-| 🔧 **API Reference** (Go / Rust / C++) | [API Docs](https://lessup.github.io/encoding/en/api/go) |
-| 📈 **Benchmark Results** | [Performance](https://lessup.github.io/encoding/en/benchmarks/results) |
-| 🤝 **Contributing Guide** | [How to Contribute](https://lessup.github.io/encoding/en/guide/contributing) |
-| 📋 **Technical Specs** (RFCs) | [specs/](specs/) |
-| 📝 **Changelog** | [CHANGELOG.md](CHANGELOG.md) |
-
-## 💻 Build & Test Commands
+## Build & Test
 
 | Command | Description |
 |---------|-------------|
-| `make build` | Build all implementations (C++, Go, Rust) |
-| `make build-huffman` | Build Huffman only |
-| `make test` | Run Go + Rust unit tests |
-| `make bench` | Run performance benchmarks |
+| `make build` | Build all implementations |
+| `make test` | Run unit tests |
+| `make bench` | Run benchmarks |
 | `make clean` | Remove build artifacts |
 
-## 🔬 Go Library Usage
-
-All Go implementations expose a reusable library API:
+## Go Library Usage
 
 ```go
-import "huffman" // or "arithmetic", "rle"
+import "huffman"
 
-// Encode a file
 err := huffman.EncodeFile("input.bin", "output.huf")
-
-// Decode a file
-err := huffman.DecodeFile("output.huf", "decoded.bin")
+err = huffman.DecodeFile("output.huf", "decoded.bin")
 ```
 
-## 🏅 Why This Project Exists
+## 📚 Documentation
 
-- **🎓 Learn** — Read clean, well-documented implementations side by side
-- **🔬 Compare** — See how C++, Go, and Rust handle the same algorithm differently
-- **✅ Verify** — Cross-language tests guarantee identical output formats
-- **📐 SDD** — Built with Spec-Driven Development: every feature starts with specs
+| Resource | Link |
+|----------|------|
+| 📖 Full Documentation | [lessup.github.io/encoding](https://lessup.github.io/encoding/) |
+| 🔧 API Reference | [Go](https://lessup.github.io/encoding/en/api/go) · [Rust](https://lessup.github.io/encoding/en/api/rust) · [C++](https://lessup.github.io/encoding/en/api/cpp) |
+| 📊 Benchmark Results | [Performance](https://lessup.github.io/encoding/en/benchmarks/results) |
+| 🤝 Contributing Guide | [How to Contribute](https://lessup.github.io/encoding/en/guide/contributing) |
+| 📋 Technical Specs | [specs/](specs/) |
+
+## 🎯 Why This Project
+
+- **📖 Learn** — Compare clean implementations across C++, Go, and Rust
+- **✅ Verify** — Cross-language tests guarantee format compatibility
+- **📐 SDD** — Built with Spec-Driven Development methodology
 
 ## 🤝 Contributing
 
-We welcome contributions! This project follows **Spec-Driven Development (SDD)**:
+This project follows **Spec-Driven Development (SDD)**:
 
-1. **Read specs first** — `/specs/` is the single source of truth
-2. **Update specs before code** — if interfaces change, specs change first
-3. **Test across languages** — verify C++ ↔ Go ↔ Rust compatibility
+1. Read specs first — `/specs/` is the single source of truth
+2. Update specs before code — if interfaces change, specs change first
+3. Test across languages — verify C++ ↔ Go ↔ Rust compatibility
 
-See the [Contributing Guide](https://lessup.github.io/encoding/en/guide/contributing) for details.
+See [Contributing Guide](https://lessup.github.io/encoding/en/guide/contributing) for details.
 
-## 📄 License
+## License
 
 [MIT License](LICENSE) · Copyright © 2025-2026 LessUp

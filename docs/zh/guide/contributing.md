@@ -80,8 +80,8 @@
 
 ## 行为准则
 
-请阅读我们的 [行为准则](https://github.com/LessUp/encoding/blob/master/CODE_OF_CONDUCT.md)。
+请阅读我们的 [行为准则](https://github.com/LessUp/compresskit/blob/master/CODE_OF_CONDUCT.md)。
 
 ## 许可证
 
-通过贡献，您同意您的贡献将在 [MIT 许可证](https://github.com/LessUp/encoding/blob/master/LICENSE) 下授权。
+通过贡献，您同意您的贡献将在 [MIT 许可证](https://github.com/LessUp/compresskit/blob/master/LICENSE) 下授权。

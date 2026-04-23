@@ -2,63 +2,107 @@
 layout: home
 
 hero:
-  name: Encoding
-  text: Compression Algorithms Collection
-  tagline: Classic compression algorithms implemented in C++17, Go, and Rust for learning, comparison, and cross-language verification
+  name: CompressKit
+  text: Compression Algorithms
+  tagline: Production-ready compression algorithms in C++17, Go, and Rust. Learn, compare, and verify across languages with identical binary formats.
   image:
     src: /logo.svg
-    alt: Encoding Logo
+    alt: CompressKit Logo
   actions:
     - theme: brand
-      text: Get Started →
+      text: Get Started
       link: /en/guide/getting-started
     - theme: alt
-      text: 中文文档
-      link: /zh/guide/getting-started
-    - theme: alt
       text: View on GitHub
-      link: https://github.com/LessUp/encoding
+      link: https://github.com/LessUp/compresskit
+    - theme: alt
+      text: 中文
+      link: /zh/
 
 features:
   - icon: 🌐
-    title: Multi-Language Comparison | 多语言对比
-    details: Each algorithm implemented in C++17, Go, and Rust. 每种算法都有 C++17、Go 和 Rust 实现。
+    title: Multi-Language Comparison
+    details: Every algorithm implemented in C++17, Go, and Rust. Compare performance, code style, and engineering practices across languages.
   - icon: 📦
-    title: Unified File Formats | 统一文件格式
-    details: Cross-language compatible binary formats. 跨语言兼容的二进制格式。
+    title: Cross-Language Compatible
+    details: All implementations share identical binary formats. Encode in C++, decode in Go, verify in Rust — seamless interoperability.
   - icon: 📚
-    title: Learning-Oriented | 面向学习
-    details: Documentation focuses on algorithms and learning paths. 文档侧重于算法和学习路径。
+    title: Learning-Focused Documentation
+    details: Understand the theory behind each algorithm with clear explanations and working code examples in three languages.
   - icon: ✅
-    title: Production-Ready | 生产级
-    details: Complete CI/CD with automated testing. 完整的 CI/CD 与自动化测试。
+    title: Production-Ready Verification
+    details: Complete CI/CD with automated builds, cross-language correctness tests, and continuous benchmarking pipelines.
 ---
 
-## 🌍 Select Language | 选择语言
+<StatsBar />
 
-<div class="language-selector">
+## Explore Algorithms
 
-### [🇺🇸 English Documentation](/en/)
+<AlgorithmGrid />
 
-Complete documentation in English, including getting started guide, algorithm explanations, and project structure.
+## Quick Comparison
 
-### [🇨🇳 中文文档](/zh/)
+| Algorithm | Compression | Speed | Best For |
+|-----------|-------------|-------|----------|
+| **Huffman** | Medium | Fast | General text/data |
+| **Arithmetic** | High | Medium | Maximum compression needs |
+| **Range Coder** | High | Fast | Balanced performance |
+| **RLE** | Variable | Very Fast | Highly repetitive data |
 
-完整的中文文档，包括快速开始指南、算法详解和项目结构说明。
+## Quick Start
 
-</div>
+```bash
+# Clone the repository
+git clone https://github.com/LessUp/compresskit.git
+cd compresskit
+
+# Build all implementations
+make build
+
+# Run tests
+make test
+
+# Run benchmarks
+make bench
+```
+
+## Cross-Language Verification
+
+A key feature of CompressKit — encode in any language, decode in any other:
+
+```bash
+# Encode with C++
+./algorithms/huffman/cpp/huffman_cpp encode input.bin encoded.huf
+
+# Decode with Go
+./algorithms/huffman/go/huffman_go decode encoded.huf restored.bin
+
+# Verify correctness
+diff input.bin restored.bin  # No output = identical
+```
+
+## Performance Highlights
+
+<BenchmarkChart />
+
+## Documentation Structure
+
+| Section | Description |
+|---------|-------------|
+| [Getting Started](/en/guide/getting-started) | Environment setup, build instructions |
+| [Algorithm Guide](/en/guide/algorithms) | Detailed explanations and comparisons |
+| [API Reference](/en/api/go) | Library APIs for all languages |
+| [Benchmarks](/en/benchmarks/results) | Performance results and methodology |
+
+## Community
+
+- 💬 [GitHub Discussions](https://github.com/LessUp/compresskit/discussions)
+- 🐛 [GitHub Issues](https://github.com/LessUp/compresskit/issues)
+- 🤝 [Contributing Guide](/en/guide/contributing)
 
 <style>
-.language-selector {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  margin: 2rem 0;
-}
-
-@media (max-width: 768px) {
-  .language-selector {
-    grid-template-columns: 1fr;
-  }
+:root {
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 50%, #10b981 100%);
 }
 </style>

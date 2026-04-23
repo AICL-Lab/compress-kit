@@ -212,4 +212,4 @@ npm run docs:build
 
 - [快速开始](/zh/guide/getting-started) - 设置和基础用法
 - [算法详解](/zh/guide/algorithms) - 算法说明
-- [GitHub 仓库](https://github.com/LessUp/encoding) - 源代码
+- [GitHub 仓库](https://github.com/LessUp/compresskit) - 源代码

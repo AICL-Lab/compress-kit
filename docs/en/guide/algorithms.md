@@ -110,7 +110,7 @@ An integer-based implementation equivalent to arithmetic coding but typically mo
 
 **Go Library**:
 ```go
-import "github.com/LessUp/encoding/algorithms/range/go/rangecoder"
+import "github.com/LessUp/compresskit/algorithms/range/go/rangecoder"
 
 // Encode data
 encoded, err := rangecoder.Encode(data)
@@ -237,4 +237,4 @@ Is the data highly repetitive?
 
 - [Project Structure](/en/guide/project-structure) - File formats and CLI conventions
 - [Getting Started](/en/guide/getting-started) - Build and test instructions
-- [GitHub Repository](https://github.com/LessUp/encoding) - Source code and issues
+- [GitHub Repository](https://github.com/LessUp/compresskit) - Source code and issues

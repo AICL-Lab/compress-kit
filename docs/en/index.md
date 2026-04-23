@@ -2,56 +2,59 @@
 layout: home
 
 hero:
-  name: Encoding
-  text: Compression Algorithms Collection
-  tagline: Classic compression algorithms implemented in C++17, Go, and Rust for learning, comparison, and cross-language verification
+  name: CompressKit
+  text: Compression Algorithms
+  tagline: Production-ready compression algorithms in C++17, Go, and Rust. Learn, compare, and verify across languages with identical binary formats.
   image:
     src: /logo.svg
-    alt: Encoding Logo
+    alt: CompressKit Logo
   actions:
     - theme: brand
-      text: Get Started →
+      text: Get Started
       link: /en/guide/getting-started
     - theme: alt
-      text: Algorithms
-      link: /en/guide/algorithms
-    - theme: alt
       text: View on GitHub
-      link: https://github.com/LessUp/encoding
+      link: https://github.com/LessUp/compresskit
+    - theme: alt
+      text: 中文
+      link: /zh/
 
 features:
   - icon: 🌐
     title: Multi-Language Comparison
-    details: Each algorithm is implemented in C++17, Go, and Rust, making it easy to compare code style, engineering practices, and performance characteristics across languages.
+    details: Every algorithm implemented in C++17, Go, and Rust. Compare performance, code style, and engineering practices across languages.
   - icon: 📦
-    title: Unified File Formats
-    details: All language implementations share identical binary formats, enabling direct cross-language encoding/decoding verification.
+    title: Cross-Language Compatible
+    details: All implementations share identical binary formats. Encode in C++, decode in Go, verify in Rust — seamless interoperability.
   - icon: 📚
-    title: Learning-Oriented
-    details: Documentation focuses on algorithm use cases, theoretical principles, and learning paths rather than just command lists.
+    title: Learning-Focused Documentation
+    details: Understand the theory behind each algorithm with clear explanations and working code examples in three languages.
   - icon: ✅
     title: Production-Ready Verification
-    details: Complete CI/CD pipelines with automated builds, tests, and benchmarks to verify correctness and performance.
+    details: Complete CI/CD with automated builds, cross-language correctness tests, and continuous benchmarking pipelines.
 ---
 
-## 🎯 Project Overview
+<StatsBar />
 
-**Encoding** is an educational repository centered around classic compression algorithms. It provides working implementations alongside comprehensive documentation that explains algorithm backgrounds, applicable scenarios, and code organization.
+## Explore Algorithms
 
-### Who This Is For
+<AlgorithmGrid />
 
-| Audience | Use Case |
-|----------|----------|
-| 🎓 **Students & Learners** | Understand compression algorithms through multi-language comparison |
-| 👨‍💻 **Software Engineers** | Compare C++, Go, and Rust implementation patterns for the same algorithm |
-| 🔧 **Open Source Maintainers** | Verify cross-language format compatibility and benchmark performance |
+## Quick Comparison
 
-## 🚀 Quick Start
+| Algorithm | Compression | Speed | Best For |
+|-----------|-------------|-------|----------|
+| **Huffman** | Medium | Fast | General text/data |
+| **Arithmetic** | High | Medium | Maximum compression needs |
+| **Range Coder** | High | Fast | Balanced performance |
+| **RLE** | Variable | Very Fast | Highly repetitive data |
+
+## Quick Start
 
 ```bash
 # Clone the repository
-git clone https://github.com/LessUp/encoding.git
-cd encoding
+git clone https://github.com/LessUp/compresskit.git
+cd compresskit
 
 # Build all implementations
 make build
@@ -63,35 +66,37 @@ make test
 make bench
 ```
 
-## 📖 Documentation Structure
+## Cross-Language Verification
 
-| Section | Description | Link |
-|---------|-------------|------|
-| **Getting Started** | Environment setup, build instructions, basic usage | [Read →](/en/guide/getting-started) |
-| **Algorithms** | Algorithm explanations, comparisons, use cases | [Read →](/en/guide/algorithms) |
-| **Project Structure** | Directory layout, CLI conventions, file formats | [Read →](/en/guide/project-structure) |
-| **Changelog** | Version history and release notes | [View on GitHub](https://github.com/LessUp/encoding/blob/master/CHANGELOG.md) |
+A key feature of CompressKit — encode in any language, decode in any other:
 
-## 📊 Algorithm Overview
+```bash
+# Encode with C++
+./algorithms/huffman/cpp/huffman_cpp encode input.bin encoded.huf
 
-| Algorithm | Compression | Speed | Best For |
-|-----------|-------------|-------|----------|
-| **Huffman** | Medium | Fast | General purpose text/data |
-| **Arithmetic** | High | Medium | Maximum compression needs |
-| **Range Coder** | High | Fast | Balanced performance |
-| **RLE** | Variable | Very Fast | Highly repetitive data |
+# Decode with Go
+./algorithms/huffman/go/huffman_go decode encoded.huf restored.bin
 
-## 🛠️ Tech Stack
+# Verify correctness
+diff input.bin restored.bin  # No output = identical
+```
 
-- **C++17** - Zero-dependency, single-file implementations
-- **Go 1.21+** - Module-based with library APIs
-- **Rust 1.70+** - Cargo-based with library crates
-- **Python 3.8+** - Benchmark and test scripts
+## Documentation Structure
 
-## 🤝 Contributing
+| Section | Description |
+|---------|-------------|
+| [Getting Started](/en/guide/getting-started) | Environment setup, build instructions, basic usage |
+| [Algorithm Guide](/en/guide/algorithms) | Detailed explanations, comparisons, and use cases |
+| [API Reference](/en/api/go) | Complete API documentation for Go, Rust, and C++ |
+| [Benchmarks](/en/benchmarks/results) | Performance results and methodology |
+| [Contributing](/en/guide/contributing) | How to contribute to the project |
 
-We welcome contributions! Please see our [Contributing Guide](https://github.com/LessUp/encoding/blob/master/CONTRIBUTING.md) for details.
+## Community
 
-## 📄 License
+- 💬 Ask questions in [GitHub Discussions](https://github.com/LessUp/compresskit/discussions)
+- 🐛 Report bugs in [GitHub Issues](https://github.com/LessUp/compresskit/issues)
+- 🤝 Read the [Contributing Guide](/en/guide/contributing)
 
-[MIT License](https://github.com/LessUp/encoding/blob/master/LICENSE) © 2025-2026 LessUp
+---
+
+**CompressKit** © 2025-2026 LessUp. Released under the MIT License.

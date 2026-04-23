@@ -4,11 +4,21 @@ import { defineConfig } from 'vitepress'
 const sharedSidebar = {
   '/en/': [
     {
-      text: 'Overview',
+      text: 'Getting Started',
       items: [
-        { text: 'Home', link: '/en/' },
+        { text: 'Introduction', link: '/en/' },
         { text: 'Quick Start', link: '/en/guide/getting-started' },
-        { text: 'Algorithms', link: '/en/guide/algorithms' },
+        { text: 'Project Structure', link: '/en/guide/project-structure' },
+      ],
+    },
+    {
+      text: 'Algorithms',
+      items: [
+        { text: 'Overview', link: '/en/guide/algorithms' },
+        { text: 'Huffman Coding', link: '/en/algorithms/huffman' },
+        { text: 'Arithmetic Coding', link: '/en/algorithms/arithmetic' },
+        { text: 'Range Coder', link: '/en/algorithms/range' },
+        { text: 'Run-Length Encoding', link: '/en/algorithms/rle' },
       ],
     },
     {
@@ -20,28 +30,39 @@ const sharedSidebar = {
       ],
     },
     {
-      text: 'Benchmarks',
+      text: 'Benchmarks & Testing',
       items: [
         { text: 'Performance Results', link: '/en/benchmarks/results' },
         { text: 'How to Run', link: '/en/benchmarks/how-to-run' },
+        { text: 'Cross-Language Testing', link: '/en/testing/cross-language' },
       ],
     },
     {
       text: 'Reference',
       items: [
-        { text: 'Project Structure', link: '/en/guide/project-structure' },
+        { text: 'Specifications', link: 'https://github.com/LessUp/compresskit/tree/master/specs' },
         { text: 'Contributing', link: '/en/guide/contributing' },
-        { text: 'Specs (SSOT)', link: 'https://github.com/LessUp/encoding/tree/master/specs' },
+        { text: 'Changelog', link: 'https://github.com/LessUp/compresskit/blob/master/CHANGELOG.md' },
       ],
     },
   ],
   '/zh/': [
     {
-      text: '概览',
+      text: '开始使用',
       items: [
-        { text: '首页', link: '/zh/' },
+        { text: '项目介绍', link: '/zh/' },
         { text: '快速开始', link: '/zh/guide/getting-started' },
-        { text: '算法详解', link: '/zh/guide/algorithms' },
+        { text: '项目结构', link: '/zh/guide/project-structure' },
+      ],
+    },
+    {
+      text: '算法详解',
+      items: [
+        { text: '算法综述', link: '/zh/guide/algorithms' },
+        { text: '霍夫曼编码', link: '/zh/algorithms/huffman' },
+        { text: '算术编码', link: '/zh/algorithms/arithmetic' },
+        { text: '区间编码', link: '/zh/algorithms/range' },
+        { text: '行程编码', link: '/zh/algorithms/rle' },
       ],
     },
     {
@@ -57,14 +78,15 @@ const sharedSidebar = {
       items: [
         { text: '性能结果', link: '/zh/benchmarks/results' },
         { text: '如何运行', link: '/zh/benchmarks/how-to-run' },
+        { text: '跨语言测试', link: '/zh/testing/cross-language' },
       ],
     },
     {
       text: '参考',
       items: [
-        { text: '项目结构', link: '/zh/guide/project-structure' },
+        { text: '规范文档', link: 'https://github.com/LessUp/compresskit/tree/master/specs' },
         { text: '参与贡献', link: '/zh/guide/contributing' },
-        { text: '规范文档 (SSOT)', link: 'https://github.com/LessUp/encoding/tree/master/specs' },
+        { text: '更新日志', link: 'https://github.com/LessUp/compresskit/blob/master/CHANGELOG.md' },
       ],
     },
   ],
@@ -72,50 +94,131 @@ const sharedSidebar = {
 
 // Shared nav configuration
 const sharedNav = (lang: string) => [
-  { text: lang === 'zh' ? '概览' : 'Overview', link: lang === 'zh' ? '/zh/' : '/en/' },
-  { text: lang === 'zh' ? '快速开始' : 'Get Started', link: lang === 'zh' ? '/zh/guide/getting-started' : '/en/guide/getting-started' },
-  { text: lang === 'zh' ? '算法' : 'Algorithms', link: lang === 'zh' ? '/zh/guide/algorithms' : '/en/guide/algorithms' },
-  { text: lang === 'zh' ? 'API' : 'API', link: lang === 'zh' ? '/zh/api/go' : '/en/api/go' },
-  { text: lang === 'zh' ? '性能' : 'Benchmarks', link: lang === 'zh' ? '/zh/benchmarks/results' : '/en/benchmarks/results' },
-  { text: lang === 'zh' ? '贡献' : 'Contributing', link: lang === 'zh' ? '/zh/guide/contributing' : '/en/guide/contributing' },
-  { text: 'Changelog', link: 'https://github.com/LessUp/encoding/blob/master/CHANGELOG.md' },
+  { 
+    text: lang === 'zh' ? '开始' : 'Get Started', 
+    link: lang === 'zh' ? '/zh/guide/getting-started' : '/en/guide/getting-started',
+    activeMatch: lang === 'zh' ? '/zh/guide/' : '/en/guide/'
+  },
+  { 
+    text: lang === 'zh' ? '算法' : 'Algorithms', 
+    link: lang === 'zh' ? '/zh/guide/algorithms' : '/en/guide/algorithms',
+    activeMatch: lang === 'zh' ? '/zh/algorithms/' : '/en/algorithms/'
+  },
+  { 
+    text: 'API', 
+    link: lang === 'zh' ? '/zh/api/go' : '/en/api/go',
+    activeMatch: lang === 'zh' ? '/zh/api/' : '/en/api/'
+  },
+  { 
+    text: lang === 'zh' ? '基准' : 'Benchmarks', 
+    link: lang === 'zh' ? '/zh/benchmarks/results' : '/en/benchmarks/results',
+    activeMatch: lang === 'zh' ? '/zh/benchmarks/' : '/en/benchmarks/'
+  },
 ]
 
 export default defineConfig({
-  // Default to English
+  // Brand Configuration
   lang: 'en-US',
-  title: 'Encoding',
-  description: 'Compression algorithms collection: classic compression algorithms in C++, Go, and Rust for learning, comparison, and verification',
-  base: '/encoding/',
+  title: 'CompressKit',
+  titleTemplate: ':title | CompressKit',
+  description: 'Production-ready compression algorithms in C++17, Go, and Rust. Learn, compare, and verify across languages with identical binary formats.',
+  
+  // Base URL
+  base: '/compresskit/',
   cleanUrls: true,
-
+  
+  // Appearance
+  appearance: true,
+  
+  // Sitemap
   sitemap: {
-    hostname: 'https://lessup.github.io/encoding/',
+    hostname: 'https://lessup.github.io/compresskit/',
   },
-
+  
+  // Head Meta Tags
   head: [
-    ['link', { rel: 'canonical', href: 'https://lessup.github.io/encoding/' }],
-    ['meta', { name: 'theme-color', content: '#0f172a' }],
+    ['link', { rel: 'canonical', href: 'https://lessup.github.io/compresskit/' }],
+    ['meta', { charset: 'UTF-8' }],
+    ['meta', { name: 'viewport', content: 'width=device-width, initial-scale=1.0' }],
+    ['meta', { name: 'theme-color', content: '#2563eb', media: '(prefers-color-scheme: light)' }],
+    ['meta', { name: 'theme-color', content: '#0f172a', media: '(prefers-color-scheme: dark)' }],
+    
+    // SEO
+    ['meta', { name: 'keywords', content: 'compression algorithms, huffman coding, arithmetic coding, range coder, run-length encoding, C++, Go, Rust, lossless compression, cross-language, benchmark' }],
+    ['meta', { name: 'author', content: 'CompressKit Team' }],
+    ['meta', { name: 'robots', content: 'index, follow' }],
+    
+    // Open Graph
     ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:title', content: 'Encoding | Compression Algorithms Collection' }],
-    ['meta', { property: 'og:description', content: 'Classic compression algorithms in C++, Go, and Rust for learning, comparison and cross-language verification' }],
-    ['meta', { property: 'og:url', content: 'https://lessup.github.io/encoding/' }],
+    ['meta', { property: 'og:locale', content: 'en_US' }],
+    ['meta', { property: 'og:title', content: 'CompressKit | Compression Algorithms Collection' }],
+    ['meta', { property: 'og:description', content: 'Production-ready compression algorithms in C++17, Go, and Rust. Learn, compare, and verify across languages.' }],
+    ['meta', { property: 'og:url', content: 'https://lessup.github.io/compresskit/' }],
+    ['meta', { property: 'og:site_name', content: 'CompressKit' }],
+    ['meta', { property: 'og:image', content: '/compresskit/og-image.png' }],
+    ['meta', { property: 'og:image:width', content: '1200' }],
+    ['meta', { property: 'og:image:height', content: '630' }],
+    
+    // Twitter
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
-    ['meta', { name: 'twitter:title', content: 'Encoding | Compression Algorithms Collection' }],
-    ['meta', { name: 'twitter:description', content: 'Classic compression algorithms in C++, Go, and Rust for learning, comparison and cross-language verification' }],
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/encoding/logo.svg' }],
+    ['meta', { name: 'twitter:site', content: '@compresskit' }],
+    ['meta', { name: 'twitter:title', content: 'CompressKit | Compression Algorithms Collection' }],
+    ['meta', { name: 'twitter:description', content: 'Production-ready compression algorithms in C++17, Go, and Rust. Learn, compare, and verify across languages.' }],
+    ['meta', { name: 'twitter:image', content: '/compresskit/og-image.png' }],
+    
+    // Favicon
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/compresskit/logo.svg' }],
+    ['link', { rel: 'mask-icon', href: '/compresskit/logo.svg', color: '#2563eb' }],
+    ['link', { rel: 'apple-touch-icon', href: '/compresskit/logo.svg' }],
+    
+    // Preconnect for fonts
+    ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
+    ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
+    ['link', { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap' }],
+    
+    // Structured Data (JSON-LD)
+    ['script', { type: 'application/ld+json' }, JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      'name': 'CompressKit',
+      'description': 'Production-ready compression algorithms in C++17, Go, and Rust',
+      'url': 'https://lessup.github.io/compresskit/',
+      'applicationCategory': 'DeveloperApplication',
+      'operatingSystem': 'Linux, macOS, Windows',
+      'softwareVersion': '1.0.0',
+      'license': 'https://opensource.org/licenses/MIT',
+      'programmingLanguage': ['C++', 'Go', 'Rust'],
+      'author': {
+        '@type': 'Organization',
+        'name': 'LessUp'
+      },
+      'codeRepository': 'https://github.com/LessUp/compresskit',
+      'featureList': [
+        'Huffman Coding implementation',
+        'Arithmetic Coding implementation', 
+        'Range Coder implementation',
+        'Run-Length Encoding implementation',
+        'Cross-language binary compatibility',
+        'Comprehensive benchmark suite'
+      ]
+    })],
   ],
-
+  
+  // Markdown Configuration
   markdown: {
     lineNumbers: true,
     languageAlias: {
       cuda: 'cpp',
     },
+    config: (md) => {
+      // Custom markdown enhancements can be added here
+    }
   },
-
+  
+  // Last Updated
   lastUpdated: true,
-
-  // Internationalization configuration
+  
+  // Internationalization Configuration
   locales: {
     root: {
       label: 'English',
@@ -125,12 +228,12 @@ export default defineConfig({
         nav: sharedNav('en'),
         sidebar: sharedSidebar['/en/'],
         editLink: {
-          pattern: 'https://github.com/LessUp/encoding/edit/master/docs/:path',
+          pattern: 'https://github.com/LessUp/compresskit/edit/master/docs/:path',
           text: 'Edit this page on GitHub',
         },
         footer: {
           message: 'Released under the MIT License',
-          copyright: 'Copyright © 2025-2026 LessUp',
+          copyright: 'Copyright © 2025-2026 LessUp. Built with VitePress.',
         },
         outline: {
           level: [2, 3],
@@ -146,6 +249,26 @@ export default defineConfig({
         returnToTopLabel: 'Return to top',
         sidebarMenuLabel: 'Menu',
         darkModeSwitchLabel: 'Theme',
+        search: {
+          provider: 'local',
+          options: {
+            translations: {
+              button: {
+                buttonText: 'Search',
+                buttonAriaLabel: 'Search documentation',
+              },
+              modal: {
+                noResultsText: 'No results found',
+                resetButtonTitle: 'Clear search',
+                footer: {
+                  selectText: 'to select',
+                  navigateText: 'to navigate',
+                  closeText: 'to close',
+                },
+              },
+            },
+          },
+        },
       },
     },
     zh: {
@@ -156,12 +279,12 @@ export default defineConfig({
         nav: sharedNav('zh'),
         sidebar: sharedSidebar['/zh/'],
         editLink: {
-          pattern: 'https://github.com/LessUp/encoding/edit/master/docs/:path',
+          pattern: 'https://github.com/LessUp/compresskit/edit/master/docs/:path',
           text: '在 GitHub 上编辑此页',
         },
         footer: {
           message: '基于 MIT 许可证发布',
-          copyright: '版权所有 © 2025-2026 LessUp',
+          copyright: '版权所有 © 2025-2026 LessUp. 使用 VitePress 构建。',
         },
         outline: {
           level: [2, 3],
@@ -177,39 +300,9 @@ export default defineConfig({
         returnToTopLabel: '返回顶部',
         sidebarMenuLabel: '菜单',
         darkModeSwitchLabel: '主题',
-      },
-    },
-  },
-
-  themeConfig: {
-    // Social links (shared)
-    socialLinks: [
-      { icon: 'github', link: 'https://github.com/LessUp/encoding' },
-    ],
-
-    // Search (localized)
-    search: {
-      provider: 'local',
-      options: {
-        locales: {
-          root: {
-            translations: {
-              button: {
-                buttonText: 'Search',
-                buttonAriaLabel: 'Search docs',
-              },
-              modal: {
-                noResultsText: 'No results found',
-                resetButtonTitle: 'Reset search',
-                footer: {
-                  selectText: 'select',
-                  navigateText: 'navigate',
-                  closeText: 'close',
-                },
-              },
-            },
-          },
-          zh: {
+        search: {
+          provider: 'local',
+          options: {
             translations: {
               button: {
                 buttonText: '搜索文档',
@@ -229,7 +322,42 @@ export default defineConfig({
         },
       },
     },
-
+  },
+  
+  // Theme Configuration
+  themeConfig: {
+    // Logo
+    logo: {
+      light: '/logo.svg',
+      dark: '/logo-dark.svg',
+      alt: 'CompressKit Logo'
+    },
+    
+    // Site Title
+    siteTitle: 'CompressKit',
+    
+    // Social links
+    socialLinks: [
+      { icon: 'github', link: 'https://github.com/LessUp/compresskit' },
+    ],
+    
+    // External link indicator
     externalLinkIcon: true,
+  },
+  
+  // Vite Configuration
+  vite: {
+    resolve: {
+      alias: {
+        '@theme': '/.vitepress/theme',
+      },
+    },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          additionalData: '',
+        },
+      },
+    },
   },
 })

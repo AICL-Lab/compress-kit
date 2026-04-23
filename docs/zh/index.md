@@ -2,56 +2,59 @@
 layout: home
 
 hero:
-  name: Encoding
+  name: CompressKit
   text: 压缩算法集
-  tagline: 使用 C++17、Go 和 Rust 实现的经典压缩算法，用于学习、对比和跨语言验证
+  tagline: 使用 C++17、Go 和 Rust 实现的生产级压缩算法。在多语言环境下学习、对比和验证。
   image:
     src: /logo.svg
-    alt: Encoding Logo
+    alt: CompressKit Logo
   actions:
     - theme: brand
-      text: 快速开始 →
+      text: 快速开始
       link: /zh/guide/getting-started
     - theme: alt
-      text: 算法详解
-      link: /zh/guide/algorithms
-    - theme: alt
       text: 查看 GitHub
-      link: https://github.com/LessUp/encoding
+      link: https://github.com/LessUp/compresskit
+    - theme: alt
+      text: English
+      link: /en/
 
 features:
   - icon: 🌐
     title: 多语言对比
-    details: 每种算法都有 C++17、Go 和 Rust 实现，便于对比代码风格、工程实践和性能特征。
+    details: 每种算法都有 C++17、Go 和 Rust 实现，便于对比性能、代码风格和工程实践。
   - icon: 📦
-    title: 统一文件格式
-    details: 所有语言实现共享相同的二进制格式，可直接进行跨语言编码/解码验证。
+    title: 跨语言兼容
+    details: 所有语言实现共享相同的二进制格式。用 C++ 编码，用 Go 解码，用 Rust 验证——完全互通。
   - icon: 📚
     title: 面向学习
-    details: 文档侧重于算法用例、理论原理和学习路径，而不仅仅是命令列表。
+    details: 通过清晰的解释和三种语言的工作代码示例，深入理解每个算法背后的原理。
   - icon: ✅
     title: 生产级验证
-    details: 完整的 CI/CD 流水线，自动化构建、测试和基准测试，确保正确性和性能。
+    details: 完整的 CI/CD 流水线，自动化构建、跨语言正确性测试和持续基准测试。
 ---
 
-## 🎯 项目简介
+<StatsBar />
 
-**Encoding** 是一个围绕经典压缩算法的教育性仓库。它提供可运行的实现以及全面的文档，解释算法背景、适用场景和代码组织。
+## 选择算法
 
-### 适用人群
+<AlgorithmGrid />
 
-| 用户类型 | 使用场景 |
-|----------|----------|
-| 🎓 **学生和学习者** | 通过多语言对比理解压缩算法 |
-| 👨‍💻 **软件工程师** | 对比相同算法在 C++、Go 和 Rust 中的实现模式 |
-| 🔧 **开源维护者** | 验证跨语言格式兼容性和基准性能 |
+## 快速对比
 
-## 🚀 快速开始
+| 算法 | 压缩率 | 速度 | 适用场景 |
+|------|--------|------|----------|
+| **霍夫曼编码** | 中等 | 快 | 通用文本/数据 |
+| **算术编码** | 高 | 中等 | 最大压缩需求 |
+| **区间编码** | 高 | 快 | 平衡性能 |
+| **行程编码** | 可变 | 极快 | 高度重复数据 |
+
+## 快速开始
 
 ```bash
 # 克隆仓库
-git clone https://github.com/LessUp/encoding.git
-cd encoding
+git clone https://github.com/LessUp/compresskit.git
+cd compresskit
 
 # 构建所有实现
 make build
@@ -63,35 +66,43 @@ make test
 make bench
 ```
 
-## 📖 文档结构
+## 跨语言验证
 
-| 章节 | 描述 | 链接 |
-|------|------|------|
-| **快速开始** | 环境配置、构建说明、基本用法 | [阅读 →](/zh/guide/getting-started) |
-| **算法详解** | 算法说明、对比、用例 | [阅读 →](/zh/guide/algorithms) |
-| **项目结构** | 目录结构、CLI 规范、文件格式 | [阅读 →](/zh/guide/project-structure) |
-| **更新日志** | 版本历史和发布说明 | [GitHub 查看](https://github.com/LessUp/encoding/blob/master/CHANGELOG.md) |
+CompressKit 的核心特性——用任意语言编码，用任意其他语言解码：
 
-## 📊 算法概览
+```bash
+# 用 C++ 编码
+./algorithms/huffman/cpp/huffman_cpp encode input.bin encoded.huf
 
-| 算法 | 压缩率 | 速度 | 适用场景 |
-|------|--------|------|----------|
-| **Huffman** | 中等 | 快 | 通用文本/数据 |
-| **算术编码** | 高 | 中等 | 最大压缩需求 |
-| **区间编码** | 高 | 快 | 平衡性能 |
-| **RLE** | 可变 | 极快 | 高度重复数据 |
+# 用 Go 解码
+./algorithms/huffman/go/huffman_go decode encoded.huf restored.bin
 
-## 🛠️ 技术栈
+# 验证正确性
+diff input.bin restored.bin  # 无输出 = 相同
+```
 
-- **C++17** - 无依赖单文件实现
-- **Go 1.21+** - 基于模块，提供库 API
-- **Rust 1.70+** - 基于 Cargo，提供库包
-- **Python 3.8+** - 基准测试和测试脚本
+## 文档结构
 
-## 🤝 参与贡献
+| 章节 | 描述 |
+|------|------|
+| [快速开始](/zh/guide/getting-started) | 环境配置、构建说明 |
+| [算法详解](/zh/guide/algorithms) | 详细说明和对比 |
+| [API 参考](/zh/api/go) | 各语言的库 API |
+| [基准测试](/zh/benchmarks/results) | 性能结果和方法论 |
 
-我们欢迎贡献！详情请查看我们的 [贡献指南](https://github.com/LessUp/encoding/blob/master/CONTRIBUTING.md)。
+## 社区
 
-## 📄 许可证
+- 💬 [GitHub 讨论区](https://github.com/LessUp/compresskit/discussions)
+- 🐛 [GitHub Issues](https://github.com/LessUp/compresskit/issues)
+- 🤝 [贡献指南](/zh/guide/contributing)
 
-[MIT 许可证](https://github.com/LessUp/encoding/blob/master/LICENSE) © 2025-2026 LessUp
+---
+
+**CompressKit** © 2025-2026 LessUp. MIT 许可证发布。
+
+<style>
+:root {
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 50%, #10b981 100%);
+}
+</style>

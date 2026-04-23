@@ -71,6 +71,12 @@ node_modules/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 
+# OpenSpec
+.openspec-cache/
+
+# Migration backup (temporary)
+specs-backup-*.tar.gz
+
 # Logs & temp
 *.log
 *.tmp

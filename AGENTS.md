@@ -1,60 +1,137 @@
-# Project Philosophy: Spec-Driven Development (SDD)
+# Project Philosophy: OpenSpec-Driven Development
 
-This project strictly follows the **Spec-Driven Development (SDD)** paradigm. All code implementations must be based on the specification documents in the `/specs` directory as the Single Source of Truth.
+This project uses **OpenSpec** for spec-driven development. All code implementations must be based on specifications in the `openspec/specs/` directory as the Single Source of Truth.
 
-## Directory Context
+## OpenSpec Setup
+
+### Installation
+
+```bash
+# Requires Node.js 20.19.0+
+npm install -g @fission-ai/openspec@latest
+```
+
+### Verification
+
+```bash
+openspec --version
+openspec list
+```
+
+## Directory Structure
 
 | Directory | Purpose |
 |-----------|---------|
-| `/specs/product/` | Product feature definitions and acceptance criteria |
-| `/specs/rfc/` | Technical design documents (architecture, patterns, decisions) |
-| `/specs/testing/` | Test specifications and BDD test cases |
-| `/docs/` | User-facing documentation (VitePress documentation site) |
+| `openspec/specs/` | Main specification documents |
+| `openspec/changes/` | Active change proposals |
+| `openspec/changes/archive/` | Completed and archived changes |
+| `openspec/config.yaml` | OpenSpec configuration |
+| `docs/` | User-facing documentation (VitePress) |
 
-## AI Agent Workflow Instructions
+## AI Agent Workflow
 
-When you (AI) are asked to develop a new feature, modify an existing one, or fix a bug, **you must strictly follow this workflow without skipping any steps**:
+When developing a new feature, fixing a bug, or making architectural changes, follow this workflow:
 
 ### Step 1: Review Specs (审查规范)
 
-- Before writing any code, first read the relevant documents in `/specs` (product requirements, RFCs, API definitions).
-- If the user's request conflicts with existing specs, **stop immediately** and point out the conflict. Ask the user whether to update the spec first.
-- 如果用户指令与现有 Spec 冲突，请立即停止编码，并指出冲突点，询问用户是否需要先更新 Spec。
+Before any code changes:
+```bash
+# Check current specs
+openspec list
 
-### Step 2: Spec-First Update (规范优先)
+# View specific spec
+cat openspec/specs/<capability>/spec.md
+```
 
-- If this is a new feature, or if existing interfaces/database structures need to change, **you must first propose modifying or creating the appropriate spec documents** (e.g., `openapi.yaml` or RFC documents).
-- Wait for user confirmation of the spec changes before proceeding to the code writing phase.
-- 如果这是一个新功能，或者需要改变现有的接口/数据库结构，**必须首先提议修改或创建相应的 Spec 文档**。等待用户确认 Spec 的修改后，才能进入代码编写阶段。
+- Read relevant specs in `openspec/specs/`
+- If user request conflicts with specs, **stop and ask** whether to create a change proposal
+- 如果用户指令与现有 Spec 冲突，请立即停止，询问是否需要创建变更提案
 
-### Step 3: Implementation (代码实现)
+### Step 2: Create Proposal (创建提案)
 
-- When writing code, **100% adhere to the definitions in the specs** (including variable naming, API paths, data types, status codes, etc.).
-- Do not add features in the code that are not defined in the specs (No Gold-Plating).
-- 编写代码时，必须 100% 遵守 Spec 中的定义（包括变量命名、API 路径、数据类型、状态码等）。不要在代码中擅自添加 Spec 中未定义的功能。
+For new features or significant changes, use OpenSpec workflow:
+
+```bash
+# Start a new change proposal
+/opsx:propose "add-lz77-compression"
+```
+
+This creates `openspec/changes/add-lz77-compression/` with:
+- `proposal.md` - Rationale and scope
+- `specs/` - Delta specs (ADDED/MODIFIED/REMOVED requirements)
+- `design.md` - Technical approach
+- `tasks.md` - Implementation checklist
+
+等待用户确认提案后再进入实现阶段。
+
+### Step 3: Implement (代码实现)
+
+After proposal approval:
+
+```bash
+# Start implementing tasks
+/opsx:apply add-lz77-compression
+```
+
+- Implement tasks from `tasks.md` in order
+- Mark tasks complete: `- [ ]` → `- [x]`
+- Follow requirement keywords: `SHALL`, `MUST`
+- Keep code changes minimal and focused
 
 ### Step 4: Test Against Spec (测试验证)
 
-- Write unit and integration tests based on the acceptance criteria in `/specs`.
-- Ensure test cases cover all boundary conditions described in the specs.
-- 根据 `/specs` 中的验收标准（Acceptance Criteria）编写单元测试和集成测试。确保测试用例覆盖了 Spec 中描述的所有边界情况。
+Write tests based on scenarios in specs:
+
+```bash
+# Run cross-language tests
+make test
+
+# Run benchmarks
+make bench
+```
+
+Each requirement has scenarios in GIVEN/WHEN/THEN format - ensure tests cover these.
+
+### Step 5: Archive (归档)
+
+When implementation is complete:
+
+```bash
+# Archive the change
+/opsx:archive add-lz77-compression
+```
+
+This:
+1. Syncs delta specs to main specs (if any)
+2. Moves change to `openspec/changes/archive/YYYY-MM-DD-add-lz77-compression/`
+
+## OpenSpec Commands Reference
+
+| Command | Purpose |
+|---------|---------|
+| `/opsx:propose <name>` | Create new change proposal with all artifacts |
+| `/opsx:apply <name>` | Implement tasks from a change |
+| `/opsx:archive <name>` | Archive completed change |
+| `/opsx:sync <name>` | Sync delta specs to main specs without archiving |
 
 ## Code Generation Rules
 
-- Any changes to binary file formats, CLI interfaces, or error handling must synchronously update the relevant spec files in `/specs/rfc/`.
-- If uncertain about technical details, consult the architecture conventions in `/specs/rfc/`. Do not invent design patterns on your own.
-- All error messages must be in English.
+- Binary format changes MUST update `openspec/specs/core-architecture/spec.md`
+- New algorithms MUST update `openspec/specs/encoding-project/spec.md`
+- Test changes MUST update `openspec/specs/cross-language-testing/spec.md`
+- All error messages MUST be in English
 - Follow language-specific conventions:
-  - **C++17**: Google C++ Style Guide, 4-space indentation, snake_case for functions/variables, PascalCase for classes
-  - **Go 1.21+**: gofmt formatting, go vet analysis, Effective Go conventions
-  - **Rust 1.70+**: rustfmt formatting, clippy linting, Rust API Guidelines
-  - **Python 3.8+**: PEP 8 style, 4-space indentation
+  - **C++17**: Google Style Guide, snake_case, PascalCase classes
+  - **Go 1.21+**: gofmt, go vet, Effective Go
+  - **Rust 1.70+**: rustfmt, clippy, Rust API Guidelines
+  - **Python 3.8+**: PEP 8
 
-## Why This Matters
+## Why OpenSpec Matters
 
-1. **Prevent AI Hallucinations (防范 AI 幻觉)**: AI tends to "freestyle" without context. Forcing it to read `/specs` in the first step anchors its thinking scope.
-2. **Constrain Modification Path (约束修改路径)**: Declaring "modify specs before code" ensures document-code synchronization (Document-Code Synchronization).
-3. **Improve PR Quality (提高 PR 质量)**: When AI generates Pull Requests, the implementation will be highly aligned with business logic because it's developed based on the acceptance criteria defined in the specs.
+1. **Structured Change Management**: Each change is a self-contained unit with proposal, specs, design, and tasks
+2. **Delta Spec Tracking**: Track what requirements are ADDED/MODIFIED/REMOVED
+3. **Archive History**: Completed changes preserved with timestamps
+4. **AI-Native Workflow**: Commands designed for AI agent execution
 
 ## Project-Specific Notes
 
@@ -65,6 +142,10 @@ This project implements compression algorithms (Huffman, Arithmetic Coding, Rang
 - **Security Constraints**: Max input 4 GiB, max output 1 GiB to prevent decompression bombs
 - **Testing Focus**: Cross-language encode/decode verification is mandatory
 
-For detailed product requirements, see [specs/product/encoding-project.md](specs/product/encoding-project.md).
-For architecture decisions, see [specs/rfc/0001-core-architecture.md](specs/rfc/0001-core-architecture.md).
-For testing specifications, see [specs/testing/cross-language.md](specs/testing/cross-language.md).
+## Current Specs
+
+| Spec | Description |
+|------|-------------|
+| [encoding-project](openspec/specs/encoding-project/spec.md) | Product requirements, algorithm status, security/quality requirements |
+| [core-architecture](openspec/specs/core-architecture/spec.md) | Directory structure, CLI patterns, frequency table format, CI/CD design |
+| [cross-language-testing](openspec/specs/cross-language-testing/spec.md) | Correctness tests, benchmarks, known issues |

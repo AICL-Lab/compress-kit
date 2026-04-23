@@ -1,7 +1,7 @@
 .PHONY: build build-huffman build-arithmetic build-range build-rle \
        test test-huffman-go test-arithmetic-go test-range-go test-rle-go \
        test-huffman-rust test-arithmetic-rust test-range-rust test-rle-rust \
-       test-data bench clean
+       test-data bench clean spec-init spec-list spec-status
 
 # ── Build ──────────────────────────────────────────────────────────────────
 
@@ -76,3 +76,33 @@ clean:
 	rm -f algorithms/range/cpp/rangecoder_cpp algorithms/range/go/rangecoder_go
 	rm -f algorithms/rle/cpp/rle_cpp algorithms/rle/go/rle_go algorithms/rle/rust/rle_rust algorithms/rle/rust/rle_rust_test
 	cargo clean --manifest-path algorithms/range/rust/Cargo.toml 2>/dev/null || true
+
+# ── OpenSpec ────────────────────────────────────────────────────────────────
+
+spec-init:
+	@openspec init --tools claude,cursor
+
+spec-list:
+	@openspec list
+
+spec-status:
+	@openspec status
+
+# ── Help ────────────────────────────────────────────────────────────────────
+
+help:
+	@echo "Build Commands:"
+	@echo "  make build          Build all algorithms"
+	@echo "  make build-<algo>   Build specific algorithm"
+	@echo ""
+	@echo "Test Commands:"
+	@echo "  make test           Run all tests"
+	@echo "  make bench          Run benchmarks"
+	@echo ""
+	@echo "OpenSpec Commands:"
+	@echo "  make spec-init      Initialize OpenSpec"
+	@echo "  make spec-list      List active changes"
+	@echo "  make spec-status    Show current status"
+	@echo ""
+	@echo "Other:"
+	@echo "  make clean          Clean build artifacts"

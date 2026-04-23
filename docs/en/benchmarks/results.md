@@ -1,10 +1,14 @@
 # Benchmark Results
 
-This page shows the performance characteristics of each algorithm across C++, Go, and Rust implementations.
+This page shows the performance characteristics of each algorithm across C++17, Go, and Rust implementations.
 
 ::: tip Note
 Benchmark results depend on hardware and OS. Run `make bench` locally for your system's numbers.
 :::
+
+## Interactive Performance Chart
+
+<BenchmarkChart />
 
 ## Test Data
 
@@ -73,7 +77,7 @@ Benchmark results depend on hardware and OS. Run `make bench` locally for your s
 
 ## Cross-Language Comparison
 
-### Speed (fastest → slowest)
+### Speed Ranking (fastest → slowest)
 
 | Algorithm | Encode | Decode |
 |-----------|--------|--------|
@@ -103,3 +107,9 @@ make bench
 # Results saved to reports/ directory
 ls reports/
 ```
+
+## See Also
+
+- [How to Run Benchmarks](/en/benchmarks/how-to-run) — Detailed instructions
+- [Cross-Language Testing](/en/testing/cross-language) — Verification methodology
+- [Algorithm Guide](/en/guide/algorithms) — Comparison and selection guide

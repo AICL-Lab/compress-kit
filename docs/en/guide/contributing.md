@@ -80,8 +80,8 @@ If you want to add support for another language (e.g., Python, Zig):
 
 ## Code of Conduct
 
-Please read our [Code of Conduct](https://github.com/LessUp/encoding/blob/master/CODE_OF_CONDUCT.md).
+Please read our [Code of Conduct](https://github.com/LessUp/compresskit/blob/master/CODE_OF_CONDUCT.md).
 
 ## License
 
-By contributing, you agree that your contributions will be licensed under the [MIT License](https://github.com/LessUp/encoding/blob/master/LICENSE).
+By contributing, you agree that your contributions will be licensed under the [MIT License](https://github.com/LessUp/compresskit/blob/master/LICENSE).

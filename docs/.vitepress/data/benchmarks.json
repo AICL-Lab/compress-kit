@@ -1,0 +1,138 @@
+{
+  "generated": "2026-04-22",
+  "version": "1.0.0",
+  "results": [
+    {
+      "algorithm": "huffman", 
+      "language": "cpp",
+      "dataset": "text_10mb",
+      "encodeTime": 180,
+      "decodeTime": 140,
+      "encodeSpeed": 55.6,
+      "decodeSpeed": 71.4,
+      "compressionRatio": 1.82,
+      "throughput": "high"
+    },
+    {
+      "algorithm": "huffman", 
+      "language": "go",
+      "dataset": "text_10mb",
+      "encodeTime": 240,
+      "decodeTime": 190,
+      "encodeSpeed": 41.7,
+      "decodeSpeed": 52.6,
+      "compressionRatio": 1.82,
+      "throughput": "medium"
+    },
+    {
+      "algorithm": "huffman", 
+      "language": "rust",
+      "dataset": "text_10mb",
+      "encodeTime": 160,
+      "decodeTime": 125,
+      "encodeSpeed": 62.5,
+      "decodeSpeed": 80.0,
+      "compressionRatio": 1.82,
+      "throughput": "high"
+    },
+    {
+      "algorithm": "arithmetic",
+      "language": "cpp",
+      "dataset": "text_10mb",
+      "encodeTime": 280,
+      "decodeTime": 250,
+      "encodeSpeed": 35.7,
+      "decodeSpeed": 40.0,
+      "compressionRatio": 1.91,
+      "throughput": "medium"
+    },
+    {
+      "algorithm": "arithmetic",
+      "language": "go",
+      "dataset": "text_10mb",
+      "encodeTime": 350,
+      "decodeTime": 310,
+      "encodeSpeed": 28.6,
+      "decodeSpeed": 32.3,
+      "compressionRatio": 1.91,
+      "throughput": "medium"
+    },
+    {
+      "algorithm": "arithmetic",
+      "language": "rust",
+      "dataset": "text_10mb",
+      "encodeTime": 260,
+      "decodeTime": 230,
+      "encodeSpeed": 38.5,
+      "decodeSpeed": 43.5,
+      "compressionRatio": 1.91,
+      "throughput": "medium"
+    },
+    {
+      "algorithm": "range",
+      "language": "cpp",
+      "dataset": "text_10mb",
+      "encodeTime": 190,
+      "decodeTime": 170,
+      "encodeSpeed": 52.6,
+      "decodeSpeed": 58.8,
+      "compressionRatio": 1.90,
+      "throughput": "high"
+    },
+    {
+      "algorithm": "range",
+      "language": "go",
+      "dataset": "text_10mb",
+      "encodeTime": 230,
+      "decodeTime": 200,
+      "encodeSpeed": 43.5,
+      "decodeSpeed": 50.0,
+      "compressionRatio": 1.90,
+      "throughput": "medium"
+    },
+    {
+      "algorithm": "range",
+      "language": "rust",
+      "dataset": "text_10mb",
+      "encodeTime": 175,
+      "decodeTime": 155,
+      "encodeSpeed": 57.1,
+      "decodeSpeed": 64.5,
+      "compressionRatio": 1.90,
+      "throughput": "high"
+    },
+    {
+      "algorithm": "rle",
+      "language": "cpp",
+      "dataset": "repetitive_10mb",
+      "encodeTime": 45,
+      "decodeTime": 35,
+      "encodeSpeed": 222.2,
+      "decodeSpeed": 285.7,
+      "compressionRatio": 25.0,
+      "throughput": "very-high"
+    },
+    {
+      "algorithm": "rle",
+      "language": "go",
+      "dataset": "repetitive_10mb",
+      "encodeTime": 70,
+      "decodeTime": 55,
+      "encodeSpeed": 142.9,
+      "decodeSpeed": 181.8,
+      "compressionRatio": 25.0,
+      "throughput": "high"
+    },
+    {
+      "algorithm": "rle",
+      "language": "rust",
+      "dataset": "repetitive_10mb",
+      "encodeTime": 40,
+      "decodeTime": 32,
+      "encodeSpeed": 250.0,
+      "decodeSpeed": 312.5,
+      "compressionRatio": 25.0,
+      "throughput": "very-high"
+    }
+  ]
+}

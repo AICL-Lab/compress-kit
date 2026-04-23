@@ -7,30 +7,24 @@ import './styles/animations.css'
 import './styles/components.css'
 
 // Import custom components
+import StatsBar from './components/StatsBar.vue'
+import AlgorithmGrid from './components/AlgorithmGrid.vue'
+import BenchmarkChart from './components/BenchmarkChart.vue'
+import CodeComparison from './components/CodeComparison.vue'
 import CustomFooter from './components/CustomFooter.vue'
-import AnimatedHero from './components/AnimatedHero.vue'
-import FeatureCard from './components/FeatureCard.vue'
-import AlgorithmShowcase from './components/AlgorithmShowcase.vue'
-import CodePlayground from './components/CodePlayground.vue'
-import LanguageSwitcher from './components/LanguageSwitcher.vue'
-import ReadingProgress from './components/ReadingProgress.vue'
-import BackToTop from './components/BackToTop.vue'
 
 export default {
   extends: DefaultTheme,
   Layout: () => {
     return h(DefaultTheme.Layout, null, {
       'layout-bottom': () => h(CustomFooter),
-      'doc-top': () => h(ReadingProgress),
-      'doc-bottom': () => h(BackToTop),
     })
   },
   enhanceApp({ app }) {
-    // Register custom components
-    app.component('AnimatedHero', AnimatedHero)
-    app.component('FeatureCard', FeatureCard)
-    app.component('AlgorithmShowcase', AlgorithmShowcase)
-    app.component('CodePlayground', CodePlayground)
-    app.component('LanguageSwitcher', LanguageSwitcher)
+    // Register custom components globally
+    app.component('StatsBar', StatsBar)
+    app.component('AlgorithmGrid', AlgorithmGrid)
+    app.component('BenchmarkChart', BenchmarkChart)
+    app.component('CodeComparison', CodeComparison)
   },
 } satisfies Theme

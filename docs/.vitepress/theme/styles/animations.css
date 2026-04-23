@@ -1,1 +1,221 @@
-/* Animation styles */
+/* CompressKit Animations */
+
+/* Fade in up */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fade in scale */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Pulse glow */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(37, 99, 235, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
+  }
+}
+
+/* Float animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Gradient shift */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Compression pulse (for demo) */
+@keyframes compress {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.85);
+  }
+}
+
+/* Slide in from left */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Slide in from right */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Count up animation */
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Rotate */
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Bounce subtle */
+@keyframes bounceSubtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  25% {
+    transform: translateY(-3px);
+  }
+  75% {
+    transform: translateY(3px);
+  }
+}
+
+/* Animation utility classes */
+.ck-animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+.ck-animate-fade-in-scale {
+  animation: fadeInScale 0.5s ease-out forwards;
+}
+
+.ck-animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.ck-animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.ck-animate-compress {
+  animation: compress 2s ease-in-out infinite;
+}
+
+.ck-animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+.ck-animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Stagger delays */
+.ck-delay-100 { animation-delay: 100ms; }
+.ck-delay-200 { animation-delay: 200ms; }
+.ck-delay-300 { animation-delay: 300ms; }
+.ck-delay-400 { animation-delay: 400ms; }
+.ck-delay-500 { animation-delay: 500ms; }
+.ck-delay-600 { animation-delay: 600ms; }
+.ck-delay-700 { animation-delay: 700ms; }
+.ck-delay-800 { animation-delay: 800ms; }
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Interactive hover effects */
+.ck-hover-lift {
+  transition: transform var(--ck-transition-base), box-shadow var(--ck-transition-base);
+}
+
+.ck-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--ck-shadow-lg);
+}
+
+.ck-hover-glow {
+  transition: box-shadow var(--ck-transition-base);
+}
+
+.ck-hover-glow:hover {
+  box-shadow: var(--ck-shadow-glow);
+}
+
+.ck-hover-scale {
+  transition: transform var(--ck-transition-fast);
+}
+
+.ck-hover-scale:hover {
+  transform: scale(1.02);
+}

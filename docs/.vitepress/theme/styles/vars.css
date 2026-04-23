@@ -1,23 +1,139 @@
-/* Custom CSS variables for VitePress theme */
+/* CompressKit Design System - CSS Variables */
 
 :root {
-  --vp-c-brand: #3b82f6;
-  --vp-c-brand-light: #60a5fa;
-  --vp-c-brand-lighter: #93c5fd;
-  --vp-c-brand-dark: #2563eb;
-  --vp-c-brand-darker: #1d4ed8;
-  --vp-c-brand-1: #3b82f6;
-  --vp-c-brand-2: #2563eb;
-  --vp-c-brand-3: #1d4ed8;
+  /* Brand Colors */
+  --ck-brand-1: #2563eb;
+  --ck-brand-2: #3b82f6;
+  --ck-brand-3: #60a5fa;
+  --ck-accent-1: #0ea5e9;
+  --ck-accent-2: #10b981;
+  --ck-accent-3: #34d399;
+  
+  /* Gradients */
+  --ck-gradient-primary: linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #0ea5e9 100%);
+  --ck-gradient-accent: linear-gradient(135deg, #0ea5e9 0%, #10b981 100%);
+  --ck-gradient-dark: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  --ck-gradient-glow: linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(14, 165, 233, 0.15) 100%);
+  
+  /* Neutrals */
+  --ck-slate-50: #f8fafc;
+  --ck-slate-100: #f1f5f9;
+  --ck-slate-200: #e2e8f0;
+  --ck-slate-300: #cbd5e1;
+  --ck-slate-400: #94a3b8;
+  --ck-slate-500: #64748b;
+  --ck-slate-600: #475569;
+  --ck-slate-700: #334155;
+  --ck-slate-800: #1e293b;
+  --ck-slate-900: #0f172a;
+  
+  /* Shadows */
+  --ck-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --ck-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --ck-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --ck-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --ck-shadow-glow: 0 0 20px rgba(37, 99, 235, 0.3);
+  --ck-shadow-glow-sm: 0 0 10px rgba(37, 99, 235, 0.2);
+  
+  /* Spacing */
+  --ck-space-1: 0.25rem;
+  --ck-space-2: 0.5rem;
+  --ck-space-3: 0.75rem;
+  --ck-space-4: 1rem;
+  --ck-space-5: 1.25rem;
+  --ck-space-6: 1.5rem;
+  --ck-space-8: 2rem;
+  --ck-space-10: 2.5rem;
+  --ck-space-12: 3rem;
+  --ck-space-16: 4rem;
+  --ck-space-20: 5rem;
+  --ck-space-24: 6rem;
+  
+  /* Border Radius */
+  --ck-radius-sm: 0.375rem;
+  --ck-radius-md: 0.5rem;
+  --ck-radius-lg: 0.75rem;
+  --ck-radius-xl: 1rem;
+  --ck-radius-2xl: 1.5rem;
+  --ck-radius-full: 9999px;
+  
+  /* Transitions */
+  --ck-transition-fast: 150ms ease;
+  --ck-transition-base: 200ms ease;
+  --ck-transition-slow: 300ms ease;
+  
+  /* Typography */
+  --ck-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
+/* VitePress Override - Light Theme */
+:root {
+  --vp-c-brand-1: var(--ck-brand-1);
+  --vp-c-brand-2: var(--ck-brand-2);
+  --vp-c-brand-3: var(--ck-brand-3);
+  --vp-c-bg: var(--ck-slate-50);
+  --vp-c-bg-alt: var(--ck-slate-100);
+  --vp-c-bg-elv: #ffffff;
+  --vp-c-divider: var(--ck-slate-200);
+  --vp-c-text-1: var(--ck-slate-900);
+  --vp-c-text-2: var(--ck-slate-700);
+  --vp-c-text-3: var(--ck-slate-500);
+  --vp-button-brand-bg: var(--ck-brand-1);
+  --vp-button-brand-hover-bg: var(--ck-brand-2);
+  --vp-home-hero-name-color: var(--ck-brand-1);
+  --vp-code-font-size: 14px;
+}
+
+/* VitePress Override - Dark Theme */
 .dark {
-  --vp-c-brand: #60a5fa;
-  --vp-c-brand-light: #93c5fd;
-  --vp-c-brand-lighter: #bfdbfe;
-  --vp-c-brand-dark: #3b82f6;
-  --vp-c-brand-darker: #2563eb;
   --vp-c-brand-1: #60a5fa;
   --vp-c-brand-2: #3b82f6;
   --vp-c-brand-3: #2563eb;
+  --vp-c-bg: var(--ck-slate-900);
+  --vp-c-bg-alt: var(--ck-slate-800);
+  --vp-c-bg-elv: #1e293b;
+  --vp-c-divider: var(--ck-slate-700);
+  --vp-c-text-1: var(--ck-slate-50);
+  --vp-c-text-2: var(--ck-slate-200);
+  --vp-c-text-3: var(--ck-slate-400);
+  --vp-button-brand-bg: var(--ck-brand-2);
+  --vp-button-brand-hover-bg: var(--ck-brand-1);
+  --vp-home-hero-name-color: var(--vp-c-brand-1);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--ck-slate-300);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ck-slate-400);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--ck-slate-700);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--ck-slate-600);
+}
+
+/* Selection color */
+::selection {
+  background: rgba(37, 99, 235, 0.2);
+  color: inherit;
+}
+
+.dark ::selection {
+  background: rgba(96, 165, 250, 0.3);
 }

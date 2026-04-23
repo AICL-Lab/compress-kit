@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- Background -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="50%" style="stop-color:#1e293b"/>
+      <stop offset="100%" style="stop-color:#0f172a"/>
+    </linearGradient>
+    <linearGradient id="brand" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#2563eb"/>
+      <stop offset="50%" style="stop-color:#0ea5e9"/>
+      <stop offset="100%" style="stop-color:#10b981"/>
+    </linearGradient>
+    <linearGradient id="cubeFront" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6"/>
+      <stop offset="100%" style="stop-color:#2563eb"/>
+    </linearGradient>
+    <linearGradient id="cubeSide" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#60a5fa"/>
+      <stop offset="100%" style="stop-color:#3b82f6"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  
+  <!-- Grid pattern -->
+  <g opacity="0.05">
+    <defs>
+      <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" stroke-width="0.5"/>
+      </pattern>
+    </defs>
+    <rect width="1200" height="630" fill="url(#grid)"/>
+  </g>
+  
+  <!-- Main Logo Cube -->
+  <g transform="translate(200, 315)">
+    <!-- Background glow -->
+    <circle cx="0" cy="10" r="150" fill="url(#brand)" opacity="0.15"/>
+    
+    <!-- 3D Cube -->
+    <g transform="scale(1.5)">
+      <!-- Front face -->
+      <path d="M-40 0 L0 20 L40 0 L0 -20 Z" fill="url(#cubeFront)"/>
+      <!-- Side face -->
+      <path d="M40 0 L0 20 L0 50 L40 30 Z" fill="url(#cubeSide)"/>
+      <!-- Top face -->
+      <path d="M0 -20 L0 20 L40 0 L0 -40 Z" fill="#93c5fd"/>
+      
+      <!-- Compressed inner cube -->
+      <g transform="translate(0, 25) scale(0.5)">
+        <path d="M-40 0 L0 20 L40 0 L0 -20 Z" fill="#34d399"/>
+        <path d="M40 0 L0 20 L0 50 L40 30 Z" fill="#10b981"/>
+        <path d="M0 -20 L0 20 L40 0 L0 -40 Z" fill="#6ee7b7"/>
+      </g>
+    </g>
+  </g>
+  
+  <!-- Title -->
+  <text x="450" y="250" font-family="system-ui, -apple-system, sans-serif" font-size="80" font-weight="800" fill="url(#brand)" letter-spacing="-2">CompressKit</text>
+  
+  <!-- Tagline -->
+  <text x="450" y="310" font-family="system-ui, -apple-system, sans-serif" font-size="32" fill="#94a3b8">Compression Algorithms in C++ • Go • Rust</text>
+  
+  <!-- Features list -->
+  <g transform="translate(450, 380)">
+    <g transform="translate(0, 0)">
+      <text x="0" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="24" fill="#64748b">🌐</text>
+      <text x="40" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="24" fill="#cbd5e1">Multi-Language Comparison</text>
+    </g>
+    <g transform="translate(0, 45)">
+      <text x="0" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="24" fill="#64748b">📦</text>
+      <text x="40" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="24" fill="#cbd5e1">Cross-Language Compatible</text>
+    </g>
+    <g transform="translate(0, 90)">
+      <text x="0" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="24" fill="#64748b">✅</text>
+      <text x="40" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="24" fill="#cbd5e1">Production-Ready Verification</text>
+    </g>
+  </g>
+  
+  <!-- Algorithm badges -->
+  <g transform="translate(450, 520)">
+    <rect x="0" y="0" width="120" height="32" rx="16" fill="#2563eb" opacity="0.2"/>
+    <rect x="0" y="0" width="120" height="32" rx="16" stroke="#2563eb" stroke-width="1" fill="none"/>
+    <text x="60" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#60a5fa" text-anchor="middle">Huffman</text>
+    
+    <rect x="140" y="0" width="130" height="32" rx="16" fill="#0ea5e9" opacity="0.2"/>
+    <rect x="140" y="0" width="130" height="32" rx="16" stroke="#0ea5e9" stroke-width="1" fill="none"/>
+    <text x="205" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#38bdf8" text-anchor="middle">Arithmetic</text>
+    
+    <rect x="290" y="0" width="110" height="32" rx="16" fill="#10b981" opacity="0.2"/>
+    <rect x="290" y="0" width="110" height="32" rx="16" stroke="#10b981" stroke-width="1" fill="none"/>
+    <text x="345" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#34d399" text-anchor="middle">Range</text>
+    
+    <rect x="420" y="0" width="70" height="32" rx="16" fill="#8b5cf6" opacity="0.2"/>
+    <rect x="420" y="0" width="70" height="32" rx="16" stroke="#8b5cf6" stroke-width="1" fill="none"/>
+    <text x="455" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#a78bfa" text-anchor="middle">RLE</text>
+  </g>
+  
+  <!-- Bottom bar -->
+  <rect x="0" y="600" width="1200" height="30" fill="url(#brand)" opacity="0.1"/>
+  <text x="600" y="620" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#64748b" text-anchor="middle">lessup.github.io/compresskit</text>
+</svg>

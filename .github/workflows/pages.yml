@@ -38,6 +38,8 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        with:
+          static_site_generator: vitepress
 
       - name: Install dependencies
         run: npm ci
@@ -60,3 +62,36 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # Optional: Update benchmark data periodically
+  update-benchmark-data:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    needs: [deploy]
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ golang rustc python3
+      
+      - name: Build and run benchmarks
+        run: |
+          make build
+          make bench
+      
+      - name: Generate benchmark JSON
+        run: |
+          python3 scripts/generate_benchmark_json.py || echo "Using static data"
+      
+      - name: Commit benchmark data
+        run: |
+          if [ -f docs/.vitepress/data/benchmarks.json ]; then
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git add docs/.vitepress/data/benchmarks.json
+            git diff --cached --quiet || (git commit -m "Update benchmark data [ci skip]" && git push)
+          fi

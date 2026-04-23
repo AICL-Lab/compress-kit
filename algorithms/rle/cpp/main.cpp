@@ -52,8 +52,8 @@ static bool read_u32_le(std::istream& in, uint32_t& out_value) {
 static bool rle_encode_file_checked(const std::string& input_path, const std::string& output_path);
 static bool rle_decode_file_checked(const std::string& input_path, const std::string& output_path);
 
-void rle_encode_file(const std::string& input_path, const std::string& output_path) {
-    (void)rle_encode_file_checked(input_path, output_path);
+bool rle_encode_file(const std::string& input_path, const std::string& output_path) {
+    return rle_encode_file_checked(input_path, output_path);
 }
 
 // Perform Run-Length encoding on entire file.
@@ -170,8 +170,8 @@ static bool rle_decode_file_checked(const std::string& input_path, const std::st
     return true;
 }
 
-void rle_decode_file(const std::string& input_path, const std::string& output_path) {
-    (void)rle_decode_file_checked(input_path, output_path);
+bool rle_decode_file(const std::string& input_path, const std::string& output_path) {
+    return rle_decode_file_checked(input_path, output_path);
 }
 
 int main(int argc, char** argv) {

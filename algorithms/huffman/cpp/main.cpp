@@ -343,12 +343,12 @@ static bool decompress_file(const std::string& input_path, const std::string& ou
     return ok;
 }
 
-void huffman_encode_file(const std::string& input_path, const std::string& output_path) {
-    (void)compress_file(input_path, output_path);
+bool huffman_encode_file(const std::string& input_path, const std::string& output_path) {
+    return compress_file(input_path, output_path);
 }
 
-void huffman_decode_file(const std::string& input_path, const std::string& output_path) {
-    (void)decompress_file(input_path, output_path);
+bool huffman_decode_file(const std::string& input_path, const std::string& output_path) {
+    return decompress_file(input_path, output_path);
 }
 
 int main(int argc, char** argv) {

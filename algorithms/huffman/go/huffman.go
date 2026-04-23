@@ -174,15 +174,13 @@ func BuildFrequenciesFromFile(path string) ([]uint32, error) {
 	freq := make([]uint32, SymbolLimit)
 	f, err := os.Open(path)
 	if err != nil {
-		freq[EOFSymbol] = 1
-		return freq, nil
+		return nil, fmt.Errorf("cannot open input file: %s: %w", path, err)
 	}
 	defer f.Close()
 
 	stat, err := f.Stat()
 	if err != nil {
-		freq[EOFSymbol] = 1
-		return freq, nil
+		return nil, fmt.Errorf("cannot stat input file: %s: %w", path, err)
 	}
 	if stat.Size() > MaxInputSize {
 		return nil, fmt.Errorf("input file too large (max %d bytes)", MaxInputSize)
@@ -349,7 +347,7 @@ func Decode(r io.Reader, w io.Writer) error {
 			}
 			node = root
 		}
-		if bitReader.EOF() && node.IsLeaf() == false && node.Left == nil && node.Right == nil {
+		if bitReader.EOF() && node == root {
 			break
 		}
 	}

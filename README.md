@@ -36,6 +36,24 @@
 
 ---
 
+## 📋 Prerequisites
+
+| Language | Minimum Version | Installation |
+|----------|-----------------|--------------|
+| C++ | GCC 9+ / Clang 10+ | `apt install g++` or `brew install gcc` |
+| Go | 1.21+ | [golang.org/dl](https://golang.org/dl) |
+| Rust | 1.70+ | [rustup.rs](https://rustup.rs) |
+| Python | 3.8+ | Only needed for generating test data |
+
+Verify environment:
+```bash
+g++ --version    # Must support -std=c++17
+go version
+rustc --version
+```
+
+---
+
 ## ✨ Features
 
 - 🔤 **Multi-Language** — Identical implementations in C++17, Go 1.21+, and Rust 1.70+
@@ -72,10 +90,34 @@ Is your data highly repetitive?
 ```bash
 git clone https://github.com/LessUp/encoding.git
 cd encoding
-make build && make test
+
+# 1. Build all implementations
+make build
+
+# 2. Generate test data (requires Python 3.8+)
+make test-data
+
+# 3. Run tests
+make test
 ```
 
-### Cross-Language Verification
+### Quick Verification
+
+```bash
+# Create a test file
+echo "Hello, World! Hello, World!" > input.txt
+
+# Encode with C++
+./algorithms/huffman/cpp/huffman_cpp encode input.txt output.huf
+
+# Decode with Go
+./algorithms/huffman/go/huffman_go decode output.huf restored.txt
+
+# Verify
+diff input.txt restored.txt && echo "✓ Cross-language verification passed"
+```
+
+### Cross-Language Verification (Alternative)
 
 ```bash
 # Encode with C++
@@ -116,14 +158,43 @@ encoding/
 | `make bench` | Run benchmarks |
 | `make clean` | Remove build artifacts |
 
-## Go Library Usage
+## 💻 Usage
+
+All implementations follow the unified CLI interface:
+
+```bash
+<binary> <encode|decode> <input> <output>
+```
+
+### CLI Examples
+
+```bash
+# Huffman - C++
+./algorithms/huffman/cpp/huffman_cpp encode input.txt output.huf
+./algorithms/huffman/cpp/huffman_cpp decode output.huf restored.txt
+
+# Huffman - Go
+./algorithms/huffman/go/huffman_go encode input.txt output.huf
+./algorithms/huffman/go/huffman_go decode output.huf restored.txt
+
+# Huffman - Rust
+./algorithms/huffman/rust/huffman_rust encode input.txt output.huf
+./algorithms/huffman/rust/huffman_rust decode output.huf restored.txt
+
+# All tools support --help for detailed options
+./algorithms/huffman/go/huffman_go --help
+```
+
+### Go Library
 
 ```go
-import "huffman"
+import "github.com/LessUp/encoding/algorithms/huffman/go"
 
 err := huffman.EncodeFile("input.bin", "output.huf")
 err = huffman.DecodeFile("output.huf", "decoded.bin")
 ```
+
+Note: When using as a library, import the package and call functions directly. For standalone CLI usage, build with `go build -o huffman_go ./cmd`.
 
 ## 📚 Documentation
 
@@ -150,6 +221,17 @@ This project follows **Spec-Driven Development (SDD)**:
 3. Test across languages — verify C++ ↔ Go ↔ Rust compatibility
 
 See [Contributing Guide](https://lessup.github.io/encoding/en/guide/contributing) for details.
+
+## ⚠️ Security Notes
+
+- **Maximum input size:** 4 GiB per file
+- **Maximum output size:** 1 GiB (protection against decompression bombs)
+- All binary formats include integrity validation
+- File formats are stable and backward compatible within major versions
+
+## 📜 Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for version history and migration guides.
 
 ## License
 

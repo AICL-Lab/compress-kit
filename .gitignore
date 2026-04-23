@@ -80,3 +80,7 @@ specs-backup-*.tar.gz
 # Logs & temp
 *.log
 *.tmp
+
+# BMad Method V6
+_bmad/
+_bmad-output/

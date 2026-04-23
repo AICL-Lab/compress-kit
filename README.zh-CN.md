@@ -36,6 +36,24 @@
 
 ---
 
+## 📋 前置要求
+
+| 语言 | 最低版本 | 安装方式 |
+|------|----------|----------|
+| C++ | GCC 9+ / Clang 10+ | `apt install g++` 或 `brew install gcc` |
+| Go | 1.21+ | [golang.org/dl](https://golang.org/dl) |
+| Rust | 1.70+ | [rustup.rs](https://rustup.rs) |
+| Python | 3.8+ | 仅需用于生成测试数据 |
+
+验证环境：
+```bash
+g++ --version    # 必须支持 -std=c++17
+go version
+rustc --version
+```
+
+---
+
 ## ✨ 特性
 
 - 🔤 **多语言实现** — C++17、Go 1.21+、Rust 1.70+ 三种语言完整实现
@@ -72,10 +90,34 @@
 ```bash
 git clone https://github.com/LessUp/encoding.git
 cd encoding
-make build && make test
+
+# 1. 构建所有实现
+make build
+
+# 2. 生成测试数据（需要 Python 3.8+）
+make test-data
+
+# 3. 运行测试
+make test
 ```
 
-### 跨语言验证
+### 快速验证
+
+```bash
+# 创建测试文件
+echo "Hello, World! Hello, World!" > input.txt
+
+# 使用 C++ 编码
+./algorithms/huffman/cpp/huffman_cpp encode input.txt output.huf
+
+# 使用 Go 解码
+./algorithms/huffman/go/huffman_go decode output.huf restored.txt
+
+# 验证
+diff input.txt restored.txt && echo "✓ 跨语言验证通过"
+```
+
+### 跨语言验证（替代方式）
 
 ```bash
 # 使用 C++ 编码
@@ -116,14 +158,43 @@ encoding/
 | `make bench` | 运行基准测试 |
 | `make clean` | 清理构建产物 |
 
-## Go 库使用
+## 💻 使用方法
+
+所有实现遵循统一的 CLI 接口：
+
+```bash
+<可执行文件> <encode|decode> <输入> <输出>
+```
+
+### CLI 示例
+
+```bash
+# Huffman - C++
+./algorithms/huffman/cpp/huffman_cpp encode input.txt output.huf
+./algorithms/huffman/cpp/huffman_cpp decode output.huf restored.txt
+
+# Huffman - Go
+./algorithms/huffman/go/huffman_go encode input.txt output.huf
+./algorithms/huffman/go/huffman_go decode output.huf restored.txt
+
+# Huffman - Rust
+./algorithms/huffman/rust/huffman_rust encode input.txt output.huf
+./algorithms/huffman/rust/huffman_rust decode output.huf restored.txt
+
+# 所有工具都支持 --help 查看详细选项
+./algorithms/huffman/go/huffman_go --help
+```
+
+### Go 库使用
 
 ```go
-import "huffman"
+import "github.com/LessUp/encoding/algorithms/huffman/go"
 
 err := huffman.EncodeFile("input.bin", "output.huf")
 err = huffman.DecodeFile("output.huf", "decoded.bin")
 ```
+
+注意：作为库使用时直接导入包调用函数。独立 CLI 使用请用 `go build -o huffman_go ./cmd` 构建。
 
 ## 📚 文档
 
@@ -150,6 +221,17 @@ err = huffman.DecodeFile("output.huf", "decoded.bin")
 3. 跨语言测试 — 验证 C++ ↔ Go ↔ Rust 兼容性
 
 详见 [贡献指南](https://lessup.github.io/encoding/zh/guide/contributing)。
+
+## ⚠️ 安全说明
+
+- **最大输入文件大小：** 4 GiB
+- **最大输出文件大小：** 1 GiB（防止解压炸弹攻击）
+- 所有二进制格式包含完整性校验
+- 文件格式在主要版本内稳定且向后兼容
+
+## 📜 更新日志
+
+查看 [CHANGELOG.md](CHANGELOG.md) 了解版本历史和迁移指南。
 
 ## 许可证
 

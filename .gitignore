@@ -84,3 +84,4 @@ specs-backup-*.tar.gz
 # BMad Method V6
 _bmad/
 _bmad-output/
+.github/copilot-instructions.md

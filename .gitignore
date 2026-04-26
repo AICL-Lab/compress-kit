@@ -74,6 +74,9 @@ docs/.vitepress/cache/
 # OpenSpec
 .openspec-cache/
 
+# Git worktrees
+.worktrees/
+
 # Migration backup (temporary)
 specs-backup-*.tar.gz
 

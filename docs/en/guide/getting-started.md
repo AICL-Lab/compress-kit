@@ -46,7 +46,7 @@ choco install mingw golang rust python3 make
 
 ```bash
 git clone https://github.com/LessUp/compress-kit.git
-cd encoding
+cd compress-kit
 ```
 
 ### Build All Implementations

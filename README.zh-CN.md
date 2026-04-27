@@ -133,7 +133,7 @@ diff input.txt restored.txt  # 无输出 = 完全相同
 ## 项目结构
 
 ```
-compresskit/
+compress-kit/
 ├── algorithms/           # 压缩算法实现
 │   ├── huffman/         # 前缀码压缩
 │   ├── arithmetic/      # 算术编码

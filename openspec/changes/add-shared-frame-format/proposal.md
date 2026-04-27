@@ -44,7 +44,9 @@ Without a shared envelope, interoperability testing (`add-interoperability-confo
 
 ## Dependencies
 
-None. This change is self-contained; `add-streaming-api-foundation` references the frame format but does not define it.
+This change is self-contained at the frame-format level — the byte layout, magic bytes, and checksum fields can be specified independently. However, the error codes surfaced when a frame fails to parse (e.g., bad magic, unsupported version, checksum mismatch) are canonically defined in `add-streaming-api-foundation`.
+
+**Ordering note for implementers**: settle the `add-streaming-api-foundation` error catalogue before writing the frame-parsing code that references those error codes. The spec documents here may be authored in any order, but the implementation of frame parsing in all three languages must not assign ad-hoc error values that conflict with the streaming error registry.
 
 ## Risks
 

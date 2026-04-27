@@ -21,9 +21,13 @@
 - [ ] A6. Create `tests/bench/thresholds.json` with default threshold values and commit it to the repository:
   ```json
   {
-    "version": 1,
-    "speed_regression_pct": 10,
-    "memory_regression_pct": 20
+    "schema_version": "1.0",
+    "thresholds": {
+      "ratio":             { "max_increase": 0.05  },
+      "encode_speed_mbps": { "max_decrease": 0.10  },
+      "decode_speed_mbps": { "max_decrease": 0.10  },
+      "peak_memory_kib":   { "max_increase": 0.20  }
+    }
   }
   ```
 

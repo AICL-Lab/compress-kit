@@ -27,7 +27,7 @@ All CompressKit compressed files SHALL begin with a 24-byte frame header.
 - **GIVEN** a frame header
 - **WHEN** `algo_id` field is read
 - **THEN** decoder SHALL select the corresponding algorithm from the registry
-- **AND** an unrecognised `algo_id` SHALL cause rejection with an appropriate error
+- **AND** an unrecognised `algo_id` SHALL cause rejection with `ERR_UNKNOWN_ALGO`
 
 #### Scenario: Flags — unknown bits
 - **GIVEN** a frame header with bits 3–15 of the flags field set to any non-zero value

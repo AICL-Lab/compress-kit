@@ -62,7 +62,12 @@ Implementations SHALL define and document maximum output expansion ratios.
 - **THEN** the call SHALL return `BUF_TOO_SMALL`
 - **AND** internal encoder state SHALL be unchanged (caller may retry with larger buffer)
 
-#### Scenario: Security limits enforced at streaming boundary
+#### Scenario: Security limits enforced at streaming boundary — output
 - **GIVEN** a streaming decoder accumulating output
 - **WHEN** cumulative decoded output would exceed 1 GiB
 - **THEN** decoder SHALL return `ERR_SIZE_LIMIT` and enter ERROR state
+
+#### Scenario: Security limits enforced at streaming boundary — input
+- **GIVEN** a streaming encoder or decoder receiving input chunks
+- **WHEN** cumulative input bytes would exceed 4 GiB
+- **THEN** the implementation SHALL return `ERR_SIZE_LIMIT` and enter ERROR state

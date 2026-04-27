@@ -18,6 +18,14 @@
 - [ ] A3. Implement memory measurement helpers per language (see design.md § Memory Measurement).
 - [ ] A4. Implement report writer that outputs `bench_<ISO8601>.json` matching design.md schema version 1.0.
 - [ ] A5. Create `tests/bench/compare.py` — reads baseline.json and latest result; prints pass/fail per metric per triple; exits 1 if any regression.
+- [ ] A6. Create `tests/bench/thresholds.json` with default threshold values and commit it to the repository:
+  ```json
+  {
+    "version": 1,
+    "speed_regression_pct": 10,
+    "memory_regression_pct": 20
+  }
+  ```
 
 ## Phase B — Makefile Targets
 

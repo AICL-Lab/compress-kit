@@ -120,6 +120,10 @@ xxHash-64 is chosen for:
 
 Reference implementation: https://github.com/Cyan4973/xxHash
 
+## Error Code Ownership
+
+Frame-level error codes (`ERR_CORRUPT`, `ERR_VERSION_UNSUPPORTED`, `ERR_TRUNCATED`, `ERR_UNKNOWN_ALGO`) referenced throughout this document are canonically defined by the `add-streaming-api-foundation` change. This document uses those names normatively; implementations MUST use the values declared there.
+
 ## Interaction with Existing Frequency Table Format
 
 `REQ-ARCH-003` (frequency table) is unchanged. The frequency table is part of the compressed payload, immediately following the frame header + extension blocks. The frame format wraps the payload; it does not replace per-algorithm internal structures.

@@ -129,4 +129,4 @@ The decode matrix test SHALL output a JSON report:
 }
 ```
 
-This report is consumed by `add-benchmark-governance` for regression tracking.
+This report is for conformance verification only. `add-benchmark-governance` reuses the corpus files from `tests/corpus/` directly; it does not consume the decode matrix report.

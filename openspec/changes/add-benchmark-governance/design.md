@@ -91,6 +91,26 @@ Thresholds are defined as maximum allowed **degradation** from baseline:
 
 Initial baseline values are set from the first successful CI run and stored in `tests/bench/baseline.json` (same schema as results, with single result per triple).
 
+### `thresholds.json` schema
+
+Thresholds are stored in `tests/bench/thresholds.json` so they can be adjusted without editing Python source. `compare.py` reads this file at startup and applies the values when comparing a result file against `baseline.json`.
+
+```json
+{
+  "schema_version": "1.0",
+  "thresholds": {
+    "ratio":             { "max_increase": 0.05  },
+    "encode_speed_mbps": { "max_decrease": 0.10  },
+    "decode_speed_mbps": { "max_decrease": 0.10  },
+    "peak_memory_kib":   { "max_increase": 0.20  }
+  }
+}
+```
+
+- `max_increase` / `max_decrease` are fractions of the baseline value (e.g. `0.10` = 10 %).
+- If `thresholds.json` is absent, `compare.py` falls back to the values in the table above.
+- After Phase E validation, edit this file to tighten thresholds; commit alongside the updated baseline.
+
 ### Threshold rationale
 
 - ±10% speed covers normal CI variance; tighter thresholds cause false positives.

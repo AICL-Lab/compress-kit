@@ -21,7 +21,7 @@ This change closes those gaps. It intentionally uses the same corpus files defin
 - JSON report schema with versioning
 - Four canonical metrics: ratio, encode_speed_MBps, decode_speed_MBps, peak_memory_KiB
 - Regression threshold table per algorithm (initial baseline values TBD from first run)
-- CI gate: fail if any metric exceeds threshold by > 10%
+- CI gate: fail if any metric exceeds its per-metric threshold (ratio +5%, speed −10%, memory +20%)
 - Historical report storage convention
 
 ### Out of scope
@@ -43,5 +43,5 @@ This change closes those gaps. It intentionally uses the same corpus files defin
 ## Risks
 
 - Initial baseline thresholds are set from first CI run — they may be too loose. Plan: tighten after 3 stable runs.
-- Memory measurement differs by language (Valgrind, `/usr/bin/time`, Go runtime stats, Rust `jemalloc`). Methodology must be documented and consistent.
+- Memory measurement differs by language (`/usr/bin/time -v` for C++ and Rust, `runtime.ReadMemStats` for Go). Methodology must be documented and consistent.
 - Range Coder decode performance for >500 KB files is a known issue; benchmark corpus for Range Coder is capped at 100 KB.

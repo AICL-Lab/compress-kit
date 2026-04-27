@@ -81,15 +81,18 @@ A key feature of CompressKit — encode in any language, decode in any other:
 diff input.bin restored.bin  # No output = identical
 ```
 
+## Performance Highlights
+
+<BenchmarkChart />
+
 ## Documentation Structure
 
 | Section | Description |
 |---------|-------------|
-| [Getting Started](/en/guide/getting-started) | Environment setup, build instructions, basic usage |
-| [Algorithm Guide](/en/guide/algorithms) | Detailed explanations, comparisons, and use cases |
-| [API Reference](/en/api/go) | Complete API documentation for Go, Rust, and C++ |
+| [Getting Started](/en/guide/getting-started) | Environment setup, build instructions |
+| [Algorithm Guide](/en/guide/algorithms) | Detailed explanations and comparisons |
+| [API Reference](/en/api/go) | Library APIs for all languages |
 | [Benchmarks](/en/benchmarks/results) | Performance results and methodology |
-| [Contributing](/en/guide/contributing) | How to contribute to the project |
 
 ## Community
 

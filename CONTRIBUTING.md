@@ -52,8 +52,8 @@ brew install gcc go rust python3
 1. **Fork and clone the repository | Fork 并克隆仓库**
 
 ```bash
-git clone https://github.com/LessUp/encoding.git
-cd encoding
+git clone https://github.com/LessUp/compress-kit.git
+cd compress-kit
 ```
 
 2. **Verify your environment | 验证环境**

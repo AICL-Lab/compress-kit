@@ -45,7 +45,7 @@ choco install mingw golang rust python3 make
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/LessUp/compresskit.git
+git clone https://github.com/LessUp/compress-kit.git
 cd encoding
 ```
 
@@ -218,4 +218,4 @@ dd if=tests/data/random_10MiB.bin of=/tmp/small.bin bs=1024 count=100
 
 - Learn about the [algorithms](/en/guide/algorithms) and their differences
 - Explore the [project structure](/en/guide/project-structure)
-- Check the [CHANGELOG](https://github.com/LessUp/compresskit/blob/master/CHANGELOG.md) for recent updates
+- Check the [CHANGELOG](https://github.com/LessUp/compress-kit/blob/master/CHANGELOG.md) for recent updates

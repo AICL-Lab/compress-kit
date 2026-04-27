@@ -40,9 +40,9 @@ const sharedSidebar = {
     {
       text: 'Reference',
       items: [
-        { text: 'Specifications', link: 'https://github.com/LessUp/compresskit/tree/master/specs' },
+        { text: 'Specifications', link: 'https://github.com/LessUp/compress-kit/tree/master/specs' },
         { text: 'Contributing', link: '/en/guide/contributing' },
-        { text: 'Changelog', link: 'https://github.com/LessUp/compresskit/blob/master/CHANGELOG.md' },
+        { text: 'Changelog', link: 'https://github.com/LessUp/compress-kit/blob/master/CHANGELOG.md' },
       ],
     },
   ],
@@ -84,9 +84,9 @@ const sharedSidebar = {
     {
       text: '参考',
       items: [
-        { text: '规范文档', link: 'https://github.com/LessUp/compresskit/tree/master/specs' },
+        { text: '规范文档', link: 'https://github.com/LessUp/compress-kit/tree/master/specs' },
         { text: '参与贡献', link: '/zh/guide/contributing' },
-        { text: '更新日志', link: 'https://github.com/LessUp/compresskit/blob/master/CHANGELOG.md' },
+        { text: '更新日志', link: 'https://github.com/LessUp/compress-kit/blob/master/CHANGELOG.md' },
       ],
     },
   ],
@@ -124,7 +124,7 @@ export default defineConfig({
   description: 'Production-ready compression algorithms in C++17, Go, and Rust. Learn, compare, and verify across languages with identical binary formats.',
   
   // Base URL
-  base: '/compresskit/',
+  base: '/compress-kit/',
   cleanUrls: true,
   
   // Appearance
@@ -132,12 +132,12 @@ export default defineConfig({
   
   // Sitemap
   sitemap: {
-    hostname: 'https://lessup.github.io/compresskit/',
+    hostname: 'https://lessup.github.io/compress-kit/',
   },
   
   // Head Meta Tags
   head: [
-    ['link', { rel: 'canonical', href: 'https://lessup.github.io/compresskit/' }],
+    ['link', { rel: 'canonical', href: 'https://lessup.github.io/compress-kit/' }],
     ['meta', { charset: 'UTF-8' }],
     ['meta', { name: 'viewport', content: 'width=device-width, initial-scale=1.0' }],
     ['meta', { name: 'theme-color', content: '#2563eb', media: '(prefers-color-scheme: light)' }],
@@ -153,9 +153,9 @@ export default defineConfig({
     ['meta', { property: 'og:locale', content: 'en_US' }],
     ['meta', { property: 'og:title', content: 'CompressKit | Compression Algorithms Collection' }],
     ['meta', { property: 'og:description', content: 'Production-ready compression algorithms in C++17, Go, and Rust. Learn, compare, and verify across languages.' }],
-    ['meta', { property: 'og:url', content: 'https://lessup.github.io/compresskit/' }],
+    ['meta', { property: 'og:url', content: 'https://lessup.github.io/compress-kit/' }],
     ['meta', { property: 'og:site_name', content: 'CompressKit' }],
-    ['meta', { property: 'og:image', content: '/compresskit/og-image.png' }],
+    ['meta', { property: 'og:image', content: '/compress-kit/og-image.png' }],
     ['meta', { property: 'og:image:width', content: '1200' }],
     ['meta', { property: 'og:image:height', content: '630' }],
     
@@ -164,12 +164,12 @@ export default defineConfig({
     ['meta', { name: 'twitter:site', content: '@compresskit' }],
     ['meta', { name: 'twitter:title', content: 'CompressKit | Compression Algorithms Collection' }],
     ['meta', { name: 'twitter:description', content: 'Production-ready compression algorithms in C++17, Go, and Rust. Learn, compare, and verify across languages.' }],
-    ['meta', { name: 'twitter:image', content: '/compresskit/og-image.png' }],
+    ['meta', { name: 'twitter:image', content: '/compress-kit/og-image.png' }],
     
     // Favicon
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/compresskit/logo.svg' }],
-    ['link', { rel: 'mask-icon', href: '/compresskit/logo.svg', color: '#2563eb' }],
-    ['link', { rel: 'apple-touch-icon', href: '/compresskit/logo.svg' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/compress-kit/logo.svg' }],
+    ['link', { rel: 'mask-icon', href: '/compress-kit/logo.svg', color: '#2563eb' }],
+    ['link', { rel: 'apple-touch-icon', href: '/compress-kit/logo.svg' }],
     
     // Preconnect for fonts
     ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
@@ -182,7 +182,7 @@ export default defineConfig({
       '@type': 'SoftwareApplication',
       'name': 'CompressKit',
       'description': 'Production-ready compression algorithms in C++17, Go, and Rust',
-      'url': 'https://lessup.github.io/compresskit/',
+      'url': 'https://lessup.github.io/compress-kit/',
       'applicationCategory': 'DeveloperApplication',
       'operatingSystem': 'Linux, macOS, Windows',
       'softwareVersion': '1.0.0',
@@ -192,7 +192,7 @@ export default defineConfig({
         '@type': 'Organization',
         'name': 'LessUp'
       },
-      'codeRepository': 'https://github.com/LessUp/compresskit',
+      'codeRepository': 'https://github.com/LessUp/compress-kit',
       'featureList': [
         'Huffman Coding implementation',
         'Arithmetic Coding implementation', 
@@ -228,7 +228,7 @@ export default defineConfig({
         nav: sharedNav('en'),
         sidebar: sharedSidebar['/en/'],
         editLink: {
-          pattern: 'https://github.com/LessUp/compresskit/edit/master/docs/:path',
+          pattern: 'https://github.com/LessUp/compress-kit/edit/master/docs/:path',
           text: 'Edit this page on GitHub',
         },
         footer: {
@@ -279,7 +279,7 @@ export default defineConfig({
         nav: sharedNav('zh'),
         sidebar: sharedSidebar['/zh/'],
         editLink: {
-          pattern: 'https://github.com/LessUp/compresskit/edit/master/docs/:path',
+          pattern: 'https://github.com/LessUp/compress-kit/edit/master/docs/:path',
           text: '在 GitHub 上编辑此页',
         },
         footer: {
@@ -338,7 +338,7 @@ export default defineConfig({
     
     // Social links
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/LessUp/compresskit' },
+      { icon: 'github', link: 'https://github.com/LessUp/compress-kit' },
     ],
     
     // External link indicator

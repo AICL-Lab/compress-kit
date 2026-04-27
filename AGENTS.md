@@ -2,6 +2,19 @@
 
 This project uses **OpenSpec** for spec-driven development. All code implementations must be based on specifications in the `openspec/specs/` directory as the Single Source of Truth.
 
+## Brand Guidelines
+
+- **Project Name**: CompressKit
+- **Repository**: `github.com/LessUp/compress-kit`
+- **Documentation**: `https://lessup.github.io/compress-kit/`
+
+⚠️ Always use `CompressKit` and `LessUp/compress-kit` consistently. Never use `encoding` or `LessUp/encoding`.
+
+## Known Limitations
+
+### Range Coder Performance Issue
+The Range Coder has a known decode performance issue for files >500KB. This is documented and should not be "fixed" without explicit scope change. See `docs/en/algorithms/range.md` for details.
+
 ## OpenSpec Setup
 
 ### Installation

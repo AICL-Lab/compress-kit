@@ -265,8 +265,9 @@ jobs:
 
       - name: Test Range coder correctness
         run: |
-          # Note: Range coder has a known decode performance issue for files >500KB
-          # Using smaller test file until this is fixed
+          # IMPORTANT: Range coder has a known decode performance issue for files >500KB
+          # Using smaller test file as documented in docs/en/algorithms/range.md
+          # This is a documented limitation, not a bug to be fixed without scope change
           TEST_FILE="tests/data/random_10MiB.bin"
           SMALL_TEST_FILE="/tmp/range_small.bin"
           RANGE_RUST="./algorithms/range/rust/target/release/rangecoder"

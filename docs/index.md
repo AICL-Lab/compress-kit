@@ -14,7 +14,7 @@ hero:
       link: /en/guide/getting-started
     - theme: alt
       text: View on GitHub
-      link: https://github.com/LessUp/compresskit
+      link: https://github.com/LessUp/compress-kit
     - theme: alt
       text: 中文
       link: /zh/
@@ -53,8 +53,8 @@ features:
 
 ```bash
 # Clone the repository
-git clone https://github.com/LessUp/compresskit.git
-cd compresskit
+git clone https://github.com/LessUp/compress-kit.git
+cd compress-kit
 
 # Build all implementations
 make build
@@ -96,8 +96,8 @@ diff input.bin restored.bin  # No output = identical
 
 ## Community
 
-- 💬 [GitHub Discussions](https://github.com/LessUp/compresskit/discussions)
-- 🐛 [GitHub Issues](https://github.com/LessUp/compresskit/issues)
+- 💬 [GitHub Discussions](https://github.com/LessUp/compress-kit/discussions)
+- 🐛 [GitHub Issues](https://github.com/LessUp/compress-kit/issues)
 - 🤝 [Contributing Guide](/en/guide/contributing)
 
 <style>

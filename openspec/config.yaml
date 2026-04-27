@@ -14,6 +14,6 @@ featureFlags:
 
 # Project metadata
 project:
-  name: encoding
+  name: compresskit
   description: Multi-language compression algorithm library
   languages: [cpp, go, rust]

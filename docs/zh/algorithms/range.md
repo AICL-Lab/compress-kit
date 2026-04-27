@@ -126,7 +126,7 @@ pub fn encode(&mut self, data: &[u8], cum_freq: &[u32; 257]) {
 ### Go
 
 ```go
-import "github.com/LessUp/compresskit/algorithms/range/go/rangecoder"
+import "github.com/LessUp/compress-kit/algorithms/range/go/rangecoder"
 
 // 使用频率表创建编码器
 freq := rangecoder.BuildFrequencyTable(data)
@@ -155,4 +155,16 @@ let decoded = rangecoder::decode(&encoded, &cum_freq, data.len())?;
 
 - [算术编码](/zh/algorithms/arithmetic) — 浮点数等价实现
 - [基准测试](/zh/benchmarks/results) — 性能对比
-- [文件格式规范](https://github.com/LessUp/compresskit/tree/master/specs/rfc)
+- [文件格式规范](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
+
+## 已知限制
+
+::: warning 大文件性能问题
+
+当前区间编码实现存在一个**已知的解码性能问题**：当文件大于 **500 KB** 时，解码操作可能会变得非常缓慢或出现卡顿。
+
+**临时解决方案**：测试时请使用小于 100 KB 的文件。CI 管道中已使用 100 KB 测试文件进行区间编码验证。
+
+**状态**：这是一个已知问题，已记录以便未来改进。编码操作对所有文件大小均正常工作。
+
+:::

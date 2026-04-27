@@ -166,8 +166,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Release Comparison
 
-[Unreleased]: https://github.com/LessUp/encoding/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/LessUp/encoding/releases/tag/v1.0.0
+[Unreleased]: https://github.com/LessUp/compress-kit/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/LessUp/compress-kit/releases/tag/v1.0.0
 
 ---
 

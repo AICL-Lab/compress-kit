@@ -110,7 +110,7 @@
 
 **Go 库**:
 ```go
-import "github.com/LessUp/compresskit/algorithms/range/go/rangecoder"
+import "github.com/LessUp/compress-kit/algorithms/range/go/rangecoder"
 
 // 编码数据
 encoded, err := rangecoder.Encode(data)
@@ -237,4 +237,4 @@ cargo run --bin rangecoder -- decode output.rcnc restored.bin
 
 - [项目结构](/zh/guide/project-structure) - 文件格式和 CLI 规范
 - [快速开始](/zh/guide/getting-started) - 构建和测试说明
-- [GitHub 仓库](https://github.com/LessUp/compresskit) - 源代码和问题
+- [GitHub 仓库](https://github.com/LessUp/compress-kit) - 源代码和问题

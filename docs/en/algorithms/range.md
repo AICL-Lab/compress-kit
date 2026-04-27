@@ -126,7 +126,7 @@ pub fn encode(&mut self, data: &[u8], cum_freq: &[u32; 257]) {
 ### Go
 
 ```go
-import "github.com/LessUp/compresskit/algorithms/range/go/rangecoder"
+import "github.com/LessUp/compress-kit/algorithms/range/go/rangecoder"
 
 // Create encoder with frequency table
 freq := rangecoder.BuildFrequencyTable(data)
@@ -155,4 +155,16 @@ let decoded = rangecoder::decode(&encoded, &cum_freq, data.len())?;
 
 - [Arithmetic Coding](/en/algorithms/arithmetic) — Floating point equivalent
 - [Benchmarks](/en/benchmarks/results) — Performance comparison
-- [File Format Specs](https://github.com/LessUp/compresskit/tree/master/specs/rfc)
+- [File Format Specs](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
+
+## Known Limitations
+
+::: warning Performance Issue with Large Files
+
+The current Range Coder implementation has a **known decode performance issue** for files larger than **500 KB**. The decode operation may become significantly slower or appear to hang.
+
+**Workaround**: For testing purposes, use files smaller than 100 KB. This is reflected in the CI pipeline which uses 100 KB test files for Range Coder verification.
+
+**Status**: This is a known issue that is documented for future improvement. The encode operation works correctly for all file sizes.
+
+:::

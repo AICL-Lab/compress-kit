@@ -106,3 +106,17 @@ The project SHALL follow open source community standards.
 - **GIVEN** project root
 - **WHEN** checking community files
 - **THEN** CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md SHALL exist
+
+### REQ-PROD-008: Brand Consistency
+
+All project references SHALL use consistent naming.
+
+#### Scenario: Repository naming
+- **GIVEN** any project reference
+- **WHEN** checking repository URL
+- **THEN** `LessUp/compress-kit` SHALL be used consistently
+
+#### Scenario: Documentation naming
+- **GIVEN** documentation site
+- **WHEN** checking brand references
+- **THEN** `CompressKit` SHALL be used as the product name

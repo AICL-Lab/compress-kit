@@ -75,10 +75,10 @@ make test
 
 详细的格式规范可在 specs 目录找到：
 
-- [霍夫曼格式](https://github.com/LessUp/compresskit/tree/master/specs/rfc)
-- [算术编码格式](https://github.com/LessUp/compresskit/tree/master/specs/rfc)
-- [区间编码格式](https://github.com/LessUp/compresskit/tree/master/specs/rfc)
-- [RLE 格式](https://github.com/LessUp/compresskit/tree/master/specs/rfc)
+- [霍夫曼格式](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
+- [算术编码格式](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
+- [区间编码格式](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
+- [RLE 格式](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
 
 ## 跨语言的重要性
 
@@ -99,7 +99,7 @@ make test
 
 1. 使用 `diff` 验证二进制不匹配
 2. 使用 `xxd -l 20 encoded.huf` 检查文件头
-3. 在 [GitHub Issues](https://github.com/LessUp/compresskit/issues) 报告并附上：
+3. 在 [GitHub Issues](https://github.com/LessUp/compress-kit/issues) 报告并附上：
    - 算法名称
    - 编码语言
    - 解码语言

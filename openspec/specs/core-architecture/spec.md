@@ -118,3 +118,22 @@ Documentation SHALL be built using VitePress.
 - **GIVEN** documentation site
 - **WHEN** navigating to algorithms section
 - **THEN** complexity analysis and implementation notes SHALL be available
+
+### REQ-ARCH-008: Development Tool Configuration
+
+The project SHALL maintain development tool configurations.
+
+#### Scenario: Code formatting
+- **GIVEN** project root
+- **WHEN** checking for formatting configs
+- **THEN** .clang-format, gofmt (via go vet), and rustfmt SHALL be configured
+
+#### Scenario: Dependency management
+- **GIVEN** project dependencies
+- **WHEN** checking for lock files
+- **THEN** requirements.txt (Python), go.sum, and Cargo.lock SHALL exist
+
+#### Scenario: Security scanning
+- **GIVEN** GitHub workflows
+- **WHEN** checking for security tools
+- **THEN** Dependabot and CodeQL SHALL be configured

@@ -45,7 +45,7 @@ choco install mingw golang rust python3 make
 ### 克隆仓库
 
 ```bash
-git clone https://github.com/LessUp/compresskit.git
+git clone https://github.com/LessUp/compress-kit.git
 cd encoding
 ```
 
@@ -218,4 +218,4 @@ dd if=tests/data/random_10MiB.bin of=/tmp/small.bin bs=1024 count=100
 
 - 了解 [算法详解](/zh/guide/algorithms) 及其差异
 - 探索 [项目结构](/zh/guide/project-structure)
-- 查看 [CHANGELOG](https://github.com/LessUp/compresskit/blob/master/CHANGELOG.md) 了解最新更新
+- 查看 [CHANGELOG](https://github.com/LessUp/compress-kit/blob/master/CHANGELOG.md) 了解最新更新

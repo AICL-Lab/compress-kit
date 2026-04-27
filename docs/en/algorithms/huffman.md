@@ -167,7 +167,7 @@ fn build_huffman_tree(freq: &[u32; 256]) -> Option<Box<Node>> {
 package main
 
 import (
-    "github.com/LessUp/compresskit/algorithms/huffman/go/huffman"
+    "github.com/LessUp/compress-kit/algorithms/huffman/go/huffman"
 )
 
 func main() {
@@ -188,7 +188,7 @@ func main() {
 ### Rust
 
 ```rust
-use compresskit::huffman::{encode, decode};
+use compress_kit::huffman::{encode, decode};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let encoded = encode(&input)?;

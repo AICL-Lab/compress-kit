@@ -1,7 +1,7 @@
-# Encoding
+# CompressKit
 
 <p align="center">
-  <img src="docs/public/logo.svg" width="120" alt="Encoding Logo">
+  <img src="docs/public/logo.svg" width="120" alt="CompressKit Logo">
 </p>
 
 <p align="center">
@@ -9,14 +9,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/LessUp/encoding/actions/workflows/ci.yml">
-    <img src="https://github.com/LessUp/encoding/actions/workflows/ci.yml/badge.svg" alt="CI Status">
+  <a href="https://github.com/LessUp/compress-kit/actions/workflows/ci.yml">
+    <img src="https://github.com/LessUp/compress-kit/actions/workflows/ci.yml/badge.svg" alt="CI Status">
   </a>
-  <a href="https://lessup.github.io/encoding/">
+  <a href="https://lessup.github.io/compress-kit/">
     <img src="https://img.shields.io/badge/Docs-Online-blue?logo=readthedocs&logoColor=white" alt="Documentation">
   </a>
-  <a href="https://github.com/LessUp/encoding/releases">
-    <img src="https://img.shields.io/github/v/release/LessUp/encoding?include_prereleases&label=Release" alt="Release">
+  <a href="https://github.com/LessUp/compress-kit/releases">
+    <img src="https://img.shields.io/github/v/release/LessUp/compress-kit?include_prereleases&label=Release" alt="Release">
   </a>
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-green.svg" alt="License">
@@ -31,7 +31,7 @@
 </p>
 
 <p align="center">
-  <b>English</b> | <a href="README.zh-CN.md">简体中文</a> | <a href="https://lessup.github.io/encoding/">📖 Documentation</a>
+  <b>English</b> | <a href="README.zh-CN.md">简体中文</a> | <a href="https://lessup.github.io/compress-kit/">📖 Documentation</a>
 </p>
 
 ---
@@ -66,10 +66,10 @@ rustc --version
 
 | Algorithm | Compression | Speed | Best For |
 |-----------|-------------|-------|----------|
-| [**Huffman**](https://lessup.github.io/encoding/en/guide/algorithms#huffman-coding) | Medium | Fast | General text/data |
-| [**Arithmetic**](https://lessup.github.io/encoding/en/guide/algorithms#arithmetic-coding) | Highest | Medium | Maximum compression |
-| [**Range Coder**](https://lessup.github.io/encoding/en/guide/algorithms#range-coder) | High | Fast | Balanced performance |
-| [**RLE**](https://lessup.github.io/encoding/en/guide/algorithms#run-length-encoding-rle) | Variable | Fastest | Repetitive data (bitmaps, logs) |
+| [**Huffman**](https://lessup.github.io/compress-kit/en/guide/algorithms#huffman-coding) | Medium | Fast | General text/data |
+| [**Arithmetic**](https://lessup.github.io/compress-kit/en/guide/algorithms#arithmetic-coding) | Highest | Medium | Maximum compression |
+| [**Range Coder**](https://lessup.github.io/compress-kit/en/guide/algorithms#range-coder) | High | Fast | Balanced performance |
+| [**RLE**](https://lessup.github.io/compress-kit/en/guide/algorithms#run-length-encoding-rle) | Variable | Fastest | Repetitive data (bitmaps, logs) |
 
 ### Algorithm Selection Guide
 
@@ -88,8 +88,8 @@ Is your data highly repetitive?
 ## 🚀 Quick Start
 
 ```bash
-git clone https://github.com/LessUp/encoding.git
-cd encoding
+git clone https://github.com/LessUp/compress-kit.git
+cd compress-kit
 
 # 1. Build all implementations
 make build
@@ -133,7 +133,7 @@ diff input.txt restored.txt  # No output = identical
 ## Project Structure
 
 ```
-encoding/
+compresskit/
 ├── algorithms/           # Compression algorithm implementations
 │   ├── huffman/         # Prefix-code compression
 │   ├── arithmetic/      # Arithmetic coding
@@ -188,7 +188,7 @@ All implementations follow the unified CLI interface:
 ### Go Library
 
 ```go
-import "github.com/LessUp/encoding/algorithms/huffman/go"
+import "github.com/LessUp/compress-kit/algorithms/huffman/go"
 
 err := huffman.EncodeFile("input.bin", "output.huf")
 err = huffman.DecodeFile("output.huf", "decoded.bin")
@@ -200,10 +200,10 @@ Note: When using as a library, import the package and call functions directly. F
 
 | Resource | Link |
 |----------|------|
-| 📖 Full Documentation | [lessup.github.io/encoding](https://lessup.github.io/encoding/) |
-| 🔧 API Reference | [Go](https://lessup.github.io/encoding/en/api/go) · [Rust](https://lessup.github.io/encoding/en/api/rust) · [C++](https://lessup.github.io/encoding/en/api/cpp) |
-| 📊 Benchmark Results | [Performance](https://lessup.github.io/encoding/en/benchmarks/results) |
-| 🤝 Contributing Guide | [How to Contribute](https://lessup.github.io/encoding/en/guide/contributing) |
+| 📖 Full Documentation | [lessup.github.io/compress-kit](https://lessup.github.io/compress-kit/) |
+| 🔧 API Reference | [Go](https://lessup.github.io/compress-kit/en/api/go) · [Rust](https://lessup.github.io/compress-kit/en/api/rust) · [C++](https://lessup.github.io/compress-kit/en/api/cpp) |
+| 📊 Benchmark Results | [Performance](https://lessup.github.io/compress-kit/en/benchmarks/results) |
+| 🤝 Contributing Guide | [How to Contribute](https://lessup.github.io/compress-kit/en/guide/contributing) |
 | 📋 Technical Specs | [specs/](specs/) |
 
 ## 🎯 Why This Project
@@ -220,7 +220,7 @@ This project follows **Spec-Driven Development (SDD)**:
 2. Update specs before code — if interfaces change, specs change first
 3. Test across languages — verify C++ ↔ Go ↔ Rust compatibility
 
-See [Contributing Guide](https://lessup.github.io/encoding/en/guide/contributing) for details.
+See [Contributing Guide](https://lessup.github.io/compress-kit/en/guide/contributing) for details.
 
 ## ⚠️ Security Notes
 

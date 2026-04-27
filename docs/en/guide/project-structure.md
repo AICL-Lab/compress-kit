@@ -212,4 +212,4 @@ The built site is in `docs/.vitepress/dist/` and deployed to GitHub Pages.
 
 - [Getting Started](/en/guide/getting-started) - Setup and basic usage
 - [Algorithms Guide](/en/guide/algorithms) - Algorithm explanations
-- [GitHub Repository](https://github.com/LessUp/compresskit) - Source code
+- [GitHub Repository](https://github.com/LessUp/compress-kit) - Source code

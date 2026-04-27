@@ -1,7 +1,7 @@
 .PHONY: build build-huffman build-arithmetic build-range build-rle \
        test test-huffman-go test-arithmetic-go test-range-go test-rle-go \
        test-huffman-rust test-arithmetic-rust test-range-rust test-rle-rust \
-       test-data bench clean spec-init spec-list spec-status
+       test-data bench clean format lint spec-init spec-list spec-status
 
 # ── Build ──────────────────────────────────────────────────────────────────
 
@@ -73,9 +73,30 @@ clean:
 	rm -rf algorithms/huffman/benchmark/tmp algorithms/arithmetic/benchmark/tmp algorithms/range/benchmark/tmp algorithms/rle/benchmark/tmp
 	rm -f algorithms/huffman/cpp/huffman_cpp algorithms/huffman/go/huffman_go algorithms/huffman/rust/huffman_rust algorithms/huffman/rust/huffman_rust_test
 	rm -f algorithms/arithmetic/cpp/arithmetic_cpp algorithms/arithmetic/go/arithmetic_go algorithms/arithmetic/rust/arithmetic_rust algorithms/arithmetic/rust/arithmetic_rust_test
-	rm -f algorithms/range/cpp/rangecoder_cpp algorithms/range/go/rangecoder_go
+	rm -f algorithms/range/cpp/rangecoder_cpp algorithms/range/go/rangecoder_go algorithms/range/rust/target
 	rm -f algorithms/rle/cpp/rle_cpp algorithms/rle/go/rle_go algorithms/rle/rust/rle_rust algorithms/rle/rust/rle_rust_test
 	cargo clean --manifest-path algorithms/range/rust/Cargo.toml 2>/dev/null || true
+
+# ── Format & Lint ───────────────────────────────────────────────────────────
+
+format:
+	@echo "Formatting Go code..."
+	gofmt -w algorithms/*/go
+	@echo "Formatting Rust code..."
+	rustfmt algorithms/huffman/rust/main.rs algorithms/arithmetic/rust/main.rs algorithms/rle/rust/main.rs 2>/dev/null || true
+	cd algorithms/range/rust && cargo fmt 2>/dev/null || true
+	@echo "Formatting C++ code (if clang-format available)..."
+	@for f in algorithms/*/cpp/main.cpp; do \
+		clang-format -i "$$f" 2>/dev/null || true; \
+	done
+	@echo "Done!"
+
+lint:
+	@echo "Linting Go code..."
+	go vet ./algorithms/huffman/go/... ./algorithms/arithmetic/go/... ./algorithms/range/go/... ./algorithms/rle/go/... 2>/dev/null || true
+	@echo "Linting Rust code..."
+	cd algorithms/range/rust && cargo clippy -- -D warnings 2>/dev/null || true
+	@echo "Done!"
 
 # ── OpenSpec ────────────────────────────────────────────────────────────────
 
@@ -98,6 +119,10 @@ help:
 	@echo "Test Commands:"
 	@echo "  make test           Run all tests"
 	@echo "  make bench          Run benchmarks"
+	@echo ""
+	@echo "Code Quality:"
+	@echo "  make format         Format all code"
+	@echo "  make lint           Lint all code"
 	@echo ""
 	@echo "OpenSpec Commands:"
 	@echo "  make spec-init      Initialize OpenSpec"

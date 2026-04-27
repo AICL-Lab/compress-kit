@@ -60,6 +60,12 @@ Known issues SHALL be documented with workarounds.
 - **GIVEN** range coder implementation
 - **WHEN** file size exceeds 500KB
 - **THEN** documentation SHALL indicate decode hang issue and 100KB workaround
+- **AND** users SHALL be warned about this limitation in algorithm documentation
+
+#### Scenario: Issue visibility
+- **GIVEN** range coder algorithm page
+- **WHEN** user reads the documentation
+- **THEN** a warning block SHALL be visible explaining the performance limitation
 
 ### REQ-TEST-005: Future Improvement Tracking
 

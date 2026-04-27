@@ -75,10 +75,10 @@ This runs the full cross-language test suite across all algorithms.
 
 Detailed format specifications are available in the specs directory:
 
-- [Huffman Format](https://github.com/LessUp/compresskit/tree/master/specs/rfc)
-- [Arithmetic Format](https://github.com/LessUp/compresskit/tree/master/specs/rfc)
-- [Range Coder Format](https://github.com/LessUp/compresskit/tree/master/specs/rfc)
-- [RLE Format](https://github.com/LessUp/compresskit/tree/master/specs/rfc)
+- [Huffman Format](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
+- [Arithmetic Format](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
+- [Range Coder Format](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
+- [RLE Format](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
 
 ## Why Cross-Language Matters
 
@@ -99,7 +99,7 @@ If you find cross-language incompatibilities:
 
 1. Test with `diff` to verify binary mismatch
 2. Check file headers with `xxd -l 20 encoded.huf`
-3. Report to [GitHub Issues](https://github.com/LessUp/compresskit/issues) with:
+3. Report to [GitHub Issues](https://github.com/LessUp/compress-kit/issues) with:
    - Algorithm name
    - Encode language
    - Decode language

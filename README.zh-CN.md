@@ -1,7 +1,7 @@
-# Encoding
+# CompressKit
 
 <p align="center">
-  <img src="docs/public/logo.svg" width="120" alt="Encoding Logo">
+  <img src="docs/public/logo.svg" width="120" alt="CompressKit Logo">
 </p>
 
 <p align="center">
@@ -9,14 +9,14 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/LessUp/encoding/actions/workflows/ci.yml">
-    <img src="https://github.com/LessUp/encoding/actions/workflows/ci.yml/badge.svg" alt="CI Status">
+  <a href="https://github.com/LessUp/compress-kit/actions/workflows/ci.yml">
+    <img src="https://github.com/LessUp/compress-kit/actions/workflows/ci.yml/badge.svg" alt="CI Status">
   </a>
-  <a href="https://lessup.github.io/encoding/">
+  <a href="https://lessup.github.io/compress-kit/">
     <img src="https://img.shields.io/badge/Docs-在线文档-blue?logo=readthedocs&logoColor=white" alt="Documentation">
   </a>
-  <a href="https://github.com/LessUp/encoding/releases">
-    <img src="https://img.shields.io/github/v/release/LessUp/encoding?include_prereleases&label=Release" alt="Release">
+  <a href="https://github.com/LessUp/compress-kit/releases">
+    <img src="https://img.shields.io/github/v/release/LessUp/compress-kit?include_prereleases&label=Release" alt="Release">
   </a>
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/许可证-MIT-green.svg" alt="License">
@@ -31,7 +31,7 @@
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> | <b>简体中文</b> | <a href="https://lessup.github.io/encoding/">📖 文档站点</a>
+  <a href="README.md">English</a> | <b>简体中文</b> | <a href="https://lessup.github.io/compress-kit/">📖 文档站点</a>
 </p>
 
 ---
@@ -66,10 +66,10 @@ rustc --version
 
 | 算法 | 压缩率 | 速度 | 适用场景 |
 |------|--------|------|----------|
-| [**Huffman**](https://lessup.github.io/encoding/zh/guide/algorithms#huffman-编码) | 中等 | 快 | 通用文本/数据 |
-| [**算术编码**](https://lessup.github.io/encoding/zh/guide/algorithms#算术编码) | 最高 | 中等 | 最大压缩需求 |
-| [**区间编码**](https://lessup.github.io/encoding/zh/guide/algorithms#区间编码) | 高 | 快 | 平衡性能 |
-| [**RLE**](https://lessup.github.io/encoding/zh/guide/algorithms#行程长度编码-rle) | 可变 | 最快 | 重复数据（位图、日志） |
+| [**Huffman**](https://lessup.github.io/compress-kit/zh/guide/algorithms#huffman-编码) | 中等 | 快 | 通用文本/数据 |
+| [**算术编码**](https://lessup.github.io/compress-kit/zh/guide/algorithms#算术编码) | 最高 | 中等 | 最大压缩需求 |
+| [**区间编码**](https://lessup.github.io/compress-kit/zh/guide/algorithms#区间编码) | 高 | 快 | 平衡性能 |
+| [**RLE**](https://lessup.github.io/compress-kit/zh/guide/algorithms#行程长度编码-rle) | 可变 | 最快 | 重复数据（位图、日志） |
 
 ### 算法选择指南
 
@@ -88,8 +88,8 @@ rustc --version
 ## 🚀 快速开始
 
 ```bash
-git clone https://github.com/LessUp/encoding.git
-cd encoding
+git clone https://github.com/LessUp/compress-kit.git
+cd compress-kit
 
 # 1. 构建所有实现
 make build
@@ -133,7 +133,7 @@ diff input.txt restored.txt  # 无输出 = 完全相同
 ## 项目结构
 
 ```
-encoding/
+compresskit/
 ├── algorithms/           # 压缩算法实现
 │   ├── huffman/         # 前缀码压缩
 │   ├── arithmetic/      # 算术编码
@@ -188,7 +188,7 @@ encoding/
 ### Go 库使用
 
 ```go
-import "github.com/LessUp/encoding/algorithms/huffman/go"
+import "github.com/LessUp/compress-kit/algorithms/huffman/go"
 
 err := huffman.EncodeFile("input.bin", "output.huf")
 err = huffman.DecodeFile("output.huf", "decoded.bin")
@@ -200,10 +200,10 @@ err = huffman.DecodeFile("output.huf", "decoded.bin")
 
 | 资源 | 链接 |
 |------|------|
-| 📖 完整文档 | [lessup.github.io/encoding](https://lessup.github.io/encoding/) |
-| 🔧 API 参考 | [Go](https://lessup.github.io/encoding/zh/api/go) · [Rust](https://lessup.github.io/encoding/zh/api/rust) · [C++](https://lessup.github.io/encoding/zh/api/cpp) |
-| 📊 基准测试 | [性能对比](https://lessup.github.io/encoding/zh/benchmarks/results) |
-| 🤝 贡献指南 | [如何参与](https://lessup.github.io/encoding/zh/guide/contributing) |
+| 📖 完整文档 | [lessup.github.io/compress-kit](https://lessup.github.io/compress-kit/) |
+| 🔧 API 参考 | [Go](https://lessup.github.io/compress-kit/zh/api/go) · [Rust](https://lessup.github.io/compress-kit/zh/api/rust) · [C++](https://lessup.github.io/compress-kit/zh/api/cpp) |
+| 📊 基准测试 | [性能对比](https://lessup.github.io/compress-kit/zh/benchmarks/results) |
+| 🤝 贡献指南 | [如何参与](https://lessup.github.io/compress-kit/zh/guide/contributing) |
 | 📋 技术规范 | [specs/](specs/) |
 
 ## 🎯 项目特点
@@ -220,7 +220,7 @@ err = huffman.DecodeFile("output.huf", "decoded.bin")
 2. 代码前先更新规范 — 接口变更时规范优先
 3. 跨语言测试 — 验证 C++ ↔ Go ↔ Rust 兼容性
 
-详见 [贡献指南](https://lessup.github.io/encoding/zh/guide/contributing)。
+详见 [贡献指南](https://lessup.github.io/compress-kit/zh/guide/contributing)。
 
 ## ⚠️ 安全说明
 

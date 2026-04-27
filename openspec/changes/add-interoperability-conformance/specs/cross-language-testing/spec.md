@@ -74,7 +74,7 @@ The test suite SHALL use a fixed corpus and document cross-language decode cover
 - **GIVEN** the cross-language decode matrix test
 - **WHEN** run against all corpus files for all algorithms
 - **THEN** all 9 encoder/decoder language pairs SHALL produce PASS for each algorithm
-- **EXCEPT** Range Coder corpus files exceeding 100 KiB which SHALL be skipped per REQ-TEST-004
+- **EXCEPT** Range Coder corpus files exceeding 100 KiB which SHALL be skipped per REQ-TEST-004 (Range Coder has a known decode performance issue for files >500 KiB; the 100 KiB cap is a conservative safety margin)
 
 #### Scenario: Matrix results are committed
 - **GIVEN** a successful CI run

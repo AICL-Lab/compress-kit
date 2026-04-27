@@ -38,6 +38,7 @@ Without these tests, silent interoperability regressions can go undetected. This
 ## Dependencies
 
 - Assumes `add-shared-frame-format` is archived first (header fields must be stable before header parsing tests can be written).
+- Assumes `add-streaming-api-foundation` is archived first (error codes such as `ERR_VERSION_UNSUPPORTED`, `ERR_UNKNOWN_ALGO`, `ERR_TRUNCATED`, and `ERR_CORRUPT` are defined in that change's error catalogue and must be stable before conformance tests can reference them).
 
 ## Risks
 

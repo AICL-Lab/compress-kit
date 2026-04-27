@@ -90,6 +90,21 @@ Extension blocks appear between the frame header and the compressed payload. Eac
 
 The trailer allows quick detection of payload corruption independent of the content checksum.
 
+## Integrity Check Semantics
+
+The frame contains two independent integrity checks that serve different purposes:
+
+| Check | Location | Covers | Disabled by |
+|-------|----------|--------|-------------|
+| `payload_crc32` (CRC-32/ISO-HDLC) | Trailer | Compressed payload bytes | — (always present) |
+| `checksum` (xxHash-64) | Header | Uncompressed content bytes | `FLAG_NO_CHECKSUM` |
+
+### Rules
+
+1. **Trailer CRC is always mandatory.** `FLAG_NO_CHECKSUM` affects only the header xxHash-64 field; the trailer `payload_crc32` MUST always be computed and checked.
+2. **Check order:** Decoders SHALL verify `payload_crc32` first (before or immediately after decompression), then verify `checksum` against the decompressed bytes (unless `FLAG_NO_CHECKSUM` is set).
+3. **Error handling:** Any checksum mismatch SHALL return `ERR_CORRUPT` and produce no output. The first failing check ends processing; the second check is skipped.
+
 ## Backward Compatibility
 
 - Version `0x00` is invalid (reserved to detect zero-initialised buffers).

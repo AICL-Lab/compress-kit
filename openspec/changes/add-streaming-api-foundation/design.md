@@ -59,6 +59,7 @@ The buffer layer is a thin shim: it calls `process(input)`, `flush()`, `finish()
 | Current state | Call | Next state | Output produced |
 |---------------|------|------------|-----------------|
 | READY | `process(chunk)` | STREAMING | 0 or more bytes |
+| READY | `flush()` | READY | 0 bytes (no-op) |
 | STREAMING | `process(chunk)` | STREAMING | 0 or more bytes |
 | STREAMING | `flush()` | FLUSHING | pending output flushed |
 | FLUSHING | `flush()` | FLUSHING | 0 bytes (idempotent) |
@@ -66,6 +67,8 @@ The buffer layer is a thin shim: it calls `process(input)`, `flush()`, `finish()
 | STREAMING/FLUSHING | `finish()` | FINISHED | final bytes + trailer |
 | FINISHED | any call except `reset()` | ERROR | — |
 | ERROR | `reset()` | READY | — |
+
+> **Note:** The `FLUSHING → STREAMING` path (via `process()`) is intentional — callers may interleave flush and process calls freely. The lifecycle diagram above does not show this arc explicitly; the table above is authoritative for all transitions.
 
 ## Partial Input / Partial Output Contract
 
@@ -155,6 +158,8 @@ Implemented as: `new encoder → process(input) → finish() → collect output`
 | `ERR_CORRUPT` | Checksum or structural integrity check failed |
 | `ERR_INVALID_STATE` | Call not valid in current lifecycle state |
 | `ERR_SIZE_LIMIT` | Input or output exceeds security limits |
+| `ERR_VERSION_UNSUPPORTED` | Frame version byte is not `0x01`; originates from frame-layer validation (defined in `add-shared-frame-format`) |
+| `ERR_UNKNOWN_ALGO` | `algo_id` in frame header does not map to a known algorithm; originates from frame-layer validation |
 
 ## Open Questions
 

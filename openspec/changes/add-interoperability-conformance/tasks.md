@@ -10,6 +10,7 @@
 ## Prerequisites
 
 - [ ] P1. Confirm `add-shared-frame-format` is archived (frame header fields must be stable).
+- [ ] P2. Confirm `add-streaming-api-foundation` is archived (error codes `ERR_VERSION_UNSUPPORTED`, `ERR_UNKNOWN_ALGO`, `ERR_TRUNCATED`, `ERR_CORRUPT` must be stable).
 
 ## Phase A — Corpus Generation
 

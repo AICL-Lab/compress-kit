@@ -40,7 +40,7 @@ Four canonical metrics are collected per (algorithm, language, corpus_file) trip
 | Go | `runtime.ReadMemStats` | `HeapInuse + StackInuse` at peak |
 | Rust | `/usr/bin/time -v` | "Maximum resident set size (kbytes)" |
 
-Note: Memory measurement is best-effort. Cross-language comparisons are informational only.
+Note: Memory measurement methodology varies per language (see table above). The +20% regression threshold is enforced per-language by comparing a language's current run against its own baseline entry — it does not impose a cross-language absolute comparison. Comparing C++ memory vs. Go memory across languages is informational only.
 
 ## Report Schema
 
@@ -70,14 +70,13 @@ Each benchmark run produces a JSON report at `tests/bench/results/bench_<ISO8601
       "encode_speed_mbps": 48.3,
       "decode_speed_mbps": 52.1,
       "peak_memory_kib": 1024,
-      "samples": 5,
-      "pass": true
+      "samples": 5
     }
   ]
 }
 ```
 
-`pass` is `true` if all four metrics are within their regression thresholds vs. baseline.
+Pass/fail evaluation is **not stored in the result file**. `make bench-check` reads the result file and the baseline file and computes pass/fail externally, printing any regressing metrics to stdout.
 
 ## Regression Thresholds
 

@@ -5,6 +5,8 @@ use std::fs::File;
 use std::io::{self, BufReader, BufWriter, Read, Write};
 use std::process;
 
+use compresskit_codec::codec::{decode_buffer, encode_buffer};
+
 const SYMBOL_LIMIT: usize = 257;
 const EOF_SYMBOL: u32 = (SYMBOL_LIMIT - 1) as u32;
 const MAX_INPUT_SIZE: u64 = 4 * 1024 * 1024 * 1024; // 4 GiB max
@@ -459,9 +461,9 @@ fn main() {
     let output_path = &args[3];
 
     let result = if mode == "encode" {
-        huffman_encode_file(input_path, output_path)
+        run_encode(input_path, output_path)
     } else if mode == "decode" {
-        huffman_decode_file(input_path, output_path)
+        run_decode(input_path, output_path)
     } else {
         eprintln!("unknown mode, expected encode or decode");
         process::exit(1);
@@ -471,4 +473,40 @@ fn main() {
         eprintln!("execution failed: {e}");
         process::exit(1);
     }
+}
+
+fn run_encode(input_path: &str, output_path: &str) -> io::Result<()> {
+    let input = std::fs::read(input_path).map_err(|e| {
+        io::Error::new(
+            e.kind(),
+            format!("cannot open input file for reading: {input_path}: {e}"),
+        )
+    })?;
+    let mut encoder = huffman::StreamingEncoder::new();
+    let encoded = encode_buffer(&mut encoder, &input)
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
+    std::fs::write(output_path, encoded).map_err(|e| {
+        io::Error::new(
+            e.kind(),
+            format!("cannot open output file for writing: {output_path}: {e}"),
+        )
+    })
+}
+
+fn run_decode(input_path: &str, output_path: &str) -> io::Result<()> {
+    let input = std::fs::read(input_path).map_err(|e| {
+        io::Error::new(
+            e.kind(),
+            format!("cannot open input file for reading: {input_path}: {e}"),
+        )
+    })?;
+    let mut decoder = huffman::StreamingDecoder::new();
+    let decoded = decode_buffer(&mut decoder, &input)
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
+    std::fs::write(output_path, decoded).map_err(|e| {
+        io::Error::new(
+            e.kind(),
+            format!("cannot open output file for writing: {output_path}: {e}"),
+        )
+    })
 }

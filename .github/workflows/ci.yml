@@ -82,14 +82,14 @@ jobs:
           cd algorithms/huffman/go
           go vet ./...
           go test ./...
-          go build -o huffman_go .
+          go build -o huffman_go ./cmd
 
       - name: Build Arithmetic Go
         run: |
           cd algorithms/arithmetic/go
           go vet ./...
           go test ./...
-          go build -o arithmetic_go .
+          go build -o arithmetic_go ./cmd
 
       - name: Build Range coder Go
         run: |
@@ -103,7 +103,7 @@ jobs:
           cd algorithms/rle/go
           go vet ./...
           go test ./...
-          go build -o rle_go .
+          go build -o rle_go ./cmd
 
   # Build and check Rust implementations
   build-rust:
@@ -121,42 +121,39 @@ jobs:
 
       - name: Check Rust formatting
         run: |
-          for file in algorithms/huffman/rust/main.rs algorithms/arithmetic/rust/main.rs algorithms/rle/rust/main.rs; do
-            if [ -f "$file" ]; then
-              rustfmt --check "$file" || exit 1
-            fi
-          done
-          if [ -f "algorithms/range/rust/Cargo.toml" ]; then
-            cd algorithms/range/rust && cargo fmt --check
-          fi
+          cargo fmt --manifest-path algorithms/huffman/rust/Cargo.toml --check
+          cargo fmt --manifest-path algorithms/arithmetic/rust/Cargo.toml --check
+          cargo fmt --manifest-path algorithms/range/rust/Cargo.toml --check
+          cargo fmt --manifest-path algorithms/rle/rust/Cargo.toml --check
+          cargo fmt --manifest-path algorithms/shared/rust/Cargo.toml --check
 
       - name: Build Huffman Rust
         run: |
           cd algorithms/huffman/rust
-          rustc -O main.rs -o huffman_rust
-          rustc --test main.rs -o huffman_rust_test
-          ./huffman_rust_test
+          cargo clippy --all-targets -- -D warnings
+          cargo test
+          cargo build --bin huffman_rust --release
 
       - name: Build Arithmetic Rust
         run: |
           cd algorithms/arithmetic/rust
-          rustc -O main.rs -o arithmetic_rust
-          rustc --test main.rs -o arithmetic_rust_test
-          ./arithmetic_rust_test
+          cargo clippy --all-targets -- -D warnings
+          cargo test
+          cargo build --bin arithmetic_rust --release
 
       - name: Build and check Range coder Rust
         run: |
           cd algorithms/range/rust
-          cargo clippy -- -D warnings
+          cargo clippy --all-targets -- -D warnings
           cargo test
           cargo build --release
 
       - name: Build RLE Rust
         run: |
           cd algorithms/rle/rust
-          rustc -O main.rs -o rle_rust
-          rustc --test main.rs -o rle_rust_test
-          ./rle_rust_test
+          cargo clippy --all-targets -- -D warnings
+          cargo test
+          cargo build --bin rle_rust --release
 
   # Verify encode/decode correctness across languages
   test-correctness:
@@ -200,10 +197,10 @@ jobs:
           (cd algorithms/rle/go && go build -o rle_go ./cmd)
 
           # Rust
-          (cd algorithms/huffman/rust && rustc -O main.rs -o huffman_rust)
-          (cd algorithms/arithmetic/rust && rustc -O main.rs -o arithmetic_rust)
+          (cd algorithms/huffman/rust && cargo build --bin huffman_rust --release)
+          (cd algorithms/arithmetic/rust && cargo build --bin arithmetic_rust --release)
           (cd algorithms/range/rust && cargo build --bin rangecoder --release)
-          (cd algorithms/rle/rust && rustc -O main.rs -o rle_rust)
+          (cd algorithms/rle/rust && cargo build --bin rle_rust --release)
 
       - name: Test Huffman correctness
         run: |
@@ -220,8 +217,8 @@ jobs:
           diff "$TEST_FILE" /tmp/huf_go.dec
 
           echo "Testing Huffman Rust..."
-          ./algorithms/huffman/rust/huffman_rust encode "$TEST_FILE" /tmp/huf_rust.enc
-          ./algorithms/huffman/rust/huffman_rust decode /tmp/huf_rust.enc /tmp/huf_rust.dec
+          ./algorithms/huffman/rust/target/release/huffman_rust encode "$TEST_FILE" /tmp/huf_rust.enc
+          ./algorithms/huffman/rust/target/release/huffman_rust decode /tmp/huf_rust.enc /tmp/huf_rust.dec
           diff "$TEST_FILE" /tmp/huf_rust.dec
 
           echo "Testing cross-language (C++ encode -> Go decode)..."
@@ -229,7 +226,7 @@ jobs:
           diff "$TEST_FILE" /tmp/huf_cross_go.dec
 
           echo "Testing cross-language (C++ encode -> Rust decode)..."
-          ./algorithms/huffman/rust/huffman_rust decode /tmp/huf_cpp.enc /tmp/huf_cross_rust.dec
+          ./algorithms/huffman/rust/target/release/huffman_rust decode /tmp/huf_cpp.enc /tmp/huf_cross_rust.dec
           diff "$TEST_FILE" /tmp/huf_cross_rust.dec
 
           echo "Huffman tests passed!"
@@ -249,8 +246,8 @@ jobs:
           diff "$TEST_FILE" /tmp/arith_go.dec
 
           echo "Testing Arithmetic Rust..."
-          ./algorithms/arithmetic/rust/arithmetic_rust encode "$TEST_FILE" /tmp/arith_rust.enc
-          ./algorithms/arithmetic/rust/arithmetic_rust decode /tmp/arith_rust.enc /tmp/arith_rust.dec
+          ./algorithms/arithmetic/rust/target/release/arithmetic_rust encode "$TEST_FILE" /tmp/arith_rust.enc
+          ./algorithms/arithmetic/rust/target/release/arithmetic_rust decode /tmp/arith_rust.enc /tmp/arith_rust.dec
           diff "$TEST_FILE" /tmp/arith_rust.dec
 
           echo "Testing cross-language (C++ encode -> Go decode)..."
@@ -258,7 +255,7 @@ jobs:
           diff "$TEST_FILE" /tmp/arith_cross_go.dec
 
           echo "Testing cross-language (C++ encode -> Rust decode)..."
-          ./algorithms/arithmetic/rust/arithmetic_rust decode /tmp/arith_cpp.enc /tmp/arith_cross_rust.dec
+          ./algorithms/arithmetic/rust/target/release/arithmetic_rust decode /tmp/arith_cpp.enc /tmp/arith_cross_rust.dec
           diff "$TEST_FILE" /tmp/arith_cross_rust.dec
 
           echo "Arithmetic tests passed!"
@@ -315,8 +312,8 @@ jobs:
           diff "$TEST_FILE" /tmp/rle_go.dec
 
           echo "Testing RLE Rust..."
-          ./algorithms/rle/rust/rle_rust encode "$TEST_FILE" /tmp/rle_rust.enc
-          ./algorithms/rle/rust/rle_rust decode /tmp/rle_rust.enc /tmp/rle_rust.dec
+          ./algorithms/rle/rust/target/release/rle_rust encode "$TEST_FILE" /tmp/rle_rust.enc
+          ./algorithms/rle/rust/target/release/rle_rust decode /tmp/rle_rust.enc /tmp/rle_rust.dec
           diff "$TEST_FILE" /tmp/rle_rust.dec
 
           echo "Testing cross-language (C++ encode -> Go decode)..."
@@ -324,7 +321,7 @@ jobs:
           diff "$TEST_FILE" /tmp/rle_cross_go.dec
 
           echo "Testing cross-language (C++ encode -> Rust decode)..."
-          ./algorithms/rle/rust/rle_rust decode /tmp/rle_cpp.enc /tmp/rle_cross_rust.dec
+          ./algorithms/rle/rust/target/release/rle_rust decode /tmp/rle_cpp.enc /tmp/rle_cross_rust.dec
           diff "$TEST_FILE" /tmp/rle_cross_rust.dec
 
           echo "RLE tests passed!"

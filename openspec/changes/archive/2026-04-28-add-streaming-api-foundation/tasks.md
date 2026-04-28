@@ -21,15 +21,15 @@
 
 ## Phase B — C++17 Implementation
 
-- [ ] B1. Create `algorithms/shared/cpp/include/compresskit/encoder.hpp` — abstract `Encoder` and `Decoder` base classes matching design.md sketches.
-- [ ] B2. Create `algorithms/shared/cpp/include/compresskit/buffer_api.hpp` — `encode_buffer` / `decode_buffer` free functions.
-- [ ] B3. Create `algorithms/shared/cpp/include/compresskit/result.hpp` — `Result<T>` type and error code enum.
-- [ ] B4. Implement `BufferEncoder` shim in `algorithms/shared/cpp/src/buffer_api.cpp`.
-- [ ] B5. Add unit tests for lifecycle state transitions in `algorithms/shared/cpp/tests/test_lifecycle.cpp`.
-- [ ] B6. Adapt Huffman C++ to implement the `Encoder`/`Decoder` interfaces.
-- [ ] B7. Adapt Arithmetic C++ to implement the interfaces.
-- [ ] B8. Adapt Range C++ to implement the interfaces.
-- [ ] B9. Adapt RLE C++ to implement the interfaces.
+- [x] B1. Create `algorithms/shared/cpp/include/compresskit/encoder.hpp` — abstract `Encoder` and `Decoder` base classes matching design.md sketches.
+- [x] B2. Create `algorithms/shared/cpp/include/compresskit/buffer_api.hpp` — `encode_buffer` / `decode_buffer` free functions.
+- [x] B3. Create `algorithms/shared/cpp/include/compresskit/result.hpp` — `Result<T>` type and error code enum.
+- [x] B4. Implement `BufferEncoder` shim in `algorithms/shared/cpp/src/buffer_api.cpp`.
+- [x] B5. Add unit tests for lifecycle state transitions in `algorithms/shared/cpp/tests/test_lifecycle.cpp`.
+- [x] B6. Adapt Huffman C++ to implement the `Encoder`/`Decoder` interfaces.
+- [x] B7. Adapt Arithmetic C++ to implement the interfaces.
+- [x] B8. Adapt Range C++ to implement the interfaces.
+- [x] B9. Adapt RLE C++ to implement the interfaces.
 
 ## Phase C — Go Implementation
 
@@ -61,14 +61,14 @@
 
 ## Phase E — Integration & Verification
 
-- [ ] E1. Update `Makefile` targets: `make test` must include streaming-layer unit tests.
-- [ ] E2. Run `make test` — all tests pass.
-- [ ] E3. Run `make lint` — no new warnings.
-- [ ] E4. Update CLI file-to-file paths to use the new buffer-layer helpers (removes ad-hoc buffering).
-- [ ] E5. Confirm security limits (4 GiB in / 1 GiB out) are enforced at the streaming layer boundary.
+- [x] E1. Update `Makefile` targets: `make test` must include streaming-layer unit tests.
+- [x] E2. Run `make test` — all tests pass.
+- [x] E3. Run `make lint` — no new warnings.
+- [x] E4. Update CLI file-to-file paths to use the new buffer-layer helpers (removes ad-hoc buffering).
+- [x] E5. Confirm security limits (4 GiB in / 1 GiB out) are enforced at the streaming layer boundary.
 
 ## Phase F — Documentation
 
-- [ ] F1. Add `docs/en/api/streaming.md` covering lifecycle, error codes, and language examples.
-- [ ] F2. Add `docs/zh/api/streaming.md` (Chinese translation).
-- [ ] F3. Update `docs/en/guide/architecture.md` to reference the two-layer model.
+- [x] F1. Add `docs/en/api/streaming.md` covering lifecycle, error codes, and language examples.
+- [x] F2. Add `docs/zh/api/streaming.md` (Chinese translation).
+- [x] F3. Update `docs/en/guide/architecture.md` to reference the two-layer model.

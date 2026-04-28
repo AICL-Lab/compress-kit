@@ -1,11 +1,13 @@
 # Project Structure
 
+See also: [Streaming API](/en/api/streaming)
+
 This guide explains the project organization, file formats, and conventions used across all implementations.
 
 ## Directory Layout
 
 ```
-encoding/
+compress-kit/
 ├── algorithms/huffman/              # Huffman coding implementation
 │   ├── cpp/              #   C++ single-file implementation
 │   ├── go/               #   Go module (go.mod)
@@ -26,6 +28,10 @@ encoding/
 │   ├── go/               #   Go implementation
 │   ├── rust/             #   Rust implementation
 │   └── benchmark/        #   Cross-language benchmark
+├── algorithms/shared/    # Shared streaming/buffer foundations
+│   ├── cpp/              #   C++ headers, buffer shim, lifecycle tests
+│   ├── go/               #   Shared Go codec module
+│   └── rust/             #   Shared Rust codec crate
 ├── tests/                # Test data generation
 │   ├── gen_testdata.py   #   Generate benchmark test files
 │   └── data/             #   Generated test data
@@ -177,6 +183,7 @@ The project uses Go workspaces to manage multiple modules:
 go 1.21
 
 use (
+    ./algorithms/shared/go
     ./algorithms/huffman/go
     ./algorithms/arithmetic/go
     ./algorithms/range/go

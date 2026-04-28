@@ -18,6 +18,13 @@ fn grow_buffer(current_len: usize, limit: usize) -> usize {
     next
 }
 
+fn encode_buffer_limit(input_len: usize) -> Result<usize, CodecError> {
+    input_len
+        .checked_mul(8)
+        .and_then(|len| len.checked_add(2048))
+        .ok_or(CodecError::SizeLimit)
+}
+
 /// EncodeBuffer is a convenience function that encodes input using the streaming API.
 /// Equivalent to: new encoder → Process(input) → Finish() → collect output.
 ///
@@ -27,9 +34,15 @@ pub fn encode_buffer(encoder: &mut dyn Encoder, input: &[u8]) -> Result<Vec<u8>,
         return Err(CodecError::SizeLimit);
     }
 
+    let encode_limit = encode_buffer_limit(input.len())?;
+
     // Allocate output buffer using a conservative estimate.
     // Use 2x input size + 2KB overhead as a reasonable initial allocation.
-    let initial_size = input.len().saturating_mul(2).saturating_add(2048);
+    let initial_size = input
+        .len()
+        .saturating_mul(2)
+        .saturating_add(2048)
+        .min(encode_limit);
     let mut out_buf = vec![0u8; initial_size];
     let mut total_written = 0;
 
@@ -41,10 +54,13 @@ pub fn encode_buffer(encoder: &mut dyn Encoder, input: &[u8]) -> Result<Vec<u8>,
                 break;
             }
             Err(CodecError::BufTooSmall) => {
-                if out_buf.len() >= MAX_OUTPUT_SIZE {
+                if total_written > encode_limit {
                     return Err(CodecError::SizeLimit);
                 }
-                let new_size = grow_buffer(out_buf.len(), MAX_OUTPUT_SIZE);
+                if out_buf.len() >= encode_limit {
+                    return Err(CodecError::SizeLimit);
+                }
+                let new_size = grow_buffer(out_buf.len(), encode_limit);
                 if new_size <= out_buf.len() {
                     return Err(CodecError::SizeLimit);
                 }
@@ -62,10 +78,10 @@ pub fn encode_buffer(encoder: &mut dyn Encoder, input: &[u8]) -> Result<Vec<u8>,
                 break;
             }
             Err(CodecError::BufTooSmall) => {
-                if out_buf.len() >= MAX_OUTPUT_SIZE {
+                if out_buf.len() >= encode_limit {
                     return Err(CodecError::SizeLimit);
                 }
-                let new_size = grow_buffer(out_buf.len(), MAX_OUTPUT_SIZE);
+                let new_size = grow_buffer(out_buf.len(), encode_limit);
                 if new_size <= out_buf.len() {
                     return Err(CodecError::SizeLimit);
                 }
@@ -73,6 +89,10 @@ pub fn encode_buffer(encoder: &mut dyn Encoder, input: &[u8]) -> Result<Vec<u8>,
             }
             Err(e) => return Err(e),
         }
+    }
+
+    if total_written > encode_limit {
+        return Err(CodecError::SizeLimit);
     }
 
     out_buf.truncate(total_written);
@@ -84,6 +104,10 @@ pub fn encode_buffer(encoder: &mut dyn Encoder, input: &[u8]) -> Result<Vec<u8>,
 ///
 /// Returns the complete decoded output or an error.
 pub fn decode_buffer(decoder: &mut dyn Decoder, input: &[u8]) -> Result<Vec<u8>, CodecError> {
+    if input.len() > MAX_INPUT_SIZE {
+        return Err(CodecError::SizeLimit);
+    }
+
     // Allocate output buffer.
     // Decode typically expands, so start with input size and grow as needed.
     let initial_size = input.len().saturating_add(1024);

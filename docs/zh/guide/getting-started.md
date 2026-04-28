@@ -88,9 +88,9 @@ go build -o huffman_go ./cmd
 
 ```bash [Rust]
 cd algorithms/huffman/rust
-rustc -O main.rs -o huffman_rust
-./huffman_rust encode input.bin output.huf
-./huffman_rust decode output.huf restored.bin
+cargo build --bin huffman_rust --release
+./target/release/huffman_rust encode input.bin output.huf
+./target/release/huffman_rust decode output.huf restored.bin
 ```
 
 :::
@@ -120,7 +120,7 @@ diff input.bin decoded.bin  # 无输出 = 相同
 make test
 ```
 
-这将运行所有算法的 Go 和 Rust 单元测试。
+这将运行共享 streaming 层测试，以及所有算法的 Go 和 Rust 单元测试。
 
 ### 运行特定算法测试
 
@@ -129,7 +129,7 @@ make test
 cd algorithms/huffman/go && go test ./...
 
 # Rust 测试
-cd algorithms/huffman/rust && rustc --test main.rs -o test && ./test
+cd algorithms/huffman/rust && cargo test
 ```
 
 ## 运行基准测试
@@ -185,6 +185,7 @@ clang++ -std=c++17 -O2 main.cpp -o huffman_cpp
 
 ```bash
 # 确保 Go 工作区包含所有模块
+go work use ./algorithms/shared/go
 go work use ./algorithms/huffman/go
 go work use ./algorithms/arithmetic/go
 go work use ./algorithms/range/go

@@ -8,6 +8,10 @@ rust-version = "1.70"
 name = "huffman"
 path = "src/lib.rs"
 
+[[bin]]
+name = "huffman_rust"
+path = "main.rs"
+
 [dependencies]
 compresskit-codec = { path = "../../shared/rust" }
 

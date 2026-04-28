@@ -1,6 +1,8 @@
 # C++ Implementation Reference
 
-All C++ implementations are single-file, zero-dependency programs using C++17.
+See also: [Streaming API](/en/api/streaming)
+
+All C++ implementations remain single-file algorithm cores, but now share a C++17 streaming/buffer facade under `algorithms/shared/cpp/include/compresskit/`.
 
 ## Compilation
 
@@ -104,3 +106,14 @@ Repeated `(count: uint32 LE, value: byte)` pairs.
 | `#include <...>` | Standard library only |
 | Error handling | `fprintf(stderr, ...)` + `exit(1)` |
 | Memory management | `std::unique_ptr` with custom deleters |
+
+## Shared Streaming Facade
+
+The streaming and buffer helpers live in:
+
+- `compresskit/result.hpp`
+- `compresskit/encoder.hpp`
+- `compresskit/buffer_api.hpp`
+- `compresskit/algorithms.hpp`
+
+These headers provide a common `Encoder` / `Decoder` lifecycle and algorithm factories such as `compresskit::make_huffman_encoder()`.

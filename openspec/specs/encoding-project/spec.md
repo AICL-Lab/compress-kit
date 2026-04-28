@@ -11,7 +11,6 @@ Provide clear, cross-language compression algorithm implementations enabling:
 - Cross-language comparison (C++17, Go, Rust)
 - Verification of cross-language compatibility
 - Open source best practices
-
 ## Requirements
 
 ### REQ-PROD-001: Algorithm Implementation Completeness
@@ -120,3 +119,24 @@ All project references SHALL use consistent naming.
 - **GIVEN** documentation site
 - **WHEN** checking brand references
 - **THEN** `CompressKit` SHALL be used as the product name
+
+### Requirement: REQ-PROD-009 Streaming and Buffer API Availability
+
+All algorithm implementations SHALL provide both a streaming and a buffer-oriented public API.
+
+#### Scenario: Streaming API availability
+- **GIVEN** any CompressKit language implementation (C++17, Go, Rust)
+- **WHEN** a caller imports the library
+- **THEN** streaming `Encoder` and `Decoder` interfaces SHALL be available for all four algorithms
+
+#### Scenario: Buffer API convenience
+- **GIVEN** a caller that wants to compress an in-memory byte slice
+- **WHEN** the caller invokes `encode_buffer(algo, data)`
+- **THEN** the function SHALL return the compressed output without requiring file I/O
+
+#### Scenario: Lifecycle error isolation
+- **GIVEN** a caller that misuses the API (e.g. calls `process` after `finish`)
+- **WHEN** the invalid call is made
+- **THEN** the implementation SHALL return `ERR_INVALID_STATE`
+- **AND** SHALL NOT crash, corrupt memory, or produce silent data loss
+

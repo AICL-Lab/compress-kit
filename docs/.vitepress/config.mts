@@ -9,6 +9,7 @@ const sharedSidebar = {
         { text: 'Introduction', link: '/en/' },
         { text: 'Quick Start', link: '/en/guide/getting-started' },
         { text: 'Project Structure', link: '/en/guide/project-structure' },
+        { text: 'Architecture', link: '/en/guide/architecture' },
       ],
     },
     {
@@ -21,12 +22,13 @@ const sharedSidebar = {
         { text: 'Run-Length Encoding', link: '/en/algorithms/rle' },
       ],
     },
-    {
-      text: 'API Reference',
-      items: [
-        { text: 'Go Library', link: '/en/api/go' },
-        { text: 'Rust Crate', link: '/en/api/rust' },
-        { text: 'C++ Header', link: '/en/api/cpp' },
+      {
+        text: 'API Reference',
+        items: [
+          { text: 'Streaming API', link: '/en/api/streaming' },
+          { text: 'Go Library', link: '/en/api/go' },
+          { text: 'Rust Crate', link: '/en/api/rust' },
+          { text: 'C++ Header', link: '/en/api/cpp' },
       ],
     },
     {
@@ -65,12 +67,13 @@ const sharedSidebar = {
         { text: '行程编码', link: '/zh/algorithms/rle' },
       ],
     },
-    {
-      text: 'API 参考',
-      items: [
-        { text: 'Go 库', link: '/zh/api/go' },
-        { text: 'Rust 包', link: '/zh/api/rust' },
-        { text: 'C++ 头文件', link: '/zh/api/cpp' },
+      {
+        text: 'API 参考',
+        items: [
+          { text: 'Streaming API', link: '/zh/api/streaming' },
+          { text: 'Go 库', link: '/zh/api/go' },
+          { text: 'Rust 包', link: '/zh/api/rust' },
+          { text: 'C++ 头文件', link: '/zh/api/cpp' },
       ],
     },
     {

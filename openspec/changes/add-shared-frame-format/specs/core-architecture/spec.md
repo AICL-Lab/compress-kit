@@ -1,11 +1,6 @@
-# Core Architecture — Delta Spec (add-shared-frame-format)
+## ADDED Requirements
 
-<!-- DELTA TYPE: ADDED -->
-<!-- These requirements are ADDED to openspec/specs/core-architecture/spec.md when this change is archived. -->
-
----
-
-### REQ-ARCH-012: Shared Frame Header
+### Requirement: REQ-ARCH-012 Shared Frame Header
 
 All CompressKit compressed files SHALL begin with a 24-byte frame header.
 
@@ -34,9 +29,7 @@ All CompressKit compressed files SHALL begin with a 24-byte frame header.
 - **WHEN** a decoder reads the header
 - **THEN** decoder SHALL reject the frame (forward-compatibility guard)
 
----
-
-### REQ-ARCH-013: Content Size and Checksum Fields
+### Requirement: REQ-ARCH-013 Content Size and Checksum Fields
 
 The frame header SHALL carry optional content size and content integrity fields.
 
@@ -57,9 +50,7 @@ The frame header SHALL carry optional content size and content integrity fields.
 - **THEN** decoder SHALL compute xxHash-64 of the decoded output and compare to `checksum`
 - **AND** mismatch SHALL return `ERR_CORRUPT`
 
----
-
-### REQ-ARCH-014: Extension Blocks and Frame Trailer
+### Requirement: REQ-ARCH-014 Extension Blocks and Frame Trailer
 
 The frame format SHALL support extensibility via typed extension blocks and a frame trailer.
 

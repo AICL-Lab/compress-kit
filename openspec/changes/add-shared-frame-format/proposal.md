@@ -4,7 +4,7 @@
 
 Define a unified binary frame envelope for all CompressKit compressed files, adding a versioned header with magic bytes, algorithm ID, flags, content size, checksum, and optional extension fields (dictionary ID, skippable metadata blocks).
 
-## Motivation
+## Why
 
 Currently each algorithm writes its own bespoke header (or none). The existing `REQ-ARCH-003` frequency table format is algorithm-specific. There is no:
 - common magic to identify CompressKit files,

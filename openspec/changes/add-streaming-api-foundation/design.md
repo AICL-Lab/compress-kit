@@ -158,8 +158,8 @@ Implemented as: `new encoder → process(input) → finish() → collect output`
 | `ERR_CORRUPT` | Checksum or structural integrity check failed |
 | `ERR_INVALID_STATE` | Call not valid in current lifecycle state |
 | `ERR_SIZE_LIMIT` | Input or output exceeds security limits |
-| `ERR_VERSION_UNSUPPORTED` | Frame version byte is not `0x01`; originates from frame-layer validation (defined in `add-shared-frame-format`) |
-| `ERR_UNKNOWN_ALGO` | `algo_id` in frame header does not map to a known algorithm; originates from frame-layer validation |
+| `ERR_VERSION_UNSUPPORTED` | Frame version byte is not `0x01`; canonically defined here and used by frame-layer validation |
+| `ERR_UNKNOWN_ALGO` | `algo_id` in frame header does not map to a known algorithm; canonically defined here and used by frame-layer validation |
 
 ## Open Questions
 

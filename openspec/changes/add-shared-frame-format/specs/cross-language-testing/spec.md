@@ -1,11 +1,6 @@
-# Cross-Language Testing — Delta Spec (add-shared-frame-format)
+## ADDED Requirements
 
-<!-- DELTA TYPE: ADDED -->
-<!-- These requirements are ADDED to openspec/specs/cross-language-testing/spec.md when this change is archived. -->
-
----
-
-### REQ-TEST-007: Frame Format Cross-Language Parsing Tests
+### Requirement: REQ-TEST-007 Frame Format Cross-Language Parsing Tests
 
 The test suite SHALL verify that all three language implementations produce and parse identical frame headers.
 

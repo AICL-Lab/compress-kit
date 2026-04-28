@@ -1,11 +1,6 @@
-# Encoding Project — Delta Spec (add-streaming-api-foundation)
+## ADDED Requirements
 
-<!-- DELTA TYPE: ADDED -->
-<!-- These requirements are ADDED to openspec/specs/encoding-project/spec.md when this change is archived. -->
-
----
-
-### REQ-PROD-009: Streaming and Buffer API Availability
+### Requirement: REQ-PROD-009 Streaming and Buffer API Availability
 
 All algorithm implementations SHALL provide both a streaming and a buffer-oriented public API.
 

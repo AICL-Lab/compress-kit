@@ -1,11 +1,6 @@
-# Cross-Language Testing — Delta Spec (add-streaming-api-foundation)
+## ADDED Requirements
 
-<!-- DELTA TYPE: ADDED -->
-<!-- These requirements are ADDED to openspec/specs/cross-language-testing/spec.md when this change is archived. -->
-
----
-
-### REQ-TEST-006: Streaming API Conformance Tests
+### Requirement: REQ-TEST-006 Streaming API Conformance Tests
 
 The test suite SHALL verify streaming lifecycle compliance for all implementations.
 

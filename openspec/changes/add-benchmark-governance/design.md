@@ -10,10 +10,10 @@ The benchmark corpus is a subset of the interoperability conformance corpus (`te
 | `corpus/repetitive_1k.bin` | 1 KiB | All 4 |
 | `corpus/rand_1k.bin` | 1 KiB | All 4 |
 | `corpus/rand_10k.bin` | 10 KiB | All 4 |
-| `corpus/rand_100k.bin` | 100 KiB | Huffman, AC, RLE only |
+| `corpus/rand_100k.bin` | 100 KiB | All 4 |
 | `corpus/text_canterbury_alice.txt` | ~148 KiB | Huffman, AC, RLE only |
 
-Range Coder benchmarks use only files ≤ 100 KiB.
+Range Coder benchmarks use only files ≤ 100 KiB (inclusive), so `rand_100k.bin` remains in-scope and `text_canterbury_alice.txt` is excluded.
 
 ## Metrics
 

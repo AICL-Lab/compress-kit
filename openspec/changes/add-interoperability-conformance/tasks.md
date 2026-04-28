@@ -14,9 +14,10 @@
 
 ## Phase A — Corpus Generation
 
-- [ ] A1. Create `tests/gen_corpus.py` — deterministic generator using `--seed 42`; produces all 10 corpus files listed in design.md § Corpus Matrix.
-- [ ] A2. Run `python tests/gen_corpus.py --seed 42` and commit the generated files to `tests/corpus/`.
-- [ ] A3. Add SHA-256 manifest `tests/corpus/MANIFEST.sha256` for corpus integrity verification.
+- [ ] A1. Create `tests/gen_corpus.py` — deterministic generator using `--seed 42`; produces the 9 synthetic corpus files listed in design.md § Corpus Matrix (everything except `binary_elf_sample.bin`).
+- [ ] A2. Run `python tests/gen_corpus.py --seed 42` and commit the generated synthetic files to `tests/corpus/`.
+- [ ] A3. Add committed fixture `tests/corpus/binary_elf_sample.bin` verbatim from the curated repository sample described in design.md; do not source it from `gen_corpus.py` or the CI host.
+- [ ] A4. Add SHA-256 manifest `tests/corpus/MANIFEST.sha256` covering both generated corpus files and the committed binary sample for integrity verification.
 
 ## Phase B — Test Vector Generation
 

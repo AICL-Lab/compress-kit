@@ -7,6 +7,12 @@
 
 ---
 
+## Prerequisites
+
+- [ ] P1. Confirm the `add-streaming-api-foundation` error catalogue is approved and its shared error constants (`ERR_CORRUPT`, `ERR_VERSION_UNSUPPORTED`, `ERR_TRUNCATED`, `ERR_UNKNOWN_ALGO`) are frozen before implementing any frame parser tasks below.
+
+---
+
 ## Phase A — Spec & Design Validation
 
 - [ ] A1. Verify magic `0x434B5A4D` does not conflict with other known compression formats (gzip `1f 8b`, zstd `fd 2f b5 28`, LZ4 `04 22 4d 18`).
@@ -22,20 +28,45 @@
   - wrong magic → error
   - unknown flags → error
   - version != 1 → error
+  - unknown `algo_id` → `ERR_UNKNOWN_ALGO`
+  - truncated header / payload / trailer → `ERR_TRUNCATED`
+  - trailer CRC mismatch → `ERR_CORRUPT`
   - dict extension block
   - skippable block skip
 
 ## Phase C — Shared Header Library (Go)
 
-- [ ] C1. Create `pkg/frame/frame.go` — `Header`, `Trailer`, and extension types.
-- [ ] C2. Implement `WriteHeader`, `ReadHeader`, `WriteTrailer`, `ReadTrailer`.
-- [ ] C3. Add unit tests in `pkg/frame/frame_test.go` with same scenarios as B3.
+- [ ] C1. Create `algorithms/shared/go/go.mod` — shared Go module manifest for frame helpers (or extend it if created by `add-streaming-api-foundation`).
+- [ ] C2. Update `go.work` to include `./algorithms/shared/go` so algorithm modules can import the shared frame package during local development.
+- [ ] C3. Create `algorithms/shared/go/frame/frame.go` — `Header`, `Trailer`, and extension types.
+- [ ] C4. Implement `WriteHeader`, `ReadHeader`, `WriteTrailer`, `ReadTrailer`.
+- [ ] C5. Add unit tests in `algorithms/shared/go/frame/frame_test.go` covering:
+  - round-trip header/trailer write/read
+  - wrong magic → error
+  - unknown flags → error
+  - version != 1 → error
+  - unknown `algo_id` → `ERR_UNKNOWN_ALGO`
+  - truncated header / payload / trailer → `ERR_TRUNCATED`
+  - trailer CRC mismatch → `ERR_CORRUPT`
+  - dict extension block
+  - skippable block skip
 
 ## Phase D — Shared Header Library (Rust)
 
-- [ ] D1. Create `src/frame/mod.rs` — `FrameHeader`, `FrameTrailer`, and extension types.
-- [ ] D2. Implement `write_header`, `read_header`, `write_trailer`, `read_trailer`.
-- [ ] D3. Add unit tests in `src/frame/tests.rs` with same scenarios as B3.
+- [ ] D1. Create `algorithms/shared/rust/Cargo.toml` — shared Rust crate manifest for frame helpers (or extend it if created by `add-streaming-api-foundation`).
+- [ ] D2. Create `algorithms/shared/rust/src/lib.rs` exporting the shared frame modules.
+- [ ] D3. Create `algorithms/shared/rust/src/frame/mod.rs` — `FrameHeader`, `FrameTrailer`, and extension types.
+- [ ] D4. Implement `write_header`, `read_header`, `write_trailer`, `read_trailer`.
+- [ ] D5. Add unit tests in `algorithms/shared/rust/tests/frame.rs` covering:
+  - round-trip header/trailer write/read
+  - wrong magic → error
+  - unknown flags → error
+  - version != 1 → error
+  - unknown `algo_id` → `ERR_UNKNOWN_ALGO`
+  - truncated header / payload / trailer → `ERR_TRUNCATED`
+  - trailer CRC mismatch → `ERR_CORRUPT`
+  - dict extension block
+  - skippable block skip
 
 ## Phase E — Algorithm Integration
 

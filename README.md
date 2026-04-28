@@ -133,7 +133,7 @@ diff input.txt restored.txt  # No output = identical
 ## Project Structure
 
 ```
-compresskit/
+compress-kit/
 ├── algorithms/           # Compression algorithm implementations
 │   ├── huffman/         # Prefix-code compression
 │   ├── arithmetic/      # Arithmetic coding

@@ -1,0 +1,14 @@
+[package]
+name = "huffman"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+
+[[bin]]
+name = "huffman"
+path = "src/bin/huffman.rs"
+
+[dependencies]
+compresskit-codec = { path = "../../shared/rust" }
+
+[dev-dependencies]

@@ -47,17 +47,17 @@
 
 ## Phase D — Rust Implementation
 
-- [ ] D1. Create `algorithms/shared/rust/Cargo.toml` — shared Rust crate manifest for streaming foundation helpers.
-- [ ] D2. Create `algorithms/shared/rust/src/lib.rs` exporting the shared streaming modules.
-- [ ] D3. Create `algorithms/shared/rust/src/codec/encoder.rs` — `Encoder` and `Decoder` traits.
-- [ ] D4. Create `algorithms/shared/rust/src/codec/buffer.rs` — `encode_buffer` / `decode_buffer` free functions.
-- [ ] D5. Create `algorithms/shared/rust/src/codec/error.rs` — `CodecError` enum.
-- [ ] D6. Implement `WriteEncoder` adapter in `algorithms/shared/rust/src/codec/write.rs` (`impl std::io::Write`).
-- [ ] D7. Adapt Huffman Rust to implement the shared traits.
-- [ ] D8. Adapt Arithmetic Rust to implement the shared traits.
-- [ ] D9. Adapt Range Rust to implement the shared traits.
-- [ ] D10. Adapt RLE Rust to implement the shared traits.
-- [ ] D11. Add lifecycle unit tests in `algorithms/shared/rust/tests/lifecycle.rs`.
+- [x] D1. Create `algorithms/shared/rust/Cargo.toml` — shared Rust crate manifest for streaming foundation helpers.
+- [x] D2. Create `algorithms/shared/rust/src/lib.rs` exporting the shared streaming modules.
+- [x] D3. Create `algorithms/shared/rust/src/codec/encoder.rs` — `Encoder` and `Decoder` traits.
+- [x] D4. Create `algorithms/shared/rust/src/codec/buffer.rs` — `encode_buffer` / `decode_buffer` free functions.
+- [x] D5. Create `algorithms/shared/rust/src/codec/error.rs` — `CodecError` enum.
+- [x] D6. Implement `WriteEncoder` adapter in `algorithms/shared/rust/src/codec/write.rs` (`impl std::io::Write`).
+- [x] D7. Adapt Huffman Rust to implement the shared traits.
+- [x] D8. Adapt Arithmetic Rust to implement the shared traits.
+- [x] D9. Adapt Range Rust to implement the shared traits.
+- [x] D10. Adapt RLE Rust to implement the shared traits.
+- [x] D11. Add lifecycle unit tests in `algorithms/shared/rust/tests/lifecycle.rs`.
 
 ## Phase E — Integration & Verification
 

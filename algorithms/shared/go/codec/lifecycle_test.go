@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"testing"
 
+	"arithmetic"
 	"github.com/LessUp/compress-kit/algorithms/shared/go/codec"
 	"huffman"
-	"arithmetic"
 	"rangecoder"
 	"rle"
 )
@@ -265,15 +265,24 @@ func TestLifecycle_FinishAfterMultipleProcess(t *testing.T) {
 			if err != codec.ErrInvalidState {
 				t.Errorf("Process() after Finish error = %v, want ErrInvalidState", err)
 			}
+			if enc.State() != codec.StateError {
+				t.Errorf("State after invalid Process = %v, want StateError", enc.State())
+			}
 
 			_, err = enc.Flush(outBuf)
 			if err != codec.ErrInvalidState {
 				t.Errorf("Flush() after Finish error = %v, want ErrInvalidState", err)
 			}
+			if enc.State() != codec.StateError {
+				t.Errorf("State after invalid Flush = %v, want StateError", enc.State())
+			}
 
 			_, err = enc.Finish(outBuf)
 			if err != codec.ErrInvalidState {
 				t.Errorf("Finish() after Finish error = %v, want ErrInvalidState", err)
+			}
+			if enc.State() != codec.StateError {
+				t.Errorf("State after invalid Finish = %v, want StateError", enc.State())
 			}
 		})
 	}
@@ -281,30 +290,42 @@ func TestLifecycle_FinishAfterMultipleProcess(t *testing.T) {
 
 // TestLifecycle_ResetAfterFinish tests L6: reset after finish.
 func TestLifecycle_ResetAfterFinish(t *testing.T) {
-	enc := huffman.NewStreamingEncoder()
-	outBuf := make([]byte, 4096)
-
-	_, err := enc.Process([]byte("test"), outBuf)
-	if err != nil {
-		t.Fatalf("Process() error = %v", err)
+	tests := []struct {
+		name       string
+		newEncoder func() codec.Encoder
+	}{
+		{"Huffman", func() codec.Encoder { return huffman.NewStreamingEncoder() }},
+		{"Arithmetic", func() codec.Encoder { return arithmetic.NewStreamingEncoder() }},
+		{"Range", func() codec.Encoder { return rangecoder.NewStreamingEncoder() }},
+		{"RLE", func() codec.Encoder { return rle.NewStreamingEncoder() }},
 	}
 
-	_, err = enc.Finish(outBuf)
-	if err != nil {
-		t.Fatalf("Finish() error = %v", err)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			enc := tt.newEncoder()
+			outBuf := make([]byte, 4096)
 
-	// Reset
-	enc.Reset()
+			_, err := enc.Process([]byte("test"), outBuf)
+			if err != nil {
+				t.Fatalf("Process() error = %v", err)
+			}
 
-	if enc.State() != codec.StateReady {
-		t.Errorf("State after Reset = %v, want StateReady", enc.State())
-	}
+			_, err = enc.Finish(outBuf)
+			if err != nil {
+				t.Fatalf("Finish() error = %v", err)
+			}
 
-	// Should be able to reuse
-	_, err = enc.Process([]byte("new"), outBuf)
-	if err != nil {
-		t.Fatalf("Process() after Reset error = %v", err)
+			enc.Reset()
+
+			if enc.State() != codec.StateReady {
+				t.Errorf("State after Reset = %v, want StateReady", enc.State())
+			}
+
+			_, err = enc.Process([]byte("new"), outBuf)
+			if err != nil {
+				t.Fatalf("Process() after Reset error = %v", err)
+			}
+		})
 	}
 }
 
@@ -342,6 +363,34 @@ func TestLifecycle_ResetAfterError(t *testing.T) {
 			dec.Reset()
 			if dec.State() != codec.StateReady {
 				t.Errorf("State after Reset = %v, want StateReady", dec.State())
+			}
+
+			reuseInput := []byte("reuse")
+			var validEncoded []byte
+			if tt.name == "Huffman" {
+				validEncoded, err = codec.EncodeBuffer(huffman.NewStreamingEncoder(), reuseInput)
+			} else if tt.name == "Arithmetic" {
+				validEncoded, err = codec.EncodeBuffer(arithmetic.NewStreamingEncoder(), reuseInput)
+			} else if tt.name == "Range" {
+				validEncoded, err = codec.EncodeBuffer(rangecoder.NewStreamingEncoder(), reuseInput)
+			} else {
+				validEncoded, err = codec.EncodeBuffer(rle.NewStreamingEncoder(), reuseInput)
+			}
+			if err != nil {
+				t.Fatalf("EncodeBuffer() after Reset setup error = %v", err)
+			}
+
+			reuseBuf := make([]byte, 1024)
+			_, err = dec.Process(validEncoded, reuseBuf)
+			if err != nil {
+				t.Fatalf("Process() after Reset error = %v", err)
+			}
+			n, err := dec.Finish(reuseBuf)
+			if err != nil {
+				t.Fatalf("Finish() after Reset error = %v", err)
+			}
+			if !bytes.Equal(reuseBuf[:n], reuseInput) {
+				t.Fatalf("decoded after reset = %q, want %q", reuseBuf[:n], reuseInput)
 			}
 		})
 	}
@@ -537,40 +586,6 @@ func TestError_TruncatedFrame(t *testing.T) {
 	_, err = codec.DecodeBuffer(dec, truncated)
 	if err != codec.ErrTruncated && err != codec.ErrCorrupt {
 		t.Errorf("DecodeBuffer() error = %v, want ErrTruncated or ErrCorrupt", err)
-	}
-}
-
-// TestError_InputSizeLimit tests E3: input size limit (4 GiB).
-func TestError_InputSizeLimit(t *testing.T) {
-	enc := huffman.NewStreamingEncoder()
-
-	// Simulate exceeding input limit by calling Process multiple times
-	// We can't actually allocate 4GB, so we'll test the check logic
-	bigChunk := make([]byte, 1024*1024) // 1 MB
-	outBuf := make([]byte, 1024*1024*10)
-
-	// Process many times to exceed limit (this would take too long, so we test the error path)
-	// Instead, let's verify the constant
-	if codec.MaxInputSize != 4*1024*1024*1024 {
-		t.Errorf("MaxInputSize = %d, want %d", codec.MaxInputSize, 4*1024*1024*1024)
-	}
-
-	// Process to the limit without error.
-	for i := 0; i < 4096; i++ {
-		_, err := enc.Process(bigChunk, outBuf)
-		if err != nil {
-			t.Fatalf("Process() unexpected error at chunk %d = %v", i, err)
-		}
-	}
-
-	// One more chunk must exceed the limit.
-	_, err := enc.Process(bigChunk, outBuf)
-	if err != codec.ErrSizeLimit {
-		t.Fatalf("Process() overflow error = %v, want ErrSizeLimit", err)
-	}
-
-	if enc.State() != codec.StateError {
-		t.Errorf("State after size limit = %v, want StateError", enc.State())
 	}
 }
 

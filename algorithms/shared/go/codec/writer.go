@@ -25,14 +25,13 @@ func NewWriterEncoder(encoder Encoder, w io.Writer) *WriterEncoder {
 // Write implements io.Writer by encoding p and writing to the underlying writer.
 func (we *WriterEncoder) Write(p []byte) (n int, err error) {
 	// Process input through encoder
-	written, err := we.encoder.Process(p, we.outBuf[we.outBufOffset:])
-	if err == ErrBufTooSmall {
-		// Flush current buffer and retry with larger buffer
+	var written int
+	written, err = we.encoder.Process(p, we.outBuf[we.outBufOffset:])
+	for err == ErrBufTooSmall {
 		if err := we.flushOutBuf(); err != nil {
 			return 0, err
 		}
-		// Grow output buffer
-		we.outBuf = make([]byte, len(we.outBuf)*2)
+		we.outBuf = make([]byte, growBuffer(len(we.outBuf), MaxOutputSize))
 		we.outBufOffset = 0
 		written, err = we.encoder.Process(p, we.outBuf)
 	}
@@ -56,13 +55,11 @@ func (we *WriterEncoder) Write(p []byte) (n int, err error) {
 func (we *WriterEncoder) Close() error {
 	// Finish encoding
 	written, err := we.encoder.Finish(we.outBuf[we.outBufOffset:])
-	if err == ErrBufTooSmall {
-		// Flush current buffer
+	for err == ErrBufTooSmall {
 		if err := we.flushOutBuf(); err != nil {
 			return err
 		}
-		// Grow buffer and retry
-		we.outBuf = make([]byte, len(we.outBuf)*2)
+		we.outBuf = make([]byte, growBuffer(len(we.outBuf), MaxOutputSize))
 		we.outBufOffset = 0
 		written, err = we.encoder.Finish(we.outBuf)
 	}

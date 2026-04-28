@@ -25,6 +25,7 @@ func NewStreamingEncoder() *StreamingEncoder {
 // Process buffers input for later encoding.
 func (e *StreamingEncoder) Process(in []byte, out []byte) (int, error) {
 	if e.state == codec.StateFinished {
+		e.state = codec.StateError
 		return 0, codec.ErrInvalidState
 	}
 	if e.state == codec.StateError {
@@ -49,6 +50,7 @@ func (e *StreamingEncoder) Process(in []byte, out []byte) (int, error) {
 // Flush is a no-op for Huffman (need complete input for frequency analysis).
 func (e *StreamingEncoder) Flush(out []byte) (int, error) {
 	if e.state == codec.StateFinished {
+		e.state = codec.StateError
 		return 0, codec.ErrInvalidState
 	}
 	if e.state == codec.StateError {
@@ -66,6 +68,7 @@ func (e *StreamingEncoder) Flush(out []byte) (int, error) {
 // Finish encodes all buffered input and writes output.
 func (e *StreamingEncoder) Finish(out []byte) (int, error) {
 	if e.state == codec.StateFinished {
+		e.state = codec.StateError
 		return 0, codec.ErrInvalidState
 	}
 	if e.state == codec.StateError {
@@ -121,6 +124,7 @@ func NewStreamingDecoder() *StreamingDecoder {
 // Process buffers input for later decoding.
 func (d *StreamingDecoder) Process(in []byte, out []byte) (int, error) {
 	if d.state == codec.StateFinished {
+		d.state = codec.StateError
 		return 0, codec.ErrInvalidState
 	}
 	if d.state == codec.StateError {
@@ -145,6 +149,7 @@ func (d *StreamingDecoder) Process(in []byte, out []byte) (int, error) {
 // Flush is a no-op for Huffman decoder.
 func (d *StreamingDecoder) Flush(out []byte) (int, error) {
 	if d.state == codec.StateFinished {
+		d.state = codec.StateError
 		return 0, codec.ErrInvalidState
 	}
 	if d.state == codec.StateError {
@@ -161,6 +166,7 @@ func (d *StreamingDecoder) Flush(out []byte) (int, error) {
 // Finish decodes all buffered input and writes output.
 func (d *StreamingDecoder) Finish(out []byte) (int, error) {
 	if d.state == codec.StateFinished {
+		d.state = codec.StateError
 		return 0, codec.ErrInvalidState
 	}
 	if d.state == codec.StateError {

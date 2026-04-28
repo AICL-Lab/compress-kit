@@ -31,7 +31,11 @@ func (we *WriterEncoder) Write(p []byte) (n int, err error) {
 		if err := we.flushOutBuf(); err != nil {
 			return 0, err
 		}
-		we.outBuf = make([]byte, growBuffer(len(we.outBuf), MaxOutputSize))
+		newSize := growBuffer(len(we.outBuf), MaxOutputSize)
+		if newSize <= len(we.outBuf) {
+			return 0, ErrSizeLimit
+		}
+		we.outBuf = make([]byte, newSize)
 		we.outBufOffset = 0
 		written, err = we.encoder.Process(p, we.outBuf)
 	}
@@ -59,7 +63,11 @@ func (we *WriterEncoder) Close() error {
 		if err := we.flushOutBuf(); err != nil {
 			return err
 		}
-		we.outBuf = make([]byte, growBuffer(len(we.outBuf), MaxOutputSize))
+		newSize := growBuffer(len(we.outBuf), MaxOutputSize)
+		if newSize <= len(we.outBuf) {
+			return ErrSizeLimit
+		}
+		we.outBuf = make([]byte, newSize)
 		we.outBufOffset = 0
 		written, err = we.encoder.Finish(we.outBuf)
 	}

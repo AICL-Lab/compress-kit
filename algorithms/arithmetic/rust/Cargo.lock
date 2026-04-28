@@ -5,10 +5,3 @@ version = 3
 [[package]]
 name = "arithmetic"
 version = "0.1.0"
-dependencies = [
- "compresskit-codec",
-]
-
-[[package]]
-name = "compresskit-codec"
-version = "0.1.0"

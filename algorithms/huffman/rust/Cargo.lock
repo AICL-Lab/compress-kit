@@ -3,12 +3,5 @@
 version = 3
 
 [[package]]
-name = "compresskit-codec"
-version = "0.1.0"
-
-[[package]]
 name = "huffman"
 version = "0.1.0"
-dependencies = [
- "compresskit-codec",
-]

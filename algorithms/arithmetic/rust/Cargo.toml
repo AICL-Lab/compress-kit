@@ -4,11 +4,8 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.70"
 
-[[bin]]
+[lib]
 name = "arithmetic"
-path = "src/bin/arithmetic.rs"
-
-[dependencies]
-compresskit-codec = { path = "../../shared/rust" }
+path = "src/lib.rs"
 
 [dev-dependencies]

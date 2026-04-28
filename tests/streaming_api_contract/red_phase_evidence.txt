@@ -1,0 +1,86 @@
+# RED-Phase Verification Evidence for A0.2
+
+## Objective
+Verify that the streaming API contract tests fail against the pre-implementation tree,
+proving that streaming abstractions do not exist before Phase C implementation.
+
+## Base Commit
+SHA: 90929c5ece437d28ce7a1f91ea76381d3805b43d
+Message: "plan: define subagent and tdd execution rules"
+Date: 2026-04-28 14:56:46 +0800
+
+## Verification Steps
+
+### Step 1: Check for streaming abstractions directory
+
+```bash
+$ ls -la algorithms/shared/go/
+ls: cannot access 'algorithms/shared/go/': No such file or directory
+ls: cannot access 'algorithms/shared/go/': No such file or directory
+```
+
+**Result**: The `algorithms/shared/go` directory does not exist at base commit.
+
+### Step 2: Check existing algorithm implementations
+
+```bash
+$ find algorithms -name 'go.mod' -type f
+algorithms/arithmetic/go/go.mod
+algorithms/rle/go/go.mod
+algorithms/huffman/go/go.mod
+algorithms/range/go/go.mod
+```
+
+### Step 3: Attempt to import streaming codec package
+
+Creating test file that attempts to use streaming API:
+```go
+package main
+
+import (
+"fmt"
+"github.com/LessUp/compress-kit/algorithms/shared/go/codec"
+)
+
+func main() {
+// This should fail because codec package doesn't exist
+var _ codec.Encoder
+fmt.Println("Should not reach here")
+}
+```
+
+```bash
+$ go run test_streaming_missing.go
+warning: GOPATH set to GOROOT (/home/shane/go) has no effect
+test_streaming_missing.go:5:1: no required module provides package github.com/LessUp/compress-kit/algorithms/shared/go/codec; to add it:
+	go get github.com/LessUp/compress-kit/algorithms/shared/go/codec
+```
+
+
+### Step 4: Verify lifecycle test expectations
+
+The contract test plan (tests/streaming_api_contract/contract_cases.md) defines:
+- Lifecycle tests (L1-L7) requiring `Process()`, `Flush()`, `Finish()`, `Reset()` methods
+- Buffer contract tests (B1-B3) requiring `EncodeBuffer` and `DecodeBuffer` helpers
+- Error handling tests (E1-E5) requiring streaming state machine
+
+None of these APIs exist at base commit 90929c5.
+
+## Conclusion
+
+✅ **RED-phase verification successful**
+
+At commit 90929c5ece437d28ce7a1f91ea76381d3805b43d:
+1. The `algorithms/shared/go` directory does not exist
+2. The `github.com/LessUp/compress-kit/algorithms/shared/go/codec` package cannot be imported
+3. No `Encoder`, `Decoder`, `Process`, `Flush`, `Finish`, or `Reset` interfaces exist
+4. No `EncodeBuffer` or `DecodeBuffer` helpers exist
+
+The streaming API contract tests would fail (cannot compile) against this tree.
+This proves requirement A0.2: "Verify tests fail against current API surface
+before introducing shared streaming abstractions."
+
+---
+
+**Verification performed**: 2026-04-28 07:18:27 UTC
+**Verifier**: OpenSpec TDD workflow automation

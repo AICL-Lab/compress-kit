@@ -10,7 +10,7 @@
 ## Phase A0 — Contract-First Test Planning
 
 - [x] A0.1. Create `tests/streaming_api_contract/contract_cases.md` and write failing tests for process/flush/finish lifecycle.
-- [x] A0.2. Verify tests fail against current Huffman/Range API surface before introducing shared streaming abstractions.
+- [x] A0.2. Verify tests fail against current Huffman/Range API surface before introducing shared streaming abstractions. Evidence: `tests/streaming_api_contract/red_phase_evidence.txt` (verified against base commit 90929c5).
 - [x] A0.3. Create `tests/streaming_api_contract/README.md` describing scope, fixture ownership, and the rule that this stage modifies test plans only.
 
 ## Phase A — Spec & Design Review

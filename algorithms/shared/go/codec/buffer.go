@@ -1,7 +1,5 @@
 package codec
 
-import "bytes"
-
 // EncodeBuffer is a convenience function that encodes input using the streaming API.
 // Equivalent to: new encoder → Process(input) → Finish() → collect output.
 //
@@ -92,23 +90,4 @@ func DecodeBuffer(decoder Decoder, input []byte) ([]byte, error) {
 	}
 
 	return outBuf[:totalWritten], nil
-}
-
-// EncodeBufferWriter encodes input and writes to a bytes.Buffer.
-// Helper for tests and simple use cases.
-func EncodeBufferWriter(encoder Encoder, input []byte) (*bytes.Buffer, error) {
-	out, err := EncodeBuffer(encoder, input)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewBuffer(out), nil
-}
-
-// DecodeBufferWriter decodes input and writes to a bytes.Buffer.
-func DecodeBufferWriter(decoder Decoder, input []byte) (*bytes.Buffer, error) {
-	out, err := DecodeBuffer(decoder, input)
-	if err != nil {
-		return nil, err
-	}
-	return bytes.NewBuffer(out), nil
 }

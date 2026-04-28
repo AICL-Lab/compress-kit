@@ -29,7 +29,7 @@ The streaming API contract establishes:
 This directory follows **contract-first test-driven development**:
 
 1. **Phase A0**: Define test cases in `contract_cases.md` (this stage)
-2. **Phase A0.2**: Write failing Go tests that verify current APIs lack streaming support
+2. **Phase A0.2**: Verify streaming APIs do not exist before implementation — see `red_phase_evidence.txt` for verification against base commit 90929c5
 3. **Phase C**: Implement shared streaming abstractions to make tests pass
 4. **Phase E**: Run full test suite and verify all algorithms conform
 

@@ -4,7 +4,7 @@
 
 Introduce a two-layer public API (buffer layer + streaming layer) across all three language implementations, defining a common `process / flush / finish` lifecycle and conformance rules for partial input, partial output, and EOF signalling.
 
-## Motivation
+## Why
 
 The current implementation exposes only file-to-file encode/decode paths. Callers who want to:
 - compress network streams without intermediate files,

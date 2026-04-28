@@ -1,12 +1,6 @@
-# Cross-Language Testing — Delta Spec (add-benchmark-governance)
+## MODIFIED Requirements
 
-<!-- DELTA TYPE: MODIFIED REQ-TEST-003, ADDED REQ-TEST-012, REQ-TEST-013 -->
-<!-- REQ-TEST-003 is strengthened below; REQ-TEST-012 and REQ-TEST-013 are new. -->
-<!-- These changes are applied to openspec/specs/cross-language-testing/spec.md when this change is archived. -->
-
----
-
-### REQ-TEST-003: Benchmark Suite (MODIFIED — replaces existing REQ-TEST-003)
+### Requirement: REQ-TEST-003 Benchmark Suite
 
 Performance benchmarks SHALL run across all implementations using a fixed corpus and SHALL produce a structured, machine-readable report.
 
@@ -33,9 +27,9 @@ Performance benchmarks SHALL run across all implementations using a fixed corpus
 - **AND** each result entry SHALL include `algorithm`, `language`, `corpus_file`, `ratio`, `encode_speed_mbps`, `decode_speed_mbps`, `peak_memory_kib`
 - **AND** each intentionally skipped benchmark entry, if any, SHALL include `algorithm`, `language`, `corpus_file`, and `reason`
 
----
+## ADDED Requirements
 
-### REQ-TEST-012: Benchmark Regression Gating
+### Requirement: REQ-TEST-012 Benchmark Regression Gating
 
 CI SHALL fail if benchmark metrics regress beyond defined thresholds.
 
@@ -56,9 +50,7 @@ CI SHALL fail if benchmark metrics regress beyond defined thresholds.
 - **THEN** that file SHALL be skipped for Range Coder benchmarks
 - **AND** the report SHALL record one skip entry for each skipped `(algorithm, language, corpus_file)` triple with reason `range_coder_corpus_cap_100_kib`
 
----
-
-### REQ-TEST-013: Benchmark Baseline Management
+### Requirement: REQ-TEST-013 Benchmark Baseline Management
 
 A committed baseline SHALL track the approved performance envelope.
 

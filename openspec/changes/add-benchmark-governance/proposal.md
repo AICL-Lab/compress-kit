@@ -4,7 +4,7 @@
 
 Define fixed benchmark corpora, a structured report schema, four canonical metrics (compression ratio, encode speed, decode speed, memory peak), and per-algorithm regression thresholds that trigger CI failures when performance degrades beyond acceptable bounds.
 
-## Motivation
+## Why
 
 The current `REQ-TEST-003` says "benchmarks SHALL run and report metrics" but does not define:
 - Which files form the benchmark corpora (different each run = non-comparable results)

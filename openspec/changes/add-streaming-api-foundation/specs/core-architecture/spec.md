@@ -1,11 +1,6 @@
-# Core Architecture — Delta Spec (add-streaming-api-foundation)
+## ADDED Requirements
 
-<!-- DELTA TYPE: ADDED -->
-<!-- These requirements are ADDED to openspec/specs/core-architecture/spec.md when this change is archived. -->
-
----
-
-### REQ-ARCH-009: Streaming Encoder/Decoder Interface
+### Requirement: REQ-ARCH-009 Streaming Encoder/Decoder Interface
 
 All algorithm implementations SHALL expose a streaming interface with a defined lifecycle.
 
@@ -32,9 +27,7 @@ All algorithm implementations SHALL expose a streaming interface with a defined 
 - **WHEN** caller calls `reset()`
 - **THEN** encoder SHALL return to READY state with no residual data
 
----
-
-### REQ-ARCH-010: Buffer-Layer Convenience API
+### Requirement: REQ-ARCH-010 Buffer-Layer Convenience API
 
 All implementations SHALL expose a stateless buffer-layer API wrapping the streaming interface.
 
@@ -50,9 +43,7 @@ All implementations SHALL expose a stateless buffer-layer API wrapping the strea
 - **THEN** function SHALL return fully decoded output
 - **AND** an invalid or truncated input SHALL return `ERR_TRUNCATED` or `ERR_CORRUPT`
 
----
-
-### REQ-ARCH-011: Output Buffer Contract
+### Requirement: REQ-ARCH-011 Output Buffer Contract
 
 Implementations SHALL define and document maximum output expansion ratios.
 

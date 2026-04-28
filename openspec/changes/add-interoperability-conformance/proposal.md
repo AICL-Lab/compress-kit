@@ -4,7 +4,7 @@
 
 Establish a comprehensive conformance test suite for cross-language interoperability, covering header parsing, truncated/corrupted input, stream concatenation, a fixed corpus matrix, and a full cross-language encode/decode matrix.
 
-## Motivation
+## Why
 
 The existing `REQ-TEST-001` checks only the happy path: encode in language A, decode in language B. It does not cover:
 - Malformed or partially-written files (truncation, bit-flip corruption)

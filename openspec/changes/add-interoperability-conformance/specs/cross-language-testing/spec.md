@@ -1,11 +1,6 @@
-# Cross-Language Testing — Delta Spec (add-interoperability-conformance)
+## ADDED Requirements
 
-<!-- DELTA TYPE: ADDED -->
-<!-- These requirements are ADDED to openspec/specs/cross-language-testing/spec.md when this change is archived. -->
-
----
-
-### REQ-TEST-008: Header Parsing Conformance
+### Requirement: REQ-TEST-008 Header Parsing Conformance
 
 All implementations SHALL reject malformed frame headers with appropriate errors.
 
@@ -29,9 +24,7 @@ All implementations SHALL reject malformed frame headers with appropriate errors
 - **WHEN** any implementation attempts to decode it
 - **THEN** decoder SHALL return `ERR_TRUNCATED` and produce no output
 
----
-
-### REQ-TEST-009: Truncation and Corruption Robustness
+### Requirement: REQ-TEST-009 Truncation and Corruption Robustness
 
 All implementations SHALL handle truncated and corrupted inputs without crashing or producing silent garbage output.
 
@@ -48,9 +41,7 @@ All implementations SHALL handle truncated and corrupted inputs without crashing
 - **THEN** decoder SHALL return an error
 - **AND** SHALL NOT silently output data that differs from the original
 
----
-
-### REQ-TEST-010: Stream Concatenation
+### Requirement: REQ-TEST-010 Stream Concatenation
 
 Implementations SHALL correctly decode concatenated CompressKit frames.
 
@@ -59,9 +50,7 @@ Implementations SHALL correctly decode concatenated CompressKit frames.
 - **WHEN** a compliant decoder processes the concatenated stream
 - **THEN** output SHALL equal the concatenation of the decoded contents of each frame in order
 
----
-
-### REQ-TEST-011: Reproducible Corpus and Decode Matrix
+### Requirement: REQ-TEST-011 Reproducible Corpus and Decode Matrix
 
 The test suite SHALL use a fixed corpus and document cross-language decode coverage.
 

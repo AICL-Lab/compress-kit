@@ -27,27 +27,31 @@
 
 ## Phase C — Go Implementation
 
-- [ ] C1. Create `pkg/codec/encoder.go` — `Encoder` and `Decoder` interfaces.
-- [ ] C2. Create `pkg/codec/buffer.go` — `EncodeBuffer` / `DecodeBuffer` helpers.
-- [ ] C3. Create `pkg/codec/errors.go` — error sentinel values and `StatusCode` type.
-- [ ] C4. Add `WriterEncoder` adapter implementing `io.Writer` via `Process`.
-- [ ] C5. Adapt Huffman Go to implement the interfaces.
-- [ ] C6. Adapt Arithmetic Go.
-- [ ] C7. Adapt Range Go.
-- [ ] C8. Adapt RLE Go.
-- [ ] C9. Add lifecycle unit tests in `pkg/codec/lifecycle_test.go`.
+- [ ] C1. Create `algorithms/shared/go/go.mod` — shared Go module manifest for streaming foundation helpers.
+- [ ] C2. Update `go.work` to include `./algorithms/shared/go` so algorithm modules can import the shared package during local development.
+- [ ] C3. Create `algorithms/shared/go/codec/encoder.go` — `Encoder` and `Decoder` interfaces.
+- [ ] C4. Create `algorithms/shared/go/codec/buffer.go` — `EncodeBuffer` / `DecodeBuffer` helpers.
+- [ ] C5. Create `algorithms/shared/go/codec/errors.go` — error sentinel values and `StatusCode` type.
+- [ ] C6. Add `WriterEncoder` adapter in `algorithms/shared/go/codec/writer.go` implementing `io.Writer` via `Process`.
+- [ ] C7. Adapt Huffman Go to implement the interfaces from `algorithms/shared/go/codec`.
+- [ ] C8. Adapt Arithmetic Go to implement the shared interfaces.
+- [ ] C9. Adapt Range Go to implement the shared interfaces.
+- [ ] C10. Adapt RLE Go to implement the shared interfaces.
+- [ ] C11. Add lifecycle unit tests in `algorithms/shared/go/codec/lifecycle_test.go`.
 
 ## Phase D — Rust Implementation
 
-- [ ] D1. Create `src/codec/encoder.rs` — `Encoder` and `Decoder` traits.
-- [ ] D2. Create `src/codec/buffer.rs` — `encode_buffer` / `decode_buffer` free functions.
-- [ ] D3. Create `src/codec/error.rs` — `CodecError` enum.
-- [ ] D4. Implement `WriteEncoder` adapter (`impl std::io::Write`).
-- [ ] D5. Adapt Huffman Rust.
-- [ ] D6. Adapt Arithmetic Rust.
-- [ ] D7. Adapt Range Rust.
-- [ ] D8. Adapt RLE Rust.
-- [ ] D9. Add lifecycle unit tests in `src/codec/tests/lifecycle.rs`.
+- [ ] D1. Create `algorithms/shared/rust/Cargo.toml` — shared Rust crate manifest for streaming foundation helpers.
+- [ ] D2. Create `algorithms/shared/rust/src/lib.rs` exporting the shared streaming modules.
+- [ ] D3. Create `algorithms/shared/rust/src/codec/encoder.rs` — `Encoder` and `Decoder` traits.
+- [ ] D4. Create `algorithms/shared/rust/src/codec/buffer.rs` — `encode_buffer` / `decode_buffer` free functions.
+- [ ] D5. Create `algorithms/shared/rust/src/codec/error.rs` — `CodecError` enum.
+- [ ] D6. Implement `WriteEncoder` adapter in `algorithms/shared/rust/src/codec/write.rs` (`impl std::io::Write`).
+- [ ] D7. Adapt Huffman Rust to implement the shared traits.
+- [ ] D8. Adapt Arithmetic Rust to implement the shared traits.
+- [ ] D9. Adapt Range Rust to implement the shared traits.
+- [ ] D10. Adapt RLE Rust to implement the shared traits.
+- [ ] D11. Add lifecycle unit tests in `algorithms/shared/rust/tests/lifecycle.rs`.
 
 ## Phase E — Integration & Verification
 

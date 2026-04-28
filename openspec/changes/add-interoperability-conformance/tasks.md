@@ -12,6 +12,12 @@
 - [ ] P1. Confirm `add-shared-frame-format` is archived (frame header fields must be stable).
 - [ ] P2. Confirm `add-streaming-api-foundation` is archived (error codes `ERR_VERSION_UNSUPPORTED`, `ERR_UNKNOWN_ALGO`, `ERR_TRUNCATED`, `ERR_CORRUPT` must be stable).
 
+## Phase A0 — Conformance Scenario Planning
+
+- [ ] A0.1. Expand the planned corpus to include `random_1MiB.bin`, `random_10MiB.bin`, `repetitive_10MiB.bin`, `textlike_10MiB.bin`, `empty.bin`, `single_byte.bin`, `alternating.bin`, and `small_dictionary_like.bin`.
+- [ ] A0.2. Document the conformance scenarios `encode A -> decode B`, `parse header without full decode`, `truncated payload fails with actionable error`, `corrupted checksum fails with actionable error`, and `concatenated frames obey documented semantics`.
+- [ ] A0.3. Create `tests/conformance/README.md` so the corpus and scenario matrix are frozen before the parser/vector test harness is implemented.
+
 ## Phase A — Corpus Generation
 
 - [ ] A1. Create `tests/gen_corpus.py` — deterministic generator using `--seed 42`; produces the 9 synthetic corpus files listed in design.md § Corpus Matrix (everything except `binary_elf_sample.bin`).

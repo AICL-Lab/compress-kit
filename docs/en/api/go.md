@@ -1,6 +1,12 @@
 # Go Library API Reference
 
-All Go implementations expose a library API in addition to the CLI. Each algorithm follows the same pattern with `Encode`/`Decode` functions that work on `io.Reader`/`io.Writer`.
+See also: [Streaming API](/en/api/streaming)
+
+All Go implementations expose a library API in addition to the CLI. Each algorithm now follows the same layered pattern:
+
+- legacy file/stream helpers such as `Encode`, `Decode`, `EncodeFile`, and `DecodeFile`
+- shared streaming implementations via `NewStreamingEncoder()` / `NewStreamingDecoder()`
+- shared buffer helpers via `github.com/LessUp/compress-kit/algorithms/shared/go/codec`
 
 ## Huffman (`algorithms/huffman/go`)
 

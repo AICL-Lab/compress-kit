@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <chrono>
 
+#include "compresskit/buffer_api.hpp"
+
 namespace range_coder {
 
 static const uint32_t SYMBOL_LIMIT = 257;
@@ -307,6 +309,7 @@ static void write_file(const std::string& path, const std::vector<uint8_t>& data
     }
 }
 
+#ifndef COMPRESSKIT_NO_MAIN
 static void run_benchmark(std::size_t size_bytes, int iterations) {
     std::vector<uint8_t> data(size_bytes);
     for (std::size_t i = 0; i < size_bytes; ++i) {
@@ -345,7 +348,33 @@ static void run_benchmark(std::size_t size_bytes, int iterations) {
     std::cout << "Decode time: " << dec_dur.count() << " s, throughput: "
               << (total_mb / dec_dur.count()) << " MiB/s" << std::endl;
 }
+#endif
 
+bool rangecoder_encode_file(const std::string& input_path, const std::string& output_path) {
+    try {
+        std::vector<uint8_t> data = read_file(input_path);
+        std::vector<uint8_t> encoded = range_coder::encode(data);
+        write_file(output_path, encoded);
+        return true;
+    } catch (const std::exception& ex) {
+        std::cerr << "Error: " << ex.what() << "\n";
+        return false;
+    }
+}
+
+bool rangecoder_decode_file(const std::string& input_path, const std::string& output_path) {
+    try {
+        std::vector<uint8_t> encoded = read_file(input_path);
+        std::vector<uint8_t> decoded = range_coder::decode(encoded);
+        write_file(output_path, decoded);
+        return true;
+    } catch (const std::exception& ex) {
+        std::cerr << "Error: " << ex.what() << "\n";
+        return false;
+    }
+}
+
+#ifndef COMPRESSKIT_NO_MAIN
 int main(int argc, char** argv) {
     try {
         if (argc < 2) {
@@ -362,9 +391,9 @@ int main(int argc, char** argv) {
             }
             std::string input_path = argv[2];
             std::string output_path = argv[3];
-            std::vector<uint8_t> data = read_file(input_path);
-            std::vector<uint8_t> encoded = range_coder::encode(data);
-            write_file(output_path, encoded);
+            if (!compresskit::encode_file_via_buffer(rangecoder_encode_file, input_path, output_path)) {
+                return 1;
+            }
         } else if (mode == "decode") {
             if (argc != 4) {
                 std::cerr << "Usage: " << argv[0] << " decode input output\n";
@@ -372,9 +401,9 @@ int main(int argc, char** argv) {
             }
             std::string input_path = argv[2];
             std::string output_path = argv[3];
-            std::vector<uint8_t> encoded = read_file(input_path);
-            std::vector<uint8_t> decoded = range_coder::decode(encoded);
-            write_file(output_path, decoded);
+            if (!compresskit::decode_file_via_buffer(rangecoder_decode_file, input_path, output_path)) {
+                return 1;
+            }
         } else if (mode == "bench") {
             std::size_t size_bytes = 1u << 20; // 1 MiB
             int iterations = 20;
@@ -396,3 +425,4 @@ int main(int argc, char** argv) {
 
     return 0;
 }
+#endif

@@ -4,6 +4,8 @@
 #include <iostream>
 #include <string>
 
+#include "compresskit/buffer_api.hpp"
+
 class BitWriter {
 public:
     explicit BitWriter(std::ostream& s) : stream(s), buffer(0), bits_in_buffer(0) {}
@@ -391,6 +393,15 @@ static bool decompress_file(const std::string& input_path, const std::string& ou
     return true;
 }
 
+bool arithmetic_encode_file(const std::string& input_path, const std::string& output_path) {
+    return compress_file(input_path, output_path);
+}
+
+bool arithmetic_decode_file(const std::string& input_path, const std::string& output_path) {
+    return decompress_file(input_path, output_path);
+}
+
+#ifndef COMPRESSKIT_NO_MAIN
 int main(int argc, char** argv) {
     if (argc != 4) {
         std::cerr << "Usage: " << argv[0] << " encode|decode input output\n";
@@ -403,9 +414,9 @@ int main(int argc, char** argv) {
     bool ok = true;
 
     if (mode == "encode") {
-        ok = compress_file(input_path, output_path);
+        ok = compresskit::encode_file_via_buffer(arithmetic_encode_file, input_path, output_path);
     } else if (mode == "decode") {
-        ok = decompress_file(input_path, output_path);
+        ok = compresskit::decode_file_via_buffer(arithmetic_decode_file, input_path, output_path);
     } else {
         std::cerr << "Unknown mode\n";
         return 1;
@@ -413,3 +424,4 @@ int main(int argc, char** argv) {
 
     return ok ? 0 : 1;
 }
+#endif

@@ -1,11 +1,13 @@
 # 项目结构
 
+另请参阅: [Streaming API](/zh/api/streaming)
+
 本指南介绍项目组织方式、文件格式和所有实现中使用的约定。
 
 ## 目录结构
 
 ```
-encoding/
+compress-kit/
 ├── algorithms/huffman/              # Huffman 编码实现
 │   ├── cpp/              #   C++ 单文件实现
 │   ├── go/               #   Go 模块 (go.mod)
@@ -26,6 +28,10 @@ encoding/
 │   ├── go/               #   Go 实现
 │   ├── rust/             #   Rust 实现
 │   └── benchmark/        #   跨语言基准测试
+├── algorithms/shared/    # 共享 streaming/buffer 基础层
+│   ├── cpp/              #   C++ 头文件、buffer shim、生命周期测试
+│   ├── go/               #   共享 Go codec 模块
+│   └── rust/             #   共享 Rust codec crate
 ├── tests/                # 测试数据生成
 │   ├── gen_testdata.py   #   生成基准测试文件
 │   └── data/             #   生成的测试数据
@@ -177,6 +183,7 @@ encoding/
 go 1.21
 
 use (
+    ./algorithms/shared/go
     ./algorithms/huffman/go
     ./algorithms/arithmetic/go
     ./algorithms/range/go

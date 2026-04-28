@@ -46,6 +46,11 @@ coverage.out
 **/huffman_rust_test
 **/arithmetic_rust_test
 **/rle_rust_test
+**/test_lifecycle
+
+# Local environments
+.venv/
+.omc/
 
 # CMake generated files
 CMakeCache.txt

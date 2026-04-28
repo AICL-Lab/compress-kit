@@ -1,6 +1,8 @@
 # C++ 实现参考
 
-所有 C++ 实现都是单文件、零依赖的 C++17 程序。
+另请参阅: [Streaming API](/zh/api/streaming)
+
+所有 C++ 算法核心仍然保持单文件、零依赖风格，但现在额外共享了 `algorithms/shared/cpp/include/compresskit/` 下的 streaming / buffer 门面层。
 
 ## 编译
 
@@ -59,3 +61,14 @@ g++ -std=c++17 -O2 -Wall -Wextra -o <binary> main.cpp
 | 零依赖 | 仅使用标准库 |
 | 错误处理 | `fprintf(stderr, ...)` + `exit(1)` |
 | 内存管理 | `std::unique_ptr` + 自定义删除器 |
+
+## 共享 Streaming 门面
+
+共享头文件位于：
+
+- `compresskit/result.hpp`
+- `compresskit/encoder.hpp`
+- `compresskit/buffer_api.hpp`
+- `compresskit/algorithms.hpp`
+
+这些头文件提供统一的 `Encoder` / `Decoder` 生命周期接口，以及 `compresskit::make_huffman_encoder()` 这类算法工厂。

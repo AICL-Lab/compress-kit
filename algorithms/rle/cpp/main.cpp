@@ -5,6 +5,8 @@
 #include <string>
 #include <algorithm>
 
+#include "compresskit/buffer_api.hpp"
+
 // Simple Run-Length encoding implementation.
 // Format: repeatedly write (count, value) pairs until EOF.
 // - count: 4-byte unsigned integer, little-endian, represents how many times value repeats, must be > 0.
@@ -174,6 +176,7 @@ bool rle_decode_file(const std::string& input_path, const std::string& output_pa
     return rle_decode_file_checked(input_path, output_path);
 }
 
+#ifndef COMPRESSKIT_NO_MAIN
 int main(int argc, char** argv) {
     if (argc != 4) {
         std::cerr << "usage: " << argv[0] << " encode|decode input output\n";
@@ -186,9 +189,9 @@ int main(int argc, char** argv) {
     bool ok = true;
 
     if (mode == "encode") {
-        ok = rle_encode_file_checked(input_path, output_path);
+        ok = compresskit::encode_file_via_buffer(rle_encode_file, input_path, output_path);
     } else if (mode == "decode") {
-        ok = rle_decode_file_checked(input_path, output_path);
+        ok = compresskit::decode_file_via_buffer(rle_decode_file, input_path, output_path);
     } else {
         std::cerr << "unknown mode: " << mode << ", expected encode or decode\n";
         return 1;
@@ -196,3 +199,4 @@ int main(int argc, char** argv) {
 
     return ok ? 0 : 1;
 }
+#endif

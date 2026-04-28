@@ -88,9 +88,9 @@ go build -o huffman_go ./cmd
 
 ```bash [Rust]
 cd algorithms/huffman/rust
-rustc -O main.rs -o huffman_rust
-./huffman_rust encode input.bin output.huf
-./huffman_rust decode output.huf restored.bin
+cargo build --bin huffman_rust --release
+./target/release/huffman_rust encode input.bin output.huf
+./target/release/huffman_rust decode output.huf restored.bin
 ```
 
 :::
@@ -120,7 +120,7 @@ Any combination works: **C++ ↔ Go ↔ Rust**
 make test
 ```
 
-This runs all Go and Rust unit tests across all algorithms.
+This runs shared streaming-layer tests plus all Go and Rust unit tests across all algorithms.
 
 ### Run Individual Algorithm Tests
 
@@ -129,7 +129,7 @@ This runs all Go and Rust unit tests across all algorithms.
 cd algorithms/huffman/go && go test ./...
 
 # Rust tests
-cd algorithms/huffman/rust && rustc --test main.rs -o test && ./test
+cd algorithms/huffman/rust && cargo test
 ```
 
 ## Running Benchmarks
@@ -185,6 +185,7 @@ clang++ -std=c++17 -O2 main.cpp -o huffman_cpp
 
 ```bash
 # Ensure Go workspace includes all modules
+go work use ./algorithms/shared/go
 go work use ./algorithms/huffman/go
 go work use ./algorithms/arithmetic/go
 go work use ./algorithms/range/go

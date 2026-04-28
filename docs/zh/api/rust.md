@@ -1,6 +1,8 @@
 # Rust 包 API 参考
 
-每种 Rust 实现都提供可复用的库包。区间编码已有 `Cargo.toml` + `src/lib.rs`；其他算法遵循相同模式。
+另请参阅: [Streaming API](/zh/api/streaming)
+
+每种 Rust 实现都提供可复用的库包，现在四种算法也统一提供 shared streaming adapter 与 `compresskit-codec` buffer helper。
 
 ## Huffman 编码
 

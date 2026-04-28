@@ -165,3 +165,110 @@ Implemented as: `new encoder → process(input) → finish() → collect output`
 
 1. Should `flush()` be mandatory before `finish()`, or should `finish()` auto-flush? **Decision: `finish()` auto-flushes** to simplify caller code.
 2. Thread safety: are encoders thread-safe? **Decision: No. Single-threaded use only; callers manage concurrency.**
+
+## Algorithm Lifecycle Review (Task A1)
+
+All four algorithms (Huffman, Arithmetic Coding, Range Coder, RLE) have been reviewed against the lifecycle state machine. Findings:
+
+### Huffman
+- **Current implementation**: Buffers entire input, builds frequency table, then encodes in one pass
+- **Lifecycle compatibility**: ✓ Compatible. Can buffer in STREAMING state, emit on finish()
+- **State machine gaps**: None. Frequency table must be built before encoding begins; buffering all input is acceptable
+- **End-of-stream marker**: EOF symbol (index 256) already present in current implementation
+
+### Arithmetic Coding
+- **Current implementation**: Buffers entire input for frequency analysis, then encodes with range updates
+- **Lifecycle compatibility**: ✓ Compatible. Internal state (low, high, pendingBits) already tracked
+- **State machine gaps**: None. `Finish()` method already exists and handles final bit emission
+- **End-of-stream marker**: EOF symbol (index 256) already encoded
+
+### Range Coder
+- **Current implementation**: []byte-based, buffers entire input and output
+- **Lifecycle compatibility**: ✓ Compatible. Encoder already maintains `low`, `high` state
+- **State machine gaps**: None. Renormalization logic already supports incremental emission
+- **End-of-stream marker**: EOF symbol already present
+
+### RLE (Run-Length Encoding)
+- **Current implementation**: Streaming-friendly — processes byte-by-byte, emits (count, value) pairs
+- **Lifecycle compatibility**: ✓ Fully compatible. Already incremental
+- **State machine gaps**: None. Current run must be tracked across process() calls
+- **End-of-stream marker**: Not needed — decoder stops at EOF naturally
+
+**Conclusion**: All four algorithms are lifecycle-compatible. No design.md changes required for state machine correctness.
+
+## Maximum Output Expansion Formulas (Task A2)
+
+Each algorithm documents its worst-case output expansion to support `BUF_TOO_SMALL` contract and buffer sizing.
+
+### Huffman
+**Formula**: `max_output = 4 + 257*4 + input_len*8 + ceil(input_len/8)`
+- Header: 4 bytes (magic "HFMN")
+- Frequency table: 257 symbols × 4 bytes = 1028 bytes
+- Encoded data: worst case = 1 bit per input byte × input_len, padded to byte boundary
+- **Conservative upper bound**: `1032 + input_len*8 + 8 bytes`
+- **Simplified**: `max_output = 1040 + input_len*8`
+
+### Arithmetic Coding
+**Formula**: `max_output = 4 + 257*4 + input_len*4 + 32`
+- Header: 4 bytes (magic "AENC")
+- Frequency table: 1028 bytes
+- Encoded data: worst case ≈ 4 bytes per input byte (when range narrows maximally)
+- Final flush: 32 bits (4 bytes)
+- **Simplified**: `max_output = 1064 + input_len*4`
+
+### Range Coder
+**Formula**: `max_output = 4 + 257*4 + input_len*4 + 4`
+- Header: 4 bytes (magic "RCNC")
+- Frequency table: 1028 bytes
+- Encoded data: similar to arithmetic coding, ≈ 4 bytes per input byte worst case
+- Final flush: 4 bytes
+- **Simplified**: `max_output = 1036 + input_len*4`
+
+### RLE (Run-Length Encoding)
+**Formula**: `max_output = input_len*5`
+- Each input byte becomes: 4 bytes (count=1 as uint32) + 1 byte (value)
+- No header overhead
+- **Worst case**: Every byte is different, no runs
+- **Simplified**: `max_output = input_len*5`
+
+**Note**: These formulas represent absolute worst-case scenarios. Typical compression achieves much better ratios, but callers MUST allocate using these bounds to avoid `BUF_TOO_SMALL` errors.
+
+## Go Interface io.Reader/io.Writer Compatibility Review (Task A3)
+
+The Go interface design has been reviewed for standard library compatibility:
+
+### Encoder Interface
+```go
+type Encoder interface {
+    Process(in []byte, out []byte) (written int, err error)
+    Flush(out []byte) (written int, err error)
+    Finish(out []byte) (written int, err error)
+    Reset()
+}
+```
+
+### io.Writer Wrapping Strategy
+
+A `WriterEncoder` adapter can implement `io.Writer` by:
+1. Accepting a backing `Encoder` instance
+2. Maintaining an internal output buffer
+3. Mapping `Write(p []byte)` → `encoder.Process(p, outBuf)` + flush to underlying io.Writer
+4. Exposing `Close()` to call `Finish()` and flush final output
+
+**Example usage**:
+```go
+encoder := huffman.NewEncoder()
+w := codec.NewWriterEncoder(encoder, outputWriter)
+io.Copy(w, inputReader)  // Standard io.Copy works
+w.Close()                 // Calls Finish() and flushes
+```
+
+### io.Reader Wrapping Strategy
+
+A `ReaderDecoder` can wrap `Decoder`:
+1. Read from source via `Read(p []byte)`
+2. Call `decoder.Process(chunk, outBuf)` as input arrives
+3. Return decoded bytes from internal buffer via `Read(p []byte)`
+4. Handle `Finish()` when source EOF is reached
+
+**Compatibility**: ✓ The interface design is fully compatible with Go's io.Reader/io.Writer patterns. No design.md changes needed.

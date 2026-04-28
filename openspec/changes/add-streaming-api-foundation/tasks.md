@@ -9,15 +9,15 @@
 
 ## Phase A0 — Contract-First Test Planning
 
-- [ ] A0.1. Create `tests/streaming_api_contract/contract_cases.md` and write failing tests for process/flush/finish lifecycle.
-- [ ] A0.2. Verify tests fail against current Huffman/Range API surface before introducing shared streaming abstractions.
-- [ ] A0.3. Create `tests/streaming_api_contract/README.md` describing scope, fixture ownership, and the rule that this stage modifies test plans only.
+- [x] A0.1. Create `tests/streaming_api_contract/contract_cases.md` and write failing tests for process/flush/finish lifecycle.
+- [x] A0.2. Verify tests fail against current Huffman/Range API surface before introducing shared streaming abstractions.
+- [x] A0.3. Create `tests/streaming_api_contract/README.md` describing scope, fixture ownership, and the rule that this stage modifies test plans only.
 
 ## Phase A — Spec & Design Review
 
-- [ ] A1. Review design.md lifecycle state machine against all four algorithms (Huffman, AC, RC, RLE) for correctness; update design.md if gaps found.
-- [ ] A2. Confirm `max_output_expansion` formula for each algorithm and document in design.md § Partial Output.
-- [ ] A3. Review Go interface against standard `io.Reader`/`io.Writer` wrapping compatibility; update design.md if needed.
+- [x] A1. Review design.md lifecycle state machine against all four algorithms (Huffman, AC, RC, RLE) for correctness; update design.md if gaps found.
+- [x] A2. Confirm `max_output_expansion` formula for each algorithm and document in design.md § Partial Output.
+- [x] A3. Review Go interface against standard `io.Reader`/`io.Writer` wrapping compatibility; update design.md if needed.
 
 ## Phase B — C++17 Implementation
 
@@ -33,17 +33,17 @@
 
 ## Phase C — Go Implementation
 
-- [ ] C1. Create `algorithms/shared/go/go.mod` — shared Go module manifest for streaming foundation helpers.
-- [ ] C2. Update `go.work` to include `./algorithms/shared/go` so algorithm modules can import the shared package during local development.
-- [ ] C3. Create `algorithms/shared/go/codec/encoder.go` — `Encoder` and `Decoder` interfaces.
-- [ ] C4. Create `algorithms/shared/go/codec/buffer.go` — `EncodeBuffer` / `DecodeBuffer` helpers.
-- [ ] C5. Create `algorithms/shared/go/codec/errors.go` — error sentinel values and `StatusCode` type.
-- [ ] C6. Add `WriterEncoder` adapter in `algorithms/shared/go/codec/writer.go` implementing `io.Writer` via `Process`.
-- [ ] C7. Adapt Huffman Go to implement the interfaces from `algorithms/shared/go/codec`.
-- [ ] C8. Adapt Arithmetic Go to implement the shared interfaces.
-- [ ] C9. Adapt Range Go to implement the shared interfaces.
-- [ ] C10. Adapt RLE Go to implement the shared interfaces.
-- [ ] C11. Add lifecycle unit tests in `algorithms/shared/go/codec/lifecycle_test.go`.
+- [x] C1. Create `algorithms/shared/go/go.mod` — shared Go module manifest for streaming foundation helpers.
+- [x] C2. Update `go.work` to include `./algorithms/shared/go` so algorithm modules can import the shared package during local development.
+- [x] C3. Create `algorithms/shared/go/codec/encoder.go` — `Encoder` and `Decoder` interfaces.
+- [x] C4. Create `algorithms/shared/go/codec/buffer.go` — `EncodeBuffer` / `DecodeBuffer` helpers.
+- [x] C5. Create `algorithms/shared/go/codec/errors.go` — error sentinel values and `StatusCode` type.
+- [x] C6. Add `WriterEncoder` adapter in `algorithms/shared/go/codec/writer.go` implementing `io.Writer` via `Process`.
+- [x] C7. Adapt Huffman Go to implement the interfaces from `algorithms/shared/go/codec`.
+- [x] C8. Adapt Arithmetic Go to implement the shared interfaces.
+- [x] C9. Adapt Range Go to implement the shared interfaces.
+- [x] C10. Adapt RLE Go to implement the shared interfaces.
+- [x] C11. Add lifecycle unit tests in `algorithms/shared/go/codec/lifecycle_test.go`.
 
 ## Phase D — Rust Implementation
 

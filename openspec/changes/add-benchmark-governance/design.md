@@ -59,6 +59,14 @@ Each benchmark run produces a JSON report at `tests/bench/results/bench_<ISO8601
     "rust_version": "1.70.0",
     "cpp_compiler": "g++ 13.1"
   },
+  "skips": [
+    {
+      "algorithm": "range",
+      "language": "go",
+      "corpus_file": "text_canterbury_alice.txt",
+      "reason": "range_coder_corpus_cap_100_kib"
+    }
+  ],
   "results": [
     {
       "algorithm": "huffman",
@@ -76,7 +84,9 @@ Each benchmark run produces a JSON report at `tests/bench/results/bench_<ISO8601
 }
 ```
 
-Pass/fail evaluation is **not stored in the result file**. `make bench-check` reads the result file and the baseline file and computes pass/fail externally, printing any regressing metrics to stdout.
+`skips` is optional and records intentionally unrun benchmark triples. For Phase 1, the only expected reason is `range_coder_corpus_cap_100_kib` when a Range benchmark input exceeds 100 KiB. Omitted triples MUST appear in `skips`; silent omission is not allowed.
+
+Pass/fail evaluation is **not stored in the result file**. `make bench-check` reads the result file and the baseline file and computes pass/fail externally, printing any regressing metrics to stdout. Skip metadata remains in the result file so intentional exclusions are auditable.
 
 ## Regression Thresholds
 

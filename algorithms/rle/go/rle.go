@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/LessUp/compress-kit/algorithms/shared/go/codec"
 )
 
 // MaxOutputSize is the maximum allowed output size (1 GiB) to prevent
@@ -122,34 +124,38 @@ func Decode(r io.Reader, w io.Writer) error {
 
 // EncodeFile is a convenience function for file-based encoding.
 func EncodeFile(inputPath, outputPath string) error {
-	in, err := os.Open(inputPath)
+	input, err := os.ReadFile(inputPath)
 	if err != nil {
 		return fmt.Errorf("cannot open input file: %s: %w", inputPath, err)
 	}
-	defer in.Close()
 
-	out, err := os.Create(outputPath)
+	encoded, err := codec.EncodeBuffer(NewStreamingEncoder(), input)
 	if err != nil {
+		return err
+	}
+
+	if err := os.WriteFile(outputPath, encoded, 0o644); err != nil {
 		return fmt.Errorf("cannot open output file: %s: %w", outputPath, err)
 	}
-	defer out.Close()
 
-	return Encode(in, out)
+	return nil
 }
 
 // DecodeFile is a convenience function for file-based decoding.
 func DecodeFile(inputPath, outputPath string) error {
-	in, err := os.Open(inputPath)
+	input, err := os.ReadFile(inputPath)
 	if err != nil {
 		return fmt.Errorf("cannot open input file: %s: %w", inputPath, err)
 	}
-	defer in.Close()
 
-	out, err := os.Create(outputPath)
+	decoded, err := codec.DecodeBuffer(NewStreamingDecoder(), input)
 	if err != nil {
+		return err
+	}
+
+	if err := os.WriteFile(outputPath, decoded, 0o644); err != nil {
 		return fmt.Errorf("cannot open output file: %s: %w", outputPath, err)
 	}
-	defer out.Close()
 
-	return Decode(in, out)
+	return nil
 }

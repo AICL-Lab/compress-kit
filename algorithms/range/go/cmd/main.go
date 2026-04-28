@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/LessUp/compress-kit/algorithms/shared/go/codec"
 	"rangecoder"
 )
 
@@ -28,7 +29,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "cannot read input file: %v\n", err)
 			os.Exit(1)
 		}
-		encoded, err := rangecoder.Encode(data)
+		encoded, err := codec.EncodeBuffer(rangecoder.NewStreamingEncoder(), data)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "encode failed: %v\n", err)
 			os.Exit(1)
@@ -43,7 +44,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "cannot read input file: %v\n", err)
 			os.Exit(1)
 		}
-		decoded, err := rangecoder.Decode(data)
+		decoded, err := codec.DecodeBuffer(rangecoder.NewStreamingDecoder(), data)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "decode failed: %v\n", err)
 			os.Exit(1)

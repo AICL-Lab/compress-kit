@@ -1,6 +1,8 @@
 # Rust Crate API Reference
 
-Each Rust implementation provides a reusable library crate. The Range Coder already has a `Cargo.toml` with `src/lib.rs`; the other algorithms follow the same pattern.
+See also: [Streaming API](/en/api/streaming)
+
+Each Rust implementation provides a reusable library crate, and all four algorithms now expose shared streaming adapters plus the `compresskit-codec` buffer helpers.
 
 ## Huffman (`algorithms/huffman/rust`)
 

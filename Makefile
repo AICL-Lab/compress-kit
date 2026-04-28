@@ -1,5 +1,6 @@
 .PHONY: build build-huffman build-arithmetic build-range build-rle \
        test test-huffman-go test-arithmetic-go test-range-go test-rle-go \
+       test-shared-cpp test-shared-go test-shared-rust \
        test-huffman-rust test-arithmetic-rust test-range-rust test-rle-rust \
        test-data bench clean format lint spec-init spec-list spec-status
 
@@ -8,30 +9,44 @@
 build: build-huffman build-arithmetic build-range build-rle
 
 build-huffman:
-	g++ -std=c++17 -O2 -Wall -Wextra -Werror algorithms/huffman/cpp/main.cpp -o algorithms/huffman/cpp/huffman_cpp
+	g++ -std=c++17 -O2 -Wall -Wextra -Werror -Ialgorithms/shared/cpp/include algorithms/shared/cpp/src/buffer_api.cpp algorithms/huffman/cpp/main.cpp -o algorithms/huffman/cpp/huffman_cpp
 	go build -o algorithms/huffman/go/huffman_go ./algorithms/huffman/go/cmd
-	rustc -O algorithms/huffman/rust/main.rs -o algorithms/huffman/rust/huffman_rust
+	cargo build --manifest-path algorithms/huffman/rust/Cargo.toml --bin huffman_rust --release
+	cp algorithms/huffman/rust/target/release/huffman_rust algorithms/huffman/rust/huffman_rust
 
 build-arithmetic:
-	g++ -std=c++17 -O2 -Wall -Wextra -Werror algorithms/arithmetic/cpp/main.cpp -o algorithms/arithmetic/cpp/arithmetic_cpp
+	g++ -std=c++17 -O2 -Wall -Wextra -Werror -Ialgorithms/shared/cpp/include algorithms/shared/cpp/src/buffer_api.cpp algorithms/arithmetic/cpp/main.cpp -o algorithms/arithmetic/cpp/arithmetic_cpp
 	go build -o algorithms/arithmetic/go/arithmetic_go ./algorithms/arithmetic/go/cmd
-	rustc -O algorithms/arithmetic/rust/main.rs -o algorithms/arithmetic/rust/arithmetic_rust
+	cargo build --manifest-path algorithms/arithmetic/rust/Cargo.toml --bin arithmetic_rust --release
+	cp algorithms/arithmetic/rust/target/release/arithmetic_rust algorithms/arithmetic/rust/arithmetic_rust
 
 build-range:
-	g++ -std=c++17 -O2 -Wall -Wextra -Werror algorithms/range/cpp/main.cpp -o algorithms/range/cpp/rangecoder_cpp
+	g++ -std=c++17 -O2 -Wall -Wextra -Werror -Ialgorithms/shared/cpp/include algorithms/shared/cpp/src/buffer_api.cpp algorithms/range/cpp/main.cpp -o algorithms/range/cpp/rangecoder_cpp
 	go build -o algorithms/range/go/rangecoder_go ./algorithms/range/go/cmd
 	cargo build --manifest-path algorithms/range/rust/Cargo.toml --release
 
 build-rle:
-	g++ -std=c++17 -O2 -Wall -Wextra -Werror algorithms/rle/cpp/main.cpp -o algorithms/rle/cpp/rle_cpp
+	g++ -std=c++17 -O2 -Wall -Wextra -Werror -Ialgorithms/shared/cpp/include algorithms/shared/cpp/src/buffer_api.cpp algorithms/rle/cpp/main.cpp -o algorithms/rle/cpp/rle_cpp
 	go build -o algorithms/rle/go/rle_go ./algorithms/rle/go/cmd
-	rustc -O algorithms/rle/rust/main.rs -o algorithms/rle/rust/rle_rust
+	cargo build --manifest-path algorithms/rle/rust/Cargo.toml --bin rle_rust --release
+	cp algorithms/rle/rust/target/release/rle_rust algorithms/rle/rust/rle_rust
 
 # ── Test ───────────────────────────────────────────────────────────────────
 
 test: test-data \
+      test-shared-cpp test-shared-go test-shared-rust \
       test-huffman-go test-arithmetic-go test-range-go test-rle-go \
       test-huffman-rust test-arithmetic-rust test-range-rust test-rle-rust
+
+test-shared-cpp:
+	g++ -std=c++17 -O2 -Wall -Wextra -Werror -DCOMPRESSKIT_NO_MAIN -Ialgorithms/shared/cpp/include algorithms/shared/cpp/src/buffer_api.cpp algorithms/huffman/cpp/main.cpp algorithms/arithmetic/cpp/main.cpp algorithms/range/cpp/main.cpp algorithms/rle/cpp/main.cpp algorithms/shared/cpp/tests/test_lifecycle.cpp -o algorithms/shared/cpp/tests/test_lifecycle
+	./algorithms/shared/cpp/tests/test_lifecycle
+
+test-shared-go:
+	go test ./algorithms/shared/go/...
+
+test-shared-rust:
+	cargo test --manifest-path algorithms/shared/rust/Cargo.toml
 
 test-huffman-go:
 	go test ./algorithms/huffman/go/... ./algorithms/huffman/go/cmd/...
@@ -46,19 +61,16 @@ test-rle-go:
 	go test ./algorithms/rle/go/... ./algorithms/rle/go/cmd/...
 
 test-huffman-rust:
-	rustc --test algorithms/huffman/rust/main.rs -o algorithms/huffman/rust/huffman_rust_test
-	./algorithms/huffman/rust/huffman_rust_test
+	cargo test --manifest-path algorithms/huffman/rust/Cargo.toml
 
 test-arithmetic-rust:
-	rustc --test algorithms/arithmetic/rust/main.rs -o algorithms/arithmetic/rust/arithmetic_rust_test
-	./algorithms/arithmetic/rust/arithmetic_rust_test
+	cargo test --manifest-path algorithms/arithmetic/rust/Cargo.toml
 
 test-range-rust:
 	cargo test --manifest-path algorithms/range/rust/Cargo.toml
 
 test-rle-rust:
-	rustc --test algorithms/rle/rust/main.rs -o algorithms/rle/rust/rle_rust_test
-	./algorithms/rle/rust/rle_rust_test
+	cargo test --manifest-path algorithms/rle/rust/Cargo.toml
 
 # ── Data / Bench / Clean ──────────────────────────────────────────────────
 
@@ -83,19 +95,25 @@ format:
 	@echo "Formatting Go code..."
 	gofmt -w algorithms/*/go
 	@echo "Formatting Rust code..."
-	rustfmt algorithms/huffman/rust/main.rs algorithms/arithmetic/rust/main.rs algorithms/rle/rust/main.rs 2>/dev/null || true
+	cargo fmt --manifest-path algorithms/huffman/rust/Cargo.toml 2>/dev/null || true
+	cargo fmt --manifest-path algorithms/arithmetic/rust/Cargo.toml 2>/dev/null || true
+	cargo fmt --manifest-path algorithms/rle/rust/Cargo.toml 2>/dev/null || true
 	cd algorithms/range/rust && cargo fmt 2>/dev/null || true
 	@echo "Formatting C++ code (if clang-format available)..."
-	@for f in algorithms/*/cpp/main.cpp; do \
+	@for f in algorithms/*/cpp/main.cpp algorithms/shared/cpp/src/buffer_api.cpp algorithms/shared/cpp/tests/test_lifecycle.cpp; do \
 		clang-format -i "$$f" 2>/dev/null || true; \
 	done
 	@echo "Done!"
 
 lint:
 	@echo "Linting Go code..."
-	go vet ./algorithms/huffman/go/... ./algorithms/arithmetic/go/... ./algorithms/range/go/... ./algorithms/rle/go/... 2>/dev/null || true
+	go vet ./algorithms/shared/go/... ./algorithms/huffman/go/... ./algorithms/arithmetic/go/... ./algorithms/range/go/... ./algorithms/rle/go/... 2>/dev/null || true
 	@echo "Linting Rust code..."
+	cd algorithms/huffman/rust && cargo clippy --all-targets -- -D warnings 2>/dev/null || true
+	cd algorithms/arithmetic/rust && cargo clippy --all-targets -- -D warnings 2>/dev/null || true
 	cd algorithms/range/rust && cargo clippy -- -D warnings 2>/dev/null || true
+	cd algorithms/rle/rust && cargo clippy --all-targets -- -D warnings 2>/dev/null || true
+	cd algorithms/shared/rust && cargo clippy --all-targets -- -D warnings 2>/dev/null || true
 	@echo "Done!"
 
 # ── OpenSpec ────────────────────────────────────────────────────────────────

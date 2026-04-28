@@ -6,6 +6,8 @@
 #include <queue>
 #include <memory>
 
+#include "compresskit/buffer_api.hpp"
+
 class BitWriter {
 public:
     explicit BitWriter(std::ostream& s) : stream(s), buffer(0), bits_in_buffer(0) {}
@@ -351,6 +353,7 @@ bool huffman_decode_file(const std::string& input_path, const std::string& outpu
     return decompress_file(input_path, output_path);
 }
 
+#ifndef COMPRESSKIT_NO_MAIN
 int main(int argc, char** argv) {
     if (argc != 4) {
         std::cerr << "Usage: " << argv[0] << " encode|decode input output\n";
@@ -363,9 +366,9 @@ int main(int argc, char** argv) {
     bool ok = true;
 
     if (mode == "encode") {
-        ok = compress_file(input_path, output_path);
+        ok = compresskit::encode_file_via_buffer(huffman_encode_file, input_path, output_path);
     } else if (mode == "decode") {
-        ok = decompress_file(input_path, output_path);
+        ok = compresskit::decode_file_via_buffer(huffman_decode_file, input_path, output_path);
     } else {
         std::cerr << "Unknown mode\n";
         return 1;
@@ -373,3 +376,4 @@ int main(int argc, char** argv) {
 
     return ok ? 0 : 1;
 }
+#endif

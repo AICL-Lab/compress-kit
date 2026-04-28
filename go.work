@@ -5,4 +5,5 @@ use (
 	./algorithms/huffman/go
 	./algorithms/range/go
 	./algorithms/rle/go
+	./algorithms/shared/go
 )

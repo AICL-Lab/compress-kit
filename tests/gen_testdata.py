@@ -9,6 +9,10 @@ import random
 # - random_10MiB.bin       随机数据（10 MiB）
 # - repetitive_10MiB.bin   大量重复字节，适合 RLE 测试
 # - textlike_10MiB.bin     类文本分布，偏向 ASCII 可见字符
+# - empty.bin              空文件
+# - single_byte.bin        单字节边界样本
+# - alternating.bin        交替字节模式
+# - small_dictionary_like.bin  小型重复词典风格样本
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "tests" / "data"
@@ -67,12 +71,28 @@ def generate_textlike_file(path: Path, size_bytes: int):
             remaining -= n
 
 
+def generate_literal_file(path: Path, data: bytes):
+    if path.exists() and path.read_bytes() == data:
+        return
+    print(f"[gen_testdata] generating literal file: {path} ({len(data)} bytes)")
+    path.write_bytes(data)
+
+
 def main():
     ensure_dir()
     generate_random_file(DATA_DIR / "random_1MiB.bin", 1 * 1024 * 1024)
     generate_random_file(DATA_DIR / "random_10MiB.bin", 10 * 1024 * 1024)
     generate_repetitive_file(DATA_DIR / "repetitive_10MiB.bin", 10 * 1024 * 1024)
     generate_textlike_file(DATA_DIR / "textlike_10MiB.bin", 10 * 1024 * 1024)
+    generate_literal_file(DATA_DIR / "empty.bin", b"")
+    generate_literal_file(DATA_DIR / "single_byte.bin", b"\x00")
+    generate_literal_file(DATA_DIR / "alternating.bin", (b"\xAA\x55" * 512))
+    generate_literal_file(
+        DATA_DIR / "small_dictionary_like.bin",
+        (b"compresskit-dict-alpha\n" * 128)
+        + (b"compresskit-dict-beta\n" * 128)
+        + (b"compresskit-dict-gamma\n" * 128),
+    )
     print("[gen_testdata] done")
 
 

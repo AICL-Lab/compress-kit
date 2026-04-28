@@ -3,6 +3,8 @@ use std::fs::File;
 use std::io::{self, BufReader, BufWriter, Read, Write};
 use std::process;
 
+use compresskit_codec::codec::{decode_buffer, encode_buffer};
+
 // Simple Run-Length encoding implementation.
 // Format: repeatedly write 4-byte little-endian count + 1-byte value until input ends.
 // All three language implementations use the same format for cross-validation and benchmarking.
@@ -231,8 +233,8 @@ fn main() {
     let output_path = &args[3];
 
     let result = match mode.as_str() {
-        "encode" => rle_encode_file(input_path, output_path),
-        "decode" => rle_decode_file(input_path, output_path),
+        "encode" => run_encode(input_path, output_path),
+        "decode" => run_decode(input_path, output_path),
         _ => {
             eprintln!("unknown mode, expected encode or decode");
             process::exit(1);
@@ -243,4 +245,40 @@ fn main() {
         eprintln!("execution failed: {e}");
         process::exit(1);
     }
+}
+
+fn run_encode(input_path: &str, output_path: &str) -> io::Result<()> {
+    let input = std::fs::read(input_path).map_err(|e| {
+        io::Error::new(
+            e.kind(),
+            format!("cannot open input file for reading: {input_path}: {e}"),
+        )
+    })?;
+    let mut encoder = rle::StreamingEncoder::new();
+    let encoded = encode_buffer(&mut encoder, &input)
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
+    std::fs::write(output_path, encoded).map_err(|e| {
+        io::Error::new(
+            e.kind(),
+            format!("cannot open output file for writing: {output_path}: {e}"),
+        )
+    })
+}
+
+fn run_decode(input_path: &str, output_path: &str) -> io::Result<()> {
+    let input = std::fs::read(input_path).map_err(|e| {
+        io::Error::new(
+            e.kind(),
+            format!("cannot open input file for reading: {input_path}: {e}"),
+        )
+    })?;
+    let mut decoder = rle::StreamingDecoder::new();
+    let decoded = decode_buffer(&mut decoder, &input)
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
+    std::fs::write(output_path, decoded).map_err(|e| {
+        io::Error::new(
+            e.kind(),
+            format!("cannot open output file for writing: {output_path}: {e}"),
+        )
+    })
 }

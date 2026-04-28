@@ -1,0 +1,18 @@
+[package]
+name = "arithmetic"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+
+[lib]
+name = "arithmetic"
+path = "src/lib.rs"
+
+[[bin]]
+name = "arithmetic_rust"
+path = "main.rs"
+
+[dependencies]
+compresskit-codec = { path = "../../shared/rust" }
+
+[dev-dependencies]

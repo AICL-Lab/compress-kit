@@ -1,6 +1,12 @@
 # Go 库 API 参考
 
-所有 Go 实现都提供了库 API，除了命令行工具。每种算法都遵循相同的 `Encode`/`Decode` 模式。
+另请参阅: [Streaming API](/zh/api/streaming)
+
+所有 Go 实现都提供库 API 和命令行工具。现在每种算法都遵循统一的分层模式：
+
+- 传统的 `Encode`、`Decode`、`EncodeFile`、`DecodeFile`
+- 共享 streaming 实现 `NewStreamingEncoder()` / `NewStreamingDecoder()`
+- 共享 buffer helper：`github.com/LessUp/compress-kit/algorithms/shared/go/codec`
 
 ## Huffman 编码 (`algorithms/huffman/go`)
 

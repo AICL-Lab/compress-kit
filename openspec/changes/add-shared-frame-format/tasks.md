@@ -13,6 +13,12 @@
 
 ---
 
+## Phase A0 — Parser Contract Planning
+
+- [ ] A0.1. Create `tests/shared_frame_contract/frame_examples.md` and write parser-only tests before encoder/decoder integration.
+- [ ] A0.2. Create `tests/shared_frame_contract/README.md` describing fixture scope and negative-frame coverage.
+- [ ] A0.3. Keep frame parser independent from algorithm payload parsing while the contract tests are being introduced.
+
 ## Phase A — Spec & Design Validation
 
 - [ ] A1. Verify magic `0x434B5A4D` does not conflict with other known compression formats (gzip `1f 8b`, zstd `fd 2f b5 28`, LZ4 `04 22 4d 18`).

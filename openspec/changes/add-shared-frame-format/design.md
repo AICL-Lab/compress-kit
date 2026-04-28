@@ -16,6 +16,14 @@ All CompressKit compressed files SHALL conform to the following layout:
 └──────────────────────────────────────────────────────────┘
 ```
 
+## Minimal Parser Contract
+
+The minimum parser-facing frame layout is:
+
+`magic | version | algo_id | flags | content_size | checksum | [dictionary_id] | [metadata] | payload`
+
+Parser-only contract examples and negative cases are tracked in `tests/shared_frame_contract/frame_examples.md` so they can be locked before encoder/decoder integration starts.
+
 ## Frame Header (24 bytes, all fields little-endian)
 
 | Offset | Size | Field | Description |

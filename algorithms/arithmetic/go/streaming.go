@@ -163,8 +163,13 @@ func (d *StreamingDecoder) Finish(out []byte) (int, error) {
 	err := Decode(bytes.NewReader(d.inputBuf.Bytes()), &outBuf)
 	if err != nil {
 		d.state = codec.StateError
+		errStr := err.Error()
 		if err.Error() == "invalid input file format" {
 			return 0, codec.ErrCorrupt
+		}
+		if errStr == "failed to read frequency table: unexpected EOF" ||
+			errStr == "failed to read frequency table: EOF" {
+			return 0, codec.ErrTruncated
 		}
 		return 0, err
 	}

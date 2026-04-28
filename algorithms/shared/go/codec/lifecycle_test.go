@@ -589,6 +589,21 @@ func TestError_TruncatedFrame(t *testing.T) {
 	}
 }
 
+func TestError_ArithmeticTruncatedFrame(t *testing.T) {
+	input := []byte("test data for arithmetic truncation")
+
+	encoded, err := codec.EncodeBuffer(arithmetic.NewStreamingEncoder(), input)
+	if err != nil {
+		t.Fatalf("EncodeBuffer() error = %v", err)
+	}
+
+	truncated := encoded[:len(encoded)/2]
+	_, err = codec.DecodeBuffer(arithmetic.NewStreamingDecoder(), truncated)
+	if err != codec.ErrTruncated && err != codec.ErrCorrupt {
+		t.Fatalf("DecodeBuffer() error = %v, want ErrTruncated or ErrCorrupt", err)
+	}
+}
+
 func TestDecodeBuffer_GrowsWithoutMaxAllocation(t *testing.T) {
 	input := bytes.Repeat([]byte("abcd"), 1024)
 	encoded, err := codec.EncodeBuffer(rle.NewStreamingEncoder(), input)

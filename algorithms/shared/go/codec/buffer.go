@@ -39,10 +39,20 @@ func EncodeBuffer(encoder Encoder, input []byte) ([]byte, error) {
 		if err != ErrBufTooSmall {
 			break
 		}
+		totalWritten += n
+		if totalWritten > MaxOutputSize {
+			return nil, ErrSizeLimit
+		}
 		if len(outBuf) >= MaxOutputSize {
 			return nil, ErrSizeLimit
 		}
-		outBuf = make([]byte, growBuffer(len(outBuf), MaxOutputSize))
+		newSize := growBuffer(len(outBuf), MaxOutputSize)
+		if newSize <= len(outBuf) {
+			return nil, ErrSizeLimit
+		}
+		newBuf := make([]byte, newSize)
+		copy(newBuf, outBuf[:totalWritten])
+		outBuf = newBuf
 	}
 	if err != nil {
 		return nil, err
@@ -87,10 +97,20 @@ func DecodeBuffer(decoder Decoder, input []byte) ([]byte, error) {
 		if err != ErrBufTooSmall {
 			break
 		}
+		totalWritten += n
+		if totalWritten > MaxOutputSize {
+			return nil, ErrSizeLimit
+		}
 		if len(outBuf) >= MaxOutputSize {
 			return nil, ErrSizeLimit
 		}
-		outBuf = make([]byte, growBuffer(len(outBuf), MaxOutputSize))
+		newSize := growBuffer(len(outBuf), MaxOutputSize)
+		if newSize <= len(outBuf) {
+			return nil, ErrSizeLimit
+		}
+		newBuf := make([]byte, newSize)
+		copy(newBuf, outBuf[:totalWritten])
+		outBuf = newBuf
 	}
 	if err != nil {
 		return nil, err

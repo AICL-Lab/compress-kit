@@ -50,7 +50,7 @@
 
 ## Phase G — Cross-Language Decode Matrix
 
-- [ ] G1. Implement `tests/conformance/test_decode_matrix.py` — runs all 9 (encoder × decoder) pairs for all 4 algorithms × 10 corpus files.
+- [ ] G1. Implement `tests/conformance/test_decode_matrix.py` — runs all 9 (encoder × decoder) pairs for Huffman, Arithmetic, and RLE across all 10 corpus files, plus Range across the 9 corpus files at or below 100 KiB (351 combinations total).
 - [ ] G2. Output results to `tests/results/decode_matrix_<timestamp>.json`.
 - [ ] G3. Add `tests/results/baseline_matrix.json` committing the first known-good run result.
 - [ ] G4. Integrate into `make test` (non-blocking for Range Coder files >100 KB per known issue).

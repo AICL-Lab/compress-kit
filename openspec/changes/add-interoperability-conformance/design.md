@@ -91,9 +91,9 @@ Go enc   |    ✓    |   ✓    |    ✓
 Rust enc |    ✓    |   ✓    |    ✓
 ```
 
-Applies to: Huffman, Arithmetic, Range (≤100 KB only, known issue), RLE.
+Applies to: Huffman, Arithmetic, and RLE for all 10 corpus files; Range for the 9 corpus files at or below 100 KiB (`text_canterbury_alice.txt` is excluded per the known Range cap).
 
-This matrix is verified for each corpus file, giving 4 algorithms × 9 pairs × 10 files = 360 verified combinations minimum.
+This matrix is verified for each applicable corpus file, giving 351 verified combinations minimum: 3 algorithms × 9 pairs × 10 files = 270, plus Range × 9 pairs × 9 eligible files = 81.
 
 ## Test Infrastructure
 

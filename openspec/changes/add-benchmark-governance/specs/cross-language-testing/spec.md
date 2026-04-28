@@ -31,6 +31,7 @@ Performance benchmarks SHALL run across all implementations using a fixed corpus
 - **WHEN** the output JSON is read
 - **THEN** it SHALL conform to schema version `1.0` (defined in design.md § Report Schema)
 - **AND** each result entry SHALL include `algorithm`, `language`, `corpus_file`, `ratio`, `encode_speed_mbps`, `decode_speed_mbps`, `peak_memory_kib`
+- **AND** each intentionally skipped benchmark entry, if any, SHALL include `algorithm`, `language`, `corpus_file`, and `reason`
 
 ---
 
@@ -53,7 +54,7 @@ CI SHALL fail if benchmark metrics regress beyond defined thresholds.
 - **GIVEN** benchmark run for Range Coder algorithm
 - **WHEN** any corpus file exceeds 100 KiB
 - **THEN** that file SHALL be skipped for Range Coder benchmarks
-- **AND** the skip SHALL be logged in the report
+- **AND** the report SHALL record one skip entry for each skipped `(algorithm, language, corpus_file)` triple with reason `range_coder_corpus_cap_100_kib`
 
 ---
 

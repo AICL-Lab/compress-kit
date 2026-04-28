@@ -36,11 +36,10 @@
 
 ## Phase C — Shared Header Library (Go)
 
-- [ ] C1. Create `algorithms/shared/go/go.mod` — shared Go module manifest for frame helpers (or extend it if created by `add-streaming-api-foundation`).
-- [ ] C2. Update `go.work` to include `./algorithms/shared/go` so algorithm modules can import the shared frame package during local development.
-- [ ] C3. Create `algorithms/shared/go/frame/frame.go` — `Header`, `Trailer`, and extension types.
-- [ ] C4. Implement `WriteHeader`, `ReadHeader`, `WriteTrailer`, `ReadTrailer`.
-- [ ] C5. Add unit tests in `algorithms/shared/go/frame/frame_test.go` covering:
+- [ ] C1. Reuse the existing `algorithms/shared/go` module/workspace scaffold owned by `add-streaming-api-foundation`; this change only extends that shared host with frame helpers.
+- [ ] C2. Create `algorithms/shared/go/frame/frame.go` — `Header`, `Trailer`, and extension types.
+- [ ] C3. Implement `WriteHeader`, `ReadHeader`, `WriteTrailer`, `ReadTrailer`.
+- [ ] C4. Add unit tests in `algorithms/shared/go/frame/frame_test.go` covering:
   - round-trip header/trailer write/read
   - wrong magic → error
   - unknown flags → error
@@ -53,11 +52,10 @@
 
 ## Phase D — Shared Header Library (Rust)
 
-- [ ] D1. Create `algorithms/shared/rust/Cargo.toml` — shared Rust crate manifest for frame helpers (or extend it if created by `add-streaming-api-foundation`).
-- [ ] D2. Create `algorithms/shared/rust/src/lib.rs` exporting the shared frame modules.
-- [ ] D3. Create `algorithms/shared/rust/src/frame/mod.rs` — `FrameHeader`, `FrameTrailer`, and extension types.
-- [ ] D4. Implement `write_header`, `read_header`, `write_trailer`, `read_trailer`.
-- [ ] D5. Add unit tests in `algorithms/shared/rust/tests/frame.rs` covering:
+- [ ] D1. Reuse the existing `algorithms/shared/rust` crate scaffold owned by `add-streaming-api-foundation`; this change only extends that shared host with frame modules.
+- [ ] D2. Create `algorithms/shared/rust/src/frame/mod.rs` — `FrameHeader`, `FrameTrailer`, and extension types.
+- [ ] D3. Implement `write_header`, `read_header`, `write_trailer`, `read_trailer`.
+- [ ] D4. Add unit tests in `algorithms/shared/rust/tests/frame.rs` covering:
   - round-trip header/trailer write/read
   - wrong magic → error
   - unknown flags → error

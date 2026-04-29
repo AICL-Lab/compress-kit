@@ -135,7 +135,8 @@ The project SHALL maintain development tool configurations.
 #### Scenario: Security scanning
 - **GIVEN** GitHub workflows
 - **WHEN** checking for security tools
-- **THEN** Dependabot and CodeQL SHALL be configured
+- **THEN** CodeQL SHALL be configured
+- **AND** Dependabot is deliberately disabled to maintain a clean, single-branch finalized state
 
 ### Requirement: REQ-ARCH-009 Streaming Encoder/Decoder Interface
 

@@ -5,12 +5,19 @@ use std::io;
 
 const MAX_OUTPUT_SIZE: usize = 1024 * 1024 * 1024;
 
+/// Magic number for RLE format identification
+const RLE_MAGIC: &[u8; 4] = b"RLE\x00";
+
 pub fn encode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
+    let mut output = Vec::new();
+
+    // Write magic number
+    output.extend_from_slice(RLE_MAGIC);
+
     if input.is_empty() {
-        return Ok(Vec::new());
+        return Ok(output);
     }
 
-    let mut output = Vec::new();
     let mut current = input[0];
     let mut count: u32 = 1;
 
@@ -31,8 +38,22 @@ pub fn encode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
 }
 
 pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
+    // Verify magic number
+    if input.len() < 4 {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "input too short: missing magic number",
+        ));
+    }
+    if &input[0..4] != RLE_MAGIC {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "invalid RLE file: bad magic number",
+        ));
+    }
+
     let mut output = Vec::new();
-    let mut pos = 0;
+    let mut pos = 4; // Start after magic number
 
     while pos < input.len() {
         if pos + 5 > input.len() {
@@ -46,6 +67,14 @@ pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
             u32::from_le_bytes([input[pos], input[pos + 1], input[pos + 2], input[pos + 3]]);
         let value = input[pos + 4];
         pos += 5;
+
+        // Validate count is not zero
+        if count == 0 {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "invalid RLE data: count should not be 0",
+            ));
+        }
 
         let new_len = output.len() + count as usize;
         if new_len > MAX_OUTPUT_SIZE {

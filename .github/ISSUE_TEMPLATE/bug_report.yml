@@ -1,0 +1,44 @@
+name: Bug Report
+description: Report a bug in CompressKit
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: algorithm
+    attributes:
+      label: Algorithm
+      description: Which algorithm is affected?
+      options:
+        - Huffman
+        - Arithmetic
+        - Range Coder
+        - RLE
+    validations:
+      required: true
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      description: Which language implementation?
+      options:
+        - C++
+        - Go
+        - Rust
+        - Cross-language
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the bug and how to reproduce it
+      placeholder: "Steps to reproduce:\n1. Run '...'\n2. With input '...'\n3. Expected '...' but got '...'"
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Your system information
+      placeholder: "OS: Linux/macOS/Windows\nGo version: 1.21+\nRust version: 1.70+\nC++ compiler: g++ 10+"
+    validations:
+      required: false

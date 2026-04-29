@@ -4,6 +4,7 @@ package rle
 import (
 	"bufio"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -14,6 +15,12 @@ import (
 // MaxOutputSize is the maximum allowed output size (1 GiB) to prevent
 // decompression bomb attacks.
 const MaxOutputSize = 1 * 1024 * 1024 * 1024
+
+// rleMagic is the 4-byte magic number for RLE format identification
+const rleMagic = "RLE\x00"
+
+// ErrInvalidMagic indicates the file does not have a valid RLE magic number
+var ErrInvalidMagic = errors.New("invalid RLE file: bad magic number")
 
 // writeRun writes a single (count, value) pair to the output stream.
 func writeRun(w *bufio.Writer, count uint32, value byte) error {
@@ -31,9 +38,14 @@ func Encode(input io.Reader, w io.Writer) error {
 	r := bufio.NewReader(input)
 	bw := bufio.NewWriter(w)
 
+	// Write magic number
+	if _, err := bw.WriteString(rleMagic); err != nil {
+		return fmt.Errorf("failed to write RLE magic: %w", err)
+	}
+
 	first, err := r.ReadByte()
 	if err == io.EOF {
-		return bw.Flush() // Empty file
+		return bw.Flush() // Empty file (magic only)
 	}
 	if err != nil {
 		return fmt.Errorf("failed to read input: %w", err)
@@ -72,6 +84,18 @@ func Encode(input io.Reader, w io.Writer) error {
 func Decode(r io.Reader, w io.Writer) error {
 	br := bufio.NewReader(r)
 	bw := bufio.NewWriter(w)
+
+	// Verify magic number
+	magic := make([]byte, 4)
+	if _, err := io.ReadFull(br, magic); err != nil {
+		if err == io.EOF || err == io.ErrUnexpectedEOF {
+			return fmt.Errorf("cannot read magic number: %w", err)
+		}
+		return fmt.Errorf("failed to read magic: %w", err)
+	}
+	if string(magic) != rleMagic {
+		return ErrInvalidMagic
+	}
 
 	buf := make([]byte, 4096)
 	var totalWritten uint64

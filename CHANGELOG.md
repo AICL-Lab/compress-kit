@@ -9,18 +9,27 @@ style categories and uses semantic versioning for releases.
 
 ### Added
 
+- RLE format now includes 4-byte magic number `RLE\x00` for file type identification.
+- Added `.golangci.yml` for Go linting configuration.
+- Added `.clippy.toml` for Rust linting configuration.
 - Executable cross-language conformance matrix via `make test-conformance`.
 - Streaming API lifecycle and buffer contract coverage across shared C++/Go/Rust layers.
 
 ### Fixed
 
+- C++ buffer API now uses platform-appropriate temp directory instead of hardcoded `/tmp/`.
+- Rust RLE decode now validates count=0 to prevent invalid data.
+- Rust Huffman encoding performance improved by using `Vec<u8>` instead of `String` for bitstream.
 - Fixed Rust Arithmetic Coding streaming decode compatibility for short bitstreams.
 - Fixed Rust Arithmetic Coding treatment of `0x00` input bytes so they are not confused with the EOF symbol.
 
 ### Changed
 
+- **BREAKING**: RLE format now includes 4-byte magic header. Old RLE files without magic are incompatible.
 - Archived future shared-frame, extended-conformance, and benchmark-governance proposals as deferred OpenSpec design context.
-- Refined README and documentation entry points so the GitHub README stays a concise repository gateway and the VitePress site carries detailed guidance.
+- Refined README and documentation entry points so the GitHub README stays a concise repository gateway.
+- Removed 41 unused BMAD skills from `.claude/skills/` directory (~2MB reduction).
+- Simplified `AGENTS.md` and `CLAUDE.md` for better AI agent guidance.
 
 ## [1.0.0] - 2026-01-07
 

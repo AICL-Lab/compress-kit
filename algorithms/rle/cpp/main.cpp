@@ -8,12 +8,16 @@
 #include "compresskit/buffer_api.hpp"
 
 // Simple Run-Length encoding implementation.
-// Format: repeatedly write (count, value) pairs until EOF.
-// - count: 4-byte unsigned integer, little-endian, represents how many times value repeats, must be
-// > 0.
-// - value: 1 byte, represents the byte value to repeat.
+// Format:
+// - Magic number: 4 bytes "RLE\x00" for format identification
+// - Followed by (count, value) pairs until EOF:
+//   - count: 4-byte unsigned integer, little-endian, represents how many times value repeats, must be > 0.
+//   - value: 1 byte, represents the byte value to repeat.
 // This format is simple; all three language implementations are fully consistent for cross-decoding
 // and benchmarking.
+
+// Magic number for RLE format identification
+static const char RLE_MAGIC[4] = {'R', 'L', 'E', '\x00'};
 
 // Maximum output size limit (1 GiB) to prevent decompression bomb attacks
 static const uint64_t MAX_OUTPUT_SIZE = 1ULL * 1024 * 1024 * 1024;
@@ -72,9 +76,16 @@ static bool rle_encode_file_checked(const std::string& input_path, const std::st
         return false;
     }
 
+    // Write magic number
+    out.write(RLE_MAGIC, 4);
+    if (!out) {
+        std::cerr << "failed to write RLE magic number\n";
+        return false;
+    }
+
     char c;
     if (!in.get(c)) {
-        // Empty file: encoding result is also empty.
+        // Empty file: encoding result is magic number only.
         return true;
     }
     unsigned char current = static_cast<unsigned char>(c);
@@ -119,6 +130,18 @@ static bool rle_decode_file_checked(const std::string& input_path, const std::st
     std::ofstream out(output_path, std::ios::binary);
     if (!out) {
         std::cerr << "cannot open output file for writing: " << output_path << "\n";
+        return false;
+    }
+
+    // Verify magic number
+    char magic[4] = {};
+    in.read(magic, 4);
+    if (!in || in.gcount() != 4) {
+        std::cerr << "cannot read magic number\n";
+        return false;
+    }
+    if (std::memcmp(magic, RLE_MAGIC, 4) != 0) {
+        std::cerr << "invalid RLE file: bad magic number\n";
         return false;
     }
 

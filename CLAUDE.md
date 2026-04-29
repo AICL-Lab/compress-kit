@@ -1,55 +1,29 @@
 # Claude Instructions for CompressKit
 
-Follow `AGENTS.md` first. This file adds Claude-specific reminders for working
-efficiently in this repository.
+Follow `AGENTS.md` first. This file adds Claude-specific reminders.
 
-## Operating mode
-
-- Work from the real project state, not from generic compression-library habits.
-- Read the relevant OpenSpec requirement before changing code behavior.
-- Prefer small, verifiable edits over broad rewrites.
-- Keep the current `master` single-mainline flow unless the user explicitly asks
-  for branch migration.
-
-## High-value checks
-
-Use these commands as the canonical local proof points:
+## Quick Validation
 
 ```bash
-openspec validate --all
-make test
-npm run docs:build
+make test && make lint
 ```
 
-For focused work:
+## Compression Guardrails
 
-```bash
-make test-conformance
-go test ./algorithms/shared/go/... ./algorithms/huffman/go/... ./algorithms/arithmetic/go/... ./algorithms/range/go/... ./algorithms/rle/go/...
-cargo test --manifest-path algorithms/arithmetic/rust/Cargo.toml
-```
+- Do not change magic bytes, frequency table layout, endian rules, or RLE pair layout
+- RLE now has magic number `RLE\x00` (added 2026-04-30)
+- Range Coder large-file performance is a known limitation
+- Keep security limits: 4 GiB max input, 1 GiB max decoded output
 
-## Compression-specific guardrails
+## Documentation Stance
 
-- Maintain cross-language compatibility inside each algorithm family.
-- Do not silently change magic bytes, frequency table layout, endian rules, or
-  RLE pair layout.
-- Treat Range Coder large-file decode performance as a documented limitation,
-  not opportunistic cleanup.
-- Keep security limits visible: 4 GiB max input and 1 GiB max decoded output.
+- README: Short gateway
+- Git Pages: Product portal
+- OpenSpec: Requirements source
+- Changelog: User-facing changes only
 
-## Documentation stance
+## AI Tooling
 
-- README is a short gateway.
-- Git Pages is the product/documentation portal.
-- OpenSpec is the requirement source of truth.
-- Changelog records user-facing changes only; do not use it as an architecture
-  diary.
-
-## AI/tooling stance
-
-- Use OpenSpec skills for requirement-level changes.
-- Use local search and targeted tests for small bug fixes.
-- Use code review skills before merging large cross-language changes.
-- Avoid adding new MCP or plugin dependencies unless they clearly reduce future
-  token/context cost for this exact repository.
+- Use OpenSpec skills for requirement-level changes
+- Use local search and targeted tests for bug fixes
+- Use code review skills before merging cross-language changes

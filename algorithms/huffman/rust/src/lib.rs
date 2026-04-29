@@ -102,23 +102,59 @@ fn build_tree(freq: &[u32]) -> Box<Node> {
     heap.pop().unwrap().node
 }
 
-fn build_codes(node: &Node, codes: &mut [String], prefix: &mut String) {
+/// Efficient bit writer that avoids String allocation for bit storage.
+struct BitWriter {
+    buffer: Vec<u8>,
+    current_byte: u8,
+    bit_count: u8,
+}
+
+impl BitWriter {
+    fn new() -> Self {
+        BitWriter {
+            buffer: Vec::new(),
+            current_byte: 0,
+            bit_count: 0,
+        }
+    }
+
+    fn write_bit(&mut self, bit: bool) {
+        self.current_byte = (self.current_byte << 1) | (bit as u8);
+        self.bit_count += 1;
+        if self.bit_count == 8 {
+            self.buffer.push(self.current_byte);
+            self.current_byte = 0;
+            self.bit_count = 0;
+        }
+    }
+
+    fn finish(mut self) -> Vec<u8> {
+        if self.bit_count > 0 {
+            self.current_byte <<= 8 - self.bit_count;
+            self.buffer.push(self.current_byte);
+        }
+        self.buffer
+    }
+}
+
+/// Build Huffman codes using Vec<bool> instead of String for efficiency.
+fn build_codes_bitvec(node: &Node, codes: &mut [Vec<bool>], prefix: &mut Vec<bool>) {
     if is_leaf(node) {
         codes[node.symbol as usize] = if prefix.is_empty() {
-            "0".to_string()
+            vec![false]
         } else {
             prefix.clone()
         };
         return;
     }
     if let Some(ref left) = node.left {
-        prefix.push('0');
-        build_codes(left, codes, prefix);
+        prefix.push(false);
+        build_codes_bitvec(left, codes, prefix);
         prefix.pop();
     }
     if let Some(ref right) = node.right {
-        prefix.push('1');
-        build_codes(right, codes, prefix);
+        prefix.push(true);
+        build_codes_bitvec(right, codes, prefix);
         prefix.pop();
     }
 }
@@ -131,9 +167,9 @@ pub fn encode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
     freq[EOF_SYMBOL as usize] = 1;
 
     let root = build_tree(&freq);
-    let mut codes = vec![String::new(); SYMBOL_LIMIT];
-    let mut prefix = String::new();
-    build_codes(&root, &mut codes, &mut prefix);
+    let mut codes = vec![Vec::new(); SYMBOL_LIMIT];
+    let mut prefix = Vec::new();
+    build_codes_bitvec(&root, &mut codes, &mut prefix);
 
     let mut output = Vec::new();
     output.extend_from_slice(b"HFMN");
@@ -142,27 +178,19 @@ pub fn encode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
         output.extend_from_slice(&f.to_le_bytes());
     }
 
-    let mut bitstring = String::new();
+    // Use BitWriter for efficient bit packing
+    let mut writer = BitWriter::new();
     for &b in input {
-        bitstring.push_str(&codes[b as usize]);
-    }
-    bitstring.push_str(&codes[EOF_SYMBOL as usize]);
-
-    let mut byte = 0u8;
-    let mut bit_count = 0;
-    for ch in bitstring.bytes() {
-        byte = (byte << 1) | (if ch == b'1' { 1 } else { 0 });
-        bit_count += 1;
-        if bit_count == 8 {
-            output.push(byte);
-            byte = 0;
-            bit_count = 0;
+        for &bit in &codes[b as usize] {
+            writer.write_bit(bit);
         }
     }
-    if bit_count > 0 {
-        byte <<= 8 - bit_count;
-        output.push(byte);
+    // Write EOF code
+    for &bit in &codes[EOF_SYMBOL as usize] {
+        writer.write_bit(bit);
     }
+
+    output.extend(writer.finish());
     Ok(output)
 }
 

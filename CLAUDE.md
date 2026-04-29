@@ -1,71 +1,55 @@
-# CompressKit Project Instructions
+# Claude Instructions for CompressKit
 
-This file contains project-specific instructions for Claude Code when working on the CompressKit (formerly Encoding) project.
+Follow `AGENTS.md` first. This file adds Claude-specific reminders for working
+efficiently in this repository.
 
-## Project Overview
+## Operating mode
 
-CompressKit is a **multi-language lossless compression algorithm library** for educational purposes. It implements 4 classic compression algorithms (Huffman, Arithmetic Coding, Range Coder, RLE) in 3 languages (C++17, Go 1.21+, Rust 1.70+) with guaranteed cross-language binary format compatibility.
+- Work from the real project state, not from generic compression-library habits.
+- Read the relevant OpenSpec requirement before changing code behavior.
+- Prefer small, verifiable edits over broad rewrites.
+- Keep the current `master` single-mainline flow unless the user explicitly asks
+  for branch migration.
 
-## Brand Guidelines
+## High-value checks
 
-- **Project Name**: CompressKit
-- **Repository**: `LessUp/compress-kit`
-- **Documentation URL**: `https://lessup.github.io/compress-kit/`
-
-Always use `CompressKit` and `LessUp/compress-kit` in documentation and code comments.
-
-## Development Workflow
-
-This project follows **OpenSpec Spec-Driven Development**. See [AGENTS.md](AGENTS.md) for the complete workflow.
-
-### Quick Commands
+Use these commands as the canonical local proof points:
 
 ```bash
-make build        # Build all implementations
-make test         # Run all tests
-make bench        # Run benchmarks
-make format       # Format all code
-make lint         # Lint all code
-make clean        # Clean build artifacts
+openspec validate --all
+make test
+npm run docs:build
 ```
 
-## Known Issues
+For focused work:
 
-### Range Coder Performance
+```bash
+make test-conformance
+go test ./algorithms/shared/go/... ./algorithms/huffman/go/... ./algorithms/arithmetic/go/... ./algorithms/range/go/... ./algorithms/rle/go/...
+cargo test --manifest-path algorithms/arithmetic/rust/Cargo.toml
+```
 
-The Range Coder has a known decode performance issue for files >500KB. This is documented in:
-- `docs/en/algorithms/range.md`
-- `docs/zh/algorithms/range.md`
-- `openspec/specs/cross-language-testing/spec.md`
+## Compression-specific guardrails
 
-Do not attempt to fix this without explicit user request, as it's documented for future improvement.
+- Maintain cross-language compatibility inside each algorithm family.
+- Do not silently change magic bytes, frequency table layout, endian rules, or
+  RLE pair layout.
+- Treat Range Coder large-file decode performance as a documented limitation,
+  not opportunistic cleanup.
+- Keep security limits visible: 4 GiB max input and 1 GiB max decoded output.
 
-## Code Style
+## Documentation stance
 
-| Language | Tool | Config |
-|----------|------|--------|
-| C++ | clang-format | `.clang-format` (Google Style) |
-| Go | gofmt | Built-in |
-| Rust | rustfmt | Built-in |
-| Python | black | PEP 8 |
+- README is a short gateway.
+- Git Pages is the product/documentation portal.
+- OpenSpec is the requirement source of truth.
+- Changelog records user-facing changes only; do not use it as an architecture
+  diary.
 
-## Cross-Language Compatibility
+## AI/tooling stance
 
-All implementations MUST share identical binary file formats. When modifying any algorithm:
-
-1. Update the format spec in `openspec/specs/`
-2. Ensure all 3 language implementations match
-3. Run cross-language verification tests
-4. Update documentation if format changes
-
-## Security Constraints
-
-- Maximum input size: 4 GiB
-- Maximum output size: 1 GiB (decompression bomb protection)
-- All implementations must validate file sizes
-
-## Documentation
-
-- VitePress site in `docs/`
-- Bilingual: English (`docs/en/`) and Chinese (`docs/zh/`)
-- Run `npm run docs:dev` for local preview
+- Use OpenSpec skills for requirement-level changes.
+- Use local search and targeted tests for small bug fixes.
+- Use code review skills before merging large cross-language changes.
+- Avoid adding new MCP or plugin dependencies unless they clearly reduce future
+  token/context cost for this exact repository.

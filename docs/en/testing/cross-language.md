@@ -75,10 +75,8 @@ This runs the full cross-language test suite across all algorithms.
 
 Detailed format specifications are available in the specs directory:
 
-- [Huffman Format](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
-- [Arithmetic Format](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
-- [Range Coder Format](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
-- [RLE Format](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
+- [Core Architecture Specs](https://github.com/LessUp/compress-kit/tree/master/openspec/specs/core-architecture)
+- [Cross-Language Testing Specs](https://github.com/LessUp/compress-kit/tree/master/openspec/specs/cross-language-testing)
 
 ## Why Cross-Language Matters
 

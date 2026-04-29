@@ -1,5 +1,10 @@
 # Change Proposal: add-interoperability-conformance
 
+> **Disposition:** Deferred during the 2026-04-29 finalization pass. The
+> frame-era header/truncation/corruption matrix remains future work. The current
+> baseline now includes an executable cross-language decode matrix at
+> `tests/conformance/run_decode_matrix.py` for the existing stable formats.
+
 ## Summary
 
 Establish a comprehensive conformance test suite for cross-language interoperability, covering header parsing, truncated/corrupted input, stream concatenation, a fixed corpus matrix, and a full cross-language encode/decode matrix.

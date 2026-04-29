@@ -1,13 +1,13 @@
 #include <cstdint>
-#include <vector>
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "compresskit/buffer_api.hpp"
 
 class BitWriter {
-public:
+   public:
     explicit BitWriter(std::ostream& s) : stream(s), buffer(0), bits_in_buffer(0) {}
 
     void write_bit(int bit) {
@@ -29,15 +29,16 @@ public:
         }
     }
 
-private:
+   private:
     std::ostream& stream;
     uint8_t buffer;
     int bits_in_buffer;
 };
 
 class BitReader {
-public:
-    explicit BitReader(std::istream& s) : stream(s), current_byte(0), bits_remaining(0), reached_eof(false) {}
+   public:
+    explicit BitReader(std::istream& s)
+        : stream(s), current_byte(0), bits_remaining(0), reached_eof(false) {}
 
     int read_bit() {
         if (bits_remaining == 0) {
@@ -53,11 +54,9 @@ public:
         return (current_byte >> bits_remaining) & 1;
     }
 
-    bool eof() const {
-        return reached_eof;
-    }
+    bool eof() const { return reached_eof; }
 
-private:
+   private:
     std::istream& stream;
     uint8_t current_byte;
     int bits_remaining;
@@ -65,7 +64,7 @@ private:
 };
 
 class ArithmeticEncoder {
-public:
+   public:
     explicit ArithmeticEncoder(BitWriter& w)
         : writer(w), low(0), high(FULL_RANGE - 1), pending_bits(0) {}
 
@@ -107,7 +106,7 @@ public:
         writer.flush();
     }
 
-private:
+   private:
     static constexpr uint64_t STATE_BITS = 32;
     static constexpr uint64_t FULL_RANGE = (static_cast<uint64_t>(1) << STATE_BITS);
     static constexpr uint64_t HALF_RANGE = FULL_RANGE >> 1;
@@ -130,9 +129,8 @@ private:
 };
 
 class ArithmeticDecoder {
-public:
-    explicit ArithmeticDecoder(BitReader& r)
-        : reader(r), low(0), high(FULL_RANGE - 1), code(0) {
+   public:
+    explicit ArithmeticDecoder(BitReader& r) : reader(r), low(0), high(FULL_RANGE - 1), code(0) {
         for (uint64_t i = 0; i < STATE_BITS; i++) {
             code = (code << 1) | static_cast<uint64_t>(reader.read_bit());
         }
@@ -183,7 +181,7 @@ public:
         return symbol;
     }
 
-private:
+   private:
     static constexpr uint64_t STATE_BITS = 32;
     static constexpr uint64_t FULL_RANGE = (static_cast<uint64_t>(1) << STATE_BITS);
     static constexpr uint64_t HALF_RANGE = FULL_RANGE >> 1;
@@ -199,7 +197,7 @@ private:
 static const uint32_t SYMBOL_LIMIT = 257;
 static const uint32_t EOF_SYMBOL = SYMBOL_LIMIT - 1;
 static const uint32_t MAX_TOTAL = 1u << 24;
-static const uint64_t MAX_INPUT_SIZE = 4ULL * 1024 * 1024 * 1024; // 4 GiB max
+static const uint64_t MAX_INPUT_SIZE = 4ULL * 1024 * 1024 * 1024;  // 4 GiB max
 
 static void scale_frequencies(std::vector<uint32_t>& freq) {
     uint64_t total = 0;

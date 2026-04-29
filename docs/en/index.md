@@ -3,103 +3,60 @@ layout: home
 
 hero:
   name: CompressKit
-  text: Compression Algorithms
-  tagline: Production-ready compression algorithms in C++17, Go, and Rust. Learn, compare, and verify across languages with identical binary formats.
+  text: Lossless compression algorithms you can read, run, and compare
+  tagline: Huffman, Arithmetic Coding, Range Coder, and RLE implemented in C++17, Go, and Rust with cross-language binary verification.
   image:
     src: /logo.svg
     alt: CompressKit Logo
   actions:
     - theme: brand
-      text: Get Started
+      text: Start with the guide
       link: /en/guide/getting-started
     - theme: alt
-      text: View on GitHub
-      link: https://github.com/LessUp/compress-kit
+      text: Compare algorithms
+      link: /en/guide/algorithms
     - theme: alt
       text: 中文
       link: /zh/
 
 features:
+  - icon: 🧩
+    title: Four classic algorithms
+    details: Huffman, Arithmetic Coding, Range Coder, and RLE are implemented side by side for direct comparison.
   - icon: 🌐
-    title: Multi-Language Comparison
-    details: Every algorithm implemented in C++17, Go, and Rust. Compare performance, code style, and engineering practices across languages.
-  - icon: 📦
-    title: Cross-Language Compatible
-    details: All implementations share identical binary formats. Encode in C++, decode in Go, verify in Rust — seamless interoperability.
-  - icon: 📚
-    title: Learning-Focused Documentation
-    details: Understand the theory behind each algorithm with clear explanations and working code examples in three languages.
+    title: Three language stacks
+    details: C++17, Go 1.21+, and Rust 1.70+ implementations expose a shared CLI shape and matching file formats.
   - icon: ✅
-    title: Production-Ready Verification
-    details: Complete CI/CD with automated builds, cross-language correctness tests, and continuous benchmarking pipelines.
+    title: Conformance in the loop
+    details: The test baseline includes streaming lifecycle checks and an executable cross-language decode matrix.
 ---
 
 <StatsBar />
 
-## Explore Algorithms
+## Algorithm map
 
 <AlgorithmGrid />
 
-## Quick Comparison
-
-| Algorithm | Compression | Speed | Best For |
-|-----------|-------------|-------|----------|
-| **Huffman** | Medium | Fast | General text/data |
-| **Arithmetic** | High | Medium | Maximum compression needs |
-| **Range Coder** | High | Fast | Balanced performance |
-| **RLE** | Variable | Very Fast | Highly repetitive data |
-
-## Quick Start
+## The shortest useful path
 
 ```bash
-# Clone the repository
 git clone https://github.com/LessUp/compress-kit.git
 cd compress-kit
-
-# Build all implementations
 make build
-
-# Run tests
 make test
-
-# Run benchmarks
-make bench
 ```
 
-## Cross-Language Verification
+After that, use the docs by intent:
 
-A key feature of CompressKit — encode in any language, decode in any other:
+| Need | Page |
+|------|------|
+| Build prerequisites and first run | [Getting Started](/en/guide/getting-started) |
+| Algorithm behavior and trade-offs | [Algorithms](/en/guide/algorithms) |
+| Public APIs and streaming facade | [API Reference](/en/api/streaming) |
+| Compatibility verification | [Cross-Language Testing](/en/testing/cross-language) |
 
-```bash
-# Encode with C++
-./algorithms/huffman/cpp/huffman_cpp encode input.bin encoded.huf
+## Current engineering stance
 
-# Decode with Go
-./algorithms/huffman/go/huffman_go decode encoded.huf restored.bin
-
-# Verify correctness
-diff input.bin restored.bin  # No output = identical
-```
-
-## Performance Highlights
-
-<BenchmarkChart />
-
-## Documentation Structure
-
-| Section | Description |
-|---------|-------------|
-| [Getting Started](/en/guide/getting-started) | Environment setup, build instructions |
-| [Algorithm Guide](/en/guide/algorithms) | Detailed explanations and comparisons |
-| [API Reference](/en/api/go) | Library APIs for all languages |
-| [Benchmarks](/en/benchmarks/results) | Performance results and methodology |
-
-## Community
-
-- 💬 Ask questions in [GitHub Discussions](https://github.com/LessUp/compress-kit/discussions)
-- 🐛 Report bugs in [GitHub Issues](https://github.com/LessUp/compress-kit/issues)
-- 🤝 Read the [Contributing Guide](/en/guide/contributing)
-
----
-
-**CompressKit** © 2025-2026 LessUp. Released under the MIT License.
+CompressKit keeps the existing per-algorithm binary formats stable. Future frame
+format and benchmark-governance proposals are archived as design context until
+they are implemented as focused OpenSpec changes.

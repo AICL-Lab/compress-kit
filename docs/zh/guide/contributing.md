@@ -1,87 +1,52 @@
 # 参与贡献指南
 
-感谢您对 **Encoding** 的贡献兴趣！本项目严格遵循 **规范驱动开发 (SDD)** 范式。所有贡献必须基于规范文档。
+CompressKit 是一个规范驱动的多语言压缩算法仓库。一个变更不是“某个实现能跑”就结束，而是相关规范、所有受影响语言实现、跨语言二进制契约三者都一致后才算完成。
 
-## 如何贡献
+## 从 OpenSpec 开始
 
-### 1. 先阅读规范
+以 `openspec/specs/` 作为事实来源：
 
-在编写任何代码之前，请先阅读 `/specs/` 中的相关文档：
-- `/specs/product/` — 产品需求
-- `/specs/rfc/` — 技术设计文档
-- `/specs/testing/` — 测试规范
+| 规范 | 适用场景 |
+|------|----------|
+| `encoding-project` | 算法范围、质量门禁、安全限制、对外定位 |
+| `core-architecture` | 目录结构、CLI 形态、二进制格式边界 |
+| `cross-language-testing` | 兼容性矩阵、测试夹具、基准要求、已知限制 |
 
-如果您的需求与现有规范冲突，**请先更新规范**。
+新增算法、修改二进制格式、调整 CLI 行为、扩大兼容性契约时，先创建 OpenSpec 变更。小型文档修正或“恢复既有规范行为”的实现 bugfix，可以直接同步现有规范。
 
-### 2. 实现标准
+## 开发基线
 
-每种语言有特定要求：
+| 命令 | 用途 |
+|------|------|
+| `make build` | 编译 C++、Go、Rust 实现 |
+| `make test` | 运行单元测试、shell 测试和跨语言 conformance 矩阵 |
+| `make test-conformance` | 仅运行编码/解码兼容性矩阵 |
+| `make lint` | 运行 `go vet` 和严格 Rust `clippy`，警告即失败 |
+| `make format` | 运行 `gofmt`、`cargo fmt`、`clang-format` |
+| `npm run docs:build` | 构建 VitePress 文档站 |
 
-| 语言 | 构建 | 测试 | 格式 |
-|------|------|------|------|
-| **C++17** | `g++ -std=c++17 -O2 -Wall -Wextra` | 添加 `#ifdef TEST` 或独立测试文件 | `clang-format` |
-| **Go 1.21+** | Go 模块 (`go.mod`) | `go test ./...` | `gofmt` |
-| **Rust 1.70+** | `rustc` 或 `cargo` | `cargo test` 或 `rustc --test` | `rustfmt` + `clippy` |
+`make lint` 必须是真实门禁。不要用 shell fallback 吞掉 lint 失败；要么修复问题，要么说明某条 lint 为什么不适用于本项目。
 
-### 3. 提交 Pull Request
+## 实现标准
 
-1. Fork 仓库
-2. 创建特性分支：`git checkout -b feature/my-feature`
-3. 按照上述标准进行更改
-4. 确保所有测试通过：`make test`
-5. 确保构建通过：`make build`
-6. 推送并对 `master` 开启 PR
+| 语言 | 要求 |
+|------|------|
+| C++17 | 保持单文件算法 CLI 与共享格式兼容，提交前使用 `.clang-format`。 |
+| Go 1.21+ | 使用 `gofmt`、`go vet` 和符合 Go 习惯的包级测试。 |
+| Rust 1.70+ | 每个 crate 保持 `cargo test`、`cargo fmt`、`cargo clippy --all-targets -- -D warnings` 干净。 |
+| Python 3.8+ | 仅作为仓库脚本和 conformance 编排语言，不作为生产算法目标。 |
 
-### 4. PR 检查清单
+## 二进制兼容规则
 
-- [ ] 代码遵循语言约定
-- [ ] 添加了单元测试（或更新了 CI 测试）
-- [ ] 跨语言编码/解码已验证
-- [ ] 文档已更新（如行为有变）
-- [ ] 规范已更新（如接口/行为有变）
+- 每个算法 CLI 都必须保持 `encode|decode input output`。
+- Huffman、Arithmetic、Range、RLE 格式必须在 C++、Go、Rust 之间兼容，除非已有获批 OpenSpec 变更。
+- 安全限制属于契约：最大输入 4 GiB，最大解码输出 1 GiB。
+- Range Coder 大文件解码性能问题是已知限制，不应作为顺手清理项处理。
 
-## 添加新算法
+## Pull Request 检查清单
 
-1. **在 `/specs/rfc/` 创建规范**，包含：
-   - 算法描述
-   - 文件格式规范（魔数、字段布局）
-   - 验收标准
-
-2. **创建目录结构**：
-   ```
-   algorithms/<name>/
-   ├── cpp/main.cpp
-   ├── go/go.mod, main.go（或 library + cmd/）
-   ├── rust/main.rs（或 Cargo.toml + src/）
-   └── benchmark/bench.py
-   ```
-
-3. **用三种语言实现**
-
-4. **添加测试**：
-   - Go: `*_test.go`
-   - Rust: `#[cfg(test)]` 模块
-   - C++: `ci.yml` 中的 CI shell 测试
-
-5. **更新**：
-   - `Makefile` — 添加构建目标
-   - `.github/workflows/ci.yml` — 添加构建/测试任务
-   - `docs/en/guide/algorithms.md` — 算法文档
-   - `docs/zh/guide/algorithms.md` — 中文翻译
-
-## 添加新语言
-
-如果您想添加另一种语言（如 Python、Zig）：
-
-1. 先在 issue 中讨论
-2. 在 `/specs/rfc/` 创建 RFC
-3. 用新语言实现所有算法
-4. 添加到 CI 工作流
-
-## 行为准则
-
-请阅读我们的 [行为准则](https://github.com/LessUp/compress-kit/blob/master/CODE_OF_CONDUCT.md)。
-
-## 许可证
-
-通过贡献，您同意您的贡献将在 [MIT 许可证](https://github.com/LessUp/compress-kit/blob/master/LICENSE) 下授权。
+- 相关 OpenSpec requirement 仍然成立，或 PR 包含对应规范变更。
+- 本地 `make test` 通过。
+- 触及相关文件时，`make lint` 与 `npm run docs:build` 通过。
+- 二进制格式或 streaming adapter 行为变更有跨语言夹具覆盖。
+- 文档更新只保留能帮助读者选择、使用或验证项目的信息。

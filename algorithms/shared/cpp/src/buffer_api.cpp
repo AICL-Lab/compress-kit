@@ -1,5 +1,7 @@
 #include "compresskit/buffer_api.hpp"
 
+#include <unistd.h>
+
 #include <algorithm>
 #include <cstdio>
 #include <fstream>
@@ -7,8 +9,6 @@
 #include <stdexcept>
 #include <string>
 #include <utility>
-
-#include <unistd.h>
 
 namespace compresskit {
 namespace {
@@ -18,7 +18,7 @@ constexpr std::uint64_t kMaxOutputSize = 1ULL * 1024 * 1024 * 1024;
 constexpr std::size_t kInitialEncodeOverhead = 2048;
 
 class ScopedTempFile {
-public:
+   public:
     explicit ScopedTempFile(const char* prefix) {
         std::string pattern = std::string("/tmp/") + prefix + "-XXXXXX";
         std::vector<char> buffer(pattern.begin(), pattern.end());
@@ -37,11 +37,9 @@ public:
         }
     }
 
-    const std::string& path() const noexcept {
-        return path_;
-    }
+    const std::string& path() const noexcept { return path_; }
 
-private:
+   private:
     std::string path_;
 };
 
@@ -58,7 +56,8 @@ bool write_file(const std::string& path, const std::vector<uint8_t>& data) {
         return false;
     }
     if (!data.empty()) {
-        out.write(reinterpret_cast<const char*>(data.data()), static_cast<std::streamsize>(data.size()));
+        out.write(reinterpret_cast<const char*>(data.data()),
+                  static_cast<std::streamsize>(data.size()));
     }
     return static_cast<bool>(out);
 }
@@ -96,7 +95,8 @@ Result<std::vector<uint8_t>> run_transform(FileTransform transform,
             return {StatusCode::ERR_CORRUPT, {}};
         }
         if (!transform(input_file.path(), output_file.path())) {
-            Result<std::vector<uint8_t>> maybe_output = read_file(output_file.path(), enforce_output_limit);
+            Result<std::vector<uint8_t>> maybe_output =
+                read_file(output_file.path(), enforce_output_limit);
             if (maybe_output.status == StatusCode::ERR_SIZE_LIMIT) {
                 return maybe_output;
             }
@@ -269,8 +269,8 @@ Result<std::vector<uint8_t>> encode_buffer(Encoder& encoder, const std::vector<u
     std::size_t total_written = 0;
 
     for (;;) {
-        Result<std::size_t> result = encoder.process({input.data(), input.size()},
-                                                     {out.data() + total_written, out.size() - total_written});
+        Result<std::size_t> result = encoder.process(
+            {input.data(), input.size()}, {out.data() + total_written, out.size() - total_written});
         if (result.status != StatusCode::BUF_TOO_SMALL) {
             if (!result.ok()) {
                 return {result.status, {}};
@@ -286,7 +286,8 @@ Result<std::vector<uint8_t>> encode_buffer(Encoder& encoder, const std::vector<u
     }
 
     for (;;) {
-        Result<std::size_t> result = encoder.finish({out.data() + total_written, out.size() - total_written});
+        Result<std::size_t> result =
+            encoder.finish({out.data() + total_written, out.size() - total_written});
         if (result.status != StatusCode::BUF_TOO_SMALL) {
             if (!result.ok()) {
                 return {result.status, {}};
@@ -316,8 +317,8 @@ Result<std::vector<uint8_t>> decode_buffer(Decoder& decoder, const std::vector<u
     std::size_t total_written = 0;
 
     for (;;) {
-        Result<std::size_t> result = decoder.process({input.data(), input.size()},
-                                                     {out.data() + total_written, out.size() - total_written});
+        Result<std::size_t> result = decoder.process(
+            {input.data(), input.size()}, {out.data() + total_written, out.size() - total_written});
         if (result.status != StatusCode::BUF_TOO_SMALL) {
             if (!result.ok()) {
                 return {result.status, {}};
@@ -329,11 +330,13 @@ Result<std::vector<uint8_t>> decode_buffer(Decoder& decoder, const std::vector<u
         if (total_written > kMaxOutputSize || out.size() >= kMaxOutputSize) {
             return {StatusCode::ERR_SIZE_LIMIT, {}};
         }
-        out.resize(std::min<std::size_t>(kMaxOutputSize, std::max<std::size_t>(out.size() * 2, out.size() + 1)));
+        out.resize(std::min<std::size_t>(kMaxOutputSize,
+                                         std::max<std::size_t>(out.size() * 2, out.size() + 1)));
     }
 
     for (;;) {
-        Result<std::size_t> result = decoder.finish({out.data() + total_written, out.size() - total_written});
+        Result<std::size_t> result =
+            decoder.finish({out.data() + total_written, out.size() - total_written});
         if (result.status != StatusCode::BUF_TOO_SMALL) {
             if (!result.ok()) {
                 return {result.status, {}};
@@ -344,7 +347,8 @@ Result<std::vector<uint8_t>> decode_buffer(Decoder& decoder, const std::vector<u
         if (out.size() >= kMaxOutputSize) {
             return {StatusCode::ERR_SIZE_LIMIT, {}};
         }
-        out.resize(std::min<std::size_t>(kMaxOutputSize, std::max<std::size_t>(out.size() * 2, out.size() + 1)));
+        out.resize(std::min<std::size_t>(kMaxOutputSize,
+                                         std::max<std::size_t>(out.size() * 2, out.size() + 1)));
     }
 
     if (total_written > kMaxOutputSize) {
@@ -354,7 +358,8 @@ Result<std::vector<uint8_t>> decode_buffer(Decoder& decoder, const std::vector<u
     return {StatusCode::OK, std::move(out)};
 }
 
-bool encode_file_via_buffer(FileTransform transform, const std::string& input_path, const std::string& output_path) {
+bool encode_file_via_buffer(FileTransform transform, const std::string& input_path,
+                            const std::string& output_path) {
     Result<std::vector<uint8_t>> input = read_file(input_path, false);
     if (!input.ok()) {
         return false;
@@ -367,7 +372,8 @@ bool encode_file_via_buffer(FileTransform transform, const std::string& input_pa
     return write_file(output_path, encoded.value);
 }
 
-bool decode_file_via_buffer(FileTransform transform, const std::string& input_path, const std::string& output_path) {
+bool decode_file_via_buffer(FileTransform transform, const std::string& input_path,
+                            const std::string& output_path) {
     Result<std::vector<uint8_t>> input = read_file(input_path, false);
     if (!input.ok()) {
         return false;

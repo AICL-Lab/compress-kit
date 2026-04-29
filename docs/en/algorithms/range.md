@@ -155,7 +155,7 @@ let decoded = rangecoder::decode(&encoded, &cum_freq, data.len())?;
 
 - [Arithmetic Coding](/en/algorithms/arithmetic) — Floating point equivalent
 - [Benchmarks](/en/benchmarks/results) — Performance comparison
-- [File Format Specs](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
+- [OpenSpec Architecture Specs](https://github.com/LessUp/compress-kit/tree/master/openspec/specs/core-architecture)
 
 ## Known Limitations
 

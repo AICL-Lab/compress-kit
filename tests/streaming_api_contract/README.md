@@ -1,6 +1,7 @@
-# Streaming API Contract Test Plan
+# Streaming API Contract
 
-This directory defines and validates the streaming API contract across all CompressKit implementations.
+This directory documents the streaming API contract that is exercised by the
+language-level test suites.
 
 ## Purpose
 
@@ -24,14 +25,20 @@ The streaming API contract establishes:
 - Performance benchmarks (covered by separate benchmark suite)
 - Thread safety (single-threaded use is the contract)
 
-## Test Development Workflow
+## Executable coverage
 
-This directory follows **contract-first test-driven development**:
+The contract cases in `contract_cases.md` are covered by:
 
-1. **Phase A0**: Define test cases in `contract_cases.md` (this stage)
-2. **Phase A0.2**: Verify streaming APIs do not exist before implementation — see `red_phase_evidence.txt` for verification against base commit 90929c5
-3. **Phase C**: Implement shared streaming abstractions to make tests pass
-4. **Phase E**: Run full test suite and verify all algorithms conform
+- `algorithms/shared/cpp/tests/test_lifecycle.cpp`
+- `algorithms/shared/go/codec/lifecycle_test.go`
+- `algorithms/shared/rust/tests/lifecycle.rs`
+- algorithm-specific Go/Rust streaming tests under `algorithms/*/{go,rust}/`
+
+Run them through the repository baseline:
+
+```bash
+make test
+```
 
 ## Fixture Ownership
 
@@ -43,12 +50,8 @@ Test fixtures and test data generation are owned by this directory:
 Language-specific test implementations SHALL reference this contract but MAY use 
 language-idiomatic test frameworks (Go: testing package; C++: Catch2; Rust: cargo test).
 
-## Rules for This Stage
+## Historical note
 
-**Current stage (A0): Test planning only**
-- Modifications to `contract_cases.md` are allowed and encouraged
-- No production code changes are permitted until failing tests exist
-- The initial "RED" phase of TDD must verify that current implementations 
-  (Huffman io.Reader/io.Writer, Range []byte-based) do NOT support the streaming contract
-
-**Rationale:** If tests pass before implementation, the tests are invalid.
+`red_phase_evidence.txt` records the original red phase from the streaming API
+foundation change. It is kept as provenance, not as a current implementation
+task list.

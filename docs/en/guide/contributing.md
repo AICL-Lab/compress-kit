@@ -1,87 +1,52 @@
 # Contributing Guide
 
-Thank you for your interest in contributing to **Encoding**! This project follows the **Spec-Driven Development (SDD)** paradigm. All contributions must be based on specification documents.
+CompressKit is a spec-driven, multi-language compression repository. A change is not complete when one implementation works; it is complete when the relevant specification, all affected language implementations, and the cross-language binary contract agree.
 
-## How to Contribute
+## Start from OpenSpec
 
-### 1. Read the Specs First
+Use `openspec/specs/` as the source of truth:
 
-Before writing any code, read the relevant documents in `/specs/`:
-- `/specs/product/` — Product requirements
-- `/specs/rfc/` — Technical design documents
-- `/specs/testing/` — Test specifications
+| Spec | When it matters |
+|------|-----------------|
+| `encoding-project` | Algorithm scope, quality gates, security limits, public positioning |
+| `core-architecture` | Directory layout, CLI shape, binary format boundaries |
+| `cross-language-testing` | Compatibility matrix, fixtures, benchmark expectations, known limitations |
 
-If your request conflicts with existing specs, **update the spec first**.
+Create an OpenSpec change before adding a new algorithm, changing a binary format, changing CLI behavior, or widening the compatibility contract. Small documentation fixes and implementation-only bug fixes can update the existing spec directly if they only restore documented behavior.
 
-### 2. Implementation Standards
+## Development baseline
 
-Each language has specific requirements:
+| Command | Purpose |
+|---------|---------|
+| `make build` | Compile C++, Go, and Rust implementations |
+| `make test` | Run unit tests, shell tests, and the cross-language conformance matrix |
+| `make test-conformance` | Run only the encode/decode compatibility matrix |
+| `make lint` | Run `go vet` and strict Rust `clippy` with warnings denied |
+| `make format` | Run `gofmt`, `cargo fmt`, and `clang-format` |
+| `npm run docs:build` | Build the VitePress documentation site |
 
-| Language | Build | Test | Format |
-|----------|-------|------|--------|
-| **C++17** | `g++ -std=c++17 -O2 -Wall -Wextra` | Add `#ifdef TEST` or separate test file | `clang-format` |
-| **Go 1.21+** | Go modules (`go.mod`) | `go test ./...` | `gofmt` |
-| **Rust 1.70+** | `rustc` or `cargo` | `cargo test` or `rustc --test` | `rustfmt` + `clippy` |
+`make lint` is intentionally strict. Do not hide linter failures with shell fallbacks; either fix the issue or document why a specific lint cannot apply.
 
-### 3. Submit a Pull Request
+## Implementation standards
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Make changes following the standards above
-4. Ensure all tests pass: `make test`
-5. Ensure the build works: `make build`
-6. Push and open a PR against `master`
+| Language | Expectations |
+|----------|--------------|
+| C++17 | Keep the single-file algorithm CLIs compatible with the shared format; use `.clang-format` before submitting changes. |
+| Go 1.21+ | Use `gofmt`, `go vet`, and idiomatic package-level tests. |
+| Rust 1.70+ | Keep `cargo test`, `cargo fmt`, and `cargo clippy --all-targets -- -D warnings` clean for each crate. |
+| Python 3.8+ | Use Python for repository scripts and conformance orchestration, not as a production algorithm target. |
 
-### 4. PR Checklist
+## Binary compatibility rules
 
-- [ ] Code follows language-specific conventions
-- [ ] Unit tests added (or CI shell tests updated)
-- [ ] Cross-language encode/decode verified
-- [ ] Documentation updated (if behavior changed)
-- [ ] Specs updated (if interface/behavior changed)
+- Every algorithm CLI must preserve `encode|decode input output`.
+- Huffman, Arithmetic, Range, and RLE formats must remain compatible across C++, Go, and Rust unless an approved OpenSpec change says otherwise.
+- Security limits are part of the contract: maximum input is 4 GiB and maximum decoded output is 1 GiB.
+- The Range Coder large-file decode performance issue is documented and should not be treated as an incidental cleanup task.
 
-## Adding a New Algorithm
+## Pull request checklist
 
-1. **Create a spec** in `/specs/rfc/` with:
-   - Algorithm description
-   - File format specification (magic bytes, field layout)
-   - Acceptance criteria
-
-2. **Create directory structure**:
-   ```
-   algorithms/<name>/
-   ├── cpp/main.cpp
-   ├── go/go.mod, main.go (or library + cmd/)
-   ├── rust/main.rs (or Cargo.toml + src/)
-   └── benchmark/bench.py
-   ```
-
-3. **Implement** in all three languages
-
-4. **Add tests**:
-   - Go: `*_test.go`
-   - Rust: `#[cfg(test)]` module
-   - C++: CI shell test in `ci.yml`
-
-5. **Update**:
-   - `Makefile` — add build targets
-   - `.github/workflows/ci.yml` — add build/test jobs
-   - `docs/en/guide/algorithms.md` — algorithm documentation
-   - `docs/zh/guide/algorithms.md` — Chinese translation
-
-## Adding a New Language
-
-If you want to add support for another language (e.g., Python, Zig):
-
-1. Discuss in an issue first
-2. Create an RFC in `/specs/rfc/`
-3. Implement all algorithms in the new language
-4. Add to CI workflow
-
-## Code of Conduct
-
-Please read our [Code of Conduct](https://github.com/LessUp/compress-kit/blob/master/CODE_OF_CONDUCT.md).
-
-## License
-
-By contributing, you agree that your contributions will be licensed under the [MIT License](https://github.com/LessUp/compress-kit/blob/master/LICENSE).
+- The relevant OpenSpec requirement is still true, or the PR includes the spec change.
+- `make test` passes locally.
+- `make lint` and `npm run docs:build` pass when the touched files require them.
+- Cross-language fixtures cover any binary-format or streaming-adapter behavior change.
+- Documentation is updated only where it helps a reader choose, use, or validate the project.

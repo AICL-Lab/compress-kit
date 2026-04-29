@@ -1,5 +1,10 @@
 # Change Proposal: add-benchmark-governance
 
+> **Disposition:** Deferred during the 2026-04-29 finalization pass. Benchmark
+> regression gating depends on the future fixed corpus and remains outside the
+> terminal stabilization scope. The existing `make bench` path is retained until
+> a focused benchmark-governance change is re-opened.
+
 ## Summary
 
 Define fixed benchmark corpora, a structured report schema, four canonical metrics (compression ratio, encode speed, decode speed, memory peak), and per-algorithm regression thresholds that trigger CI failures when performance degrades beyond acceptable bounds.

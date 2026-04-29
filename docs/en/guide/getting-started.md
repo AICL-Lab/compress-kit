@@ -11,14 +11,14 @@ This guide will help you set up the development environment, build the implement
 | g++ or clang++ | 9+ / 10+ | C++17 compilation |
 | Go | 1.21+ | Go implementation |
 | Rust (cargo) | 1.70+ | Rust implementation |
-| Python | 3.8+ | Benchmark scripts |
+| Python | 3.8+ | Test orchestration and benchmark scripts |
 | Make | Any | Build automation |
 
 ### Optional Tools
 
 | Tool | Purpose |
 |------|---------|
-| Node.js 18+ | Documentation site development |
+| Node.js 20.19+ | Documentation site and OpenSpec tooling |
 | clang-format | C++ code formatting |
 
 ### Installation
@@ -120,7 +120,8 @@ Any combination works: **C++ ↔ Go ↔ Rust**
 make test
 ```
 
-This runs shared streaming-layer tests plus all Go and Rust unit tests across all algorithms.
+This runs shared streaming-layer tests, Go/Rust unit tests, and the executable
+cross-language conformance matrix.
 
 ### Run Individual Algorithm Tests
 
@@ -164,7 +165,8 @@ Compression ratio: 1.23
 | `make build-arithmetic` | Build only Arithmetic implementations |
 | `make build-range` | Build only Range Coder implementations |
 | `make build-rle` | Build only RLE implementations |
-| `make test` | Run all Go and Rust unit tests |
+| `make test` | Run unit, streaming, and conformance tests |
+| `make test-conformance` | Run the cross-language decode matrix |
 | `make bench` | Generate test data and run benchmarks |
 | `make test-data` | Generate test data only |
 | `make clean` | Remove all build artifacts and reports |

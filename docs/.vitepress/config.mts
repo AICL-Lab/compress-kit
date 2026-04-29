@@ -9,7 +9,6 @@ const sharedSidebar = {
         { text: 'Introduction', link: '/en/' },
         { text: 'Quick Start', link: '/en/guide/getting-started' },
         { text: 'Project Structure', link: '/en/guide/project-structure' },
-        { text: 'Architecture', link: '/en/guide/architecture' },
       ],
     },
     {
@@ -22,13 +21,13 @@ const sharedSidebar = {
         { text: 'Run-Length Encoding', link: '/en/algorithms/rle' },
       ],
     },
-      {
-        text: 'API Reference',
-        items: [
-          { text: 'Streaming API', link: '/en/api/streaming' },
-          { text: 'Go Library', link: '/en/api/go' },
-          { text: 'Rust Crate', link: '/en/api/rust' },
-          { text: 'C++ Header', link: '/en/api/cpp' },
+    {
+      text: 'API Reference',
+      items: [
+        { text: 'Streaming API', link: '/en/api/streaming' },
+        { text: 'Go Library', link: '/en/api/go' },
+        { text: 'Rust Crate', link: '/en/api/rust' },
+        { text: 'C++ Header', link: '/en/api/cpp' },
       ],
     },
     {
@@ -42,7 +41,7 @@ const sharedSidebar = {
     {
       text: 'Reference',
       items: [
-        { text: 'Specifications', link: 'https://github.com/LessUp/compress-kit/tree/master/specs' },
+        { text: 'OpenSpec Specs', link: 'https://github.com/LessUp/compress-kit/tree/master/openspec/specs' },
         { text: 'Contributing', link: '/en/guide/contributing' },
         { text: 'Changelog', link: 'https://github.com/LessUp/compress-kit/blob/master/CHANGELOG.md' },
       ],
@@ -67,13 +66,13 @@ const sharedSidebar = {
         { text: '行程编码', link: '/zh/algorithms/rle' },
       ],
     },
-      {
-        text: 'API 参考',
-        items: [
-          { text: 'Streaming API', link: '/zh/api/streaming' },
-          { text: 'Go 库', link: '/zh/api/go' },
-          { text: 'Rust 包', link: '/zh/api/rust' },
-          { text: 'C++ 头文件', link: '/zh/api/cpp' },
+    {
+      text: 'API 参考',
+      items: [
+        { text: 'Streaming API', link: '/zh/api/streaming' },
+        { text: 'Go 库', link: '/zh/api/go' },
+        { text: 'Rust 包', link: '/zh/api/rust' },
+        { text: 'C++ 头文件', link: '/zh/api/cpp' },
       ],
     },
     {
@@ -87,7 +86,7 @@ const sharedSidebar = {
     {
       text: '参考',
       items: [
-        { text: '规范文档', link: 'https://github.com/LessUp/compress-kit/tree/master/specs' },
+        { text: 'OpenSpec 规范', link: 'https://github.com/LessUp/compress-kit/tree/master/openspec/specs' },
         { text: '参与贡献', link: '/zh/guide/contributing' },
         { text: '更新日志', link: 'https://github.com/LessUp/compress-kit/blob/master/CHANGELOG.md' },
       ],
@@ -97,6 +96,11 @@ const sharedSidebar = {
 
 // Shared nav configuration
 const sharedNav = (lang: string) => [
+  {
+    text: lang === 'zh' ? '首页' : 'Home',
+    link: lang === 'zh' ? '/zh/' : '/en/',
+    activeMatch: lang === 'zh' ? '^/zh/$' : '^/en/$'
+  },
   { 
     text: lang === 'zh' ? '开始' : 'Get Started', 
     link: lang === 'zh' ? '/zh/guide/getting-started' : '/en/guide/getting-started',
@@ -124,7 +128,7 @@ export default defineConfig({
   lang: 'en-US',
   title: 'CompressKit',
   titleTemplate: ':title | CompressKit',
-  description: 'Production-ready compression algorithms in C++17, Go, and Rust. Learn, compare, and verify across languages with identical binary formats.',
+  description: 'Classic lossless compression algorithms in C++17, Go, and Rust with cross-language binary verification.',
   
   // Base URL
   base: '/compress-kit/',
@@ -147,7 +151,7 @@ export default defineConfig({
     ['meta', { name: 'theme-color', content: '#0f172a', media: '(prefers-color-scheme: dark)' }],
     
     // SEO
-    ['meta', { name: 'keywords', content: 'compression algorithms, huffman coding, arithmetic coding, range coder, run-length encoding, C++, Go, Rust, lossless compression, cross-language, benchmark' }],
+    ['meta', { name: 'keywords', content: 'compression algorithms, huffman coding, arithmetic coding, range coder, run-length encoding, C++, Go, Rust, lossless compression, cross-language conformance' }],
     ['meta', { name: 'author', content: 'CompressKit Team' }],
     ['meta', { name: 'robots', content: 'index, follow' }],
     
@@ -155,7 +159,7 @@ export default defineConfig({
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:locale', content: 'en_US' }],
     ['meta', { property: 'og:title', content: 'CompressKit | Compression Algorithms Collection' }],
-    ['meta', { property: 'og:description', content: 'Production-ready compression algorithms in C++17, Go, and Rust. Learn, compare, and verify across languages.' }],
+    ['meta', { property: 'og:description', content: 'Classic lossless compression algorithms in C++17, Go, and Rust with cross-language binary verification.' }],
     ['meta', { property: 'og:url', content: 'https://lessup.github.io/compress-kit/' }],
     ['meta', { property: 'og:site_name', content: 'CompressKit' }],
     ['meta', { property: 'og:image', content: '/compress-kit/og-image.png' }],
@@ -166,7 +170,7 @@ export default defineConfig({
     ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
     ['meta', { name: 'twitter:site', content: '@compresskit' }],
     ['meta', { name: 'twitter:title', content: 'CompressKit | Compression Algorithms Collection' }],
-    ['meta', { name: 'twitter:description', content: 'Production-ready compression algorithms in C++17, Go, and Rust. Learn, compare, and verify across languages.' }],
+    ['meta', { name: 'twitter:description', content: 'Classic lossless compression algorithms in C++17, Go, and Rust with cross-language binary verification.' }],
     ['meta', { name: 'twitter:image', content: '/compress-kit/og-image.png' }],
     
     // Favicon
@@ -184,7 +188,7 @@ export default defineConfig({
       '@context': 'https://schema.org',
       '@type': 'SoftwareApplication',
       'name': 'CompressKit',
-      'description': 'Production-ready compression algorithms in C++17, Go, and Rust',
+      'description': 'Classic lossless compression algorithms in C++17, Go, and Rust',
       'url': 'https://lessup.github.io/compress-kit/',
       'applicationCategory': 'DeveloperApplication',
       'operatingSystem': 'Linux, macOS, Windows',
@@ -202,7 +206,7 @@ export default defineConfig({
         'Range Coder implementation',
         'Run-Length Encoding implementation',
         'Cross-language binary compatibility',
-        'Comprehensive benchmark suite'
+        'Cross-language conformance tests'
       ]
     })],
   ],

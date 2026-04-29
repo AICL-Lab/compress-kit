@@ -75,10 +75,8 @@ make test
 
 详细的格式规范可在 specs 目录找到：
 
-- [霍夫曼格式](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
-- [算术编码格式](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
-- [区间编码格式](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
-- [RLE 格式](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
+- [核心架构规范](https://github.com/LessUp/compress-kit/tree/master/openspec/specs/core-architecture)
+- [跨语言测试规范](https://github.com/LessUp/compress-kit/tree/master/openspec/specs/cross-language-testing)
 
 ## 跨语言的重要性
 

@@ -5,233 +5,89 @@
 </p>
 
 <p align="center">
-  <strong>经典无损压缩算法 · C++17、Go、Rust 实现</strong>
+  <strong>使用 C++17、Go、Rust 实现的经典无损压缩算法。</strong>
 </p>
 
 <p align="center">
-  <a href="https://github.com/LessUp/compress-kit/actions/workflows/ci.yml">
-    <img src="https://github.com/LessUp/compress-kit/actions/workflows/ci.yml/badge.svg" alt="CI Status">
-  </a>
-  <a href="https://lessup.github.io/compress-kit/">
-    <img src="https://img.shields.io/badge/Docs-在线文档-blue?logo=readthedocs&logoColor=white" alt="Documentation">
-  </a>
-  <a href="https://github.com/LessUp/compress-kit/releases">
-    <img src="https://img.shields.io/github/v/release/LessUp/compress-kit?include_prereleases&label=Release" alt="Release">
-  </a>
-  <a href="https://opensource.org/licenses/MIT">
-    <img src="https://img.shields.io/badge/许可证-MIT-green.svg" alt="License">
-  </a>
+  <a href="https://github.com/LessUp/compress-kit/actions/workflows/ci.yml"><img src="https://github.com/LessUp/compress-kit/actions/workflows/ci.yml/badge.svg" alt="CI Status"></a>
+  <a href="https://lessup.github.io/compress-kit/"><img src="https://img.shields.io/badge/Docs-在线文档-blue?logo=readthedocs&logoColor=white" alt="Documentation"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/许可证-MIT-green.svg" alt="License"></a>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/C++-17-00599C.svg?logo=c%2B%2B" alt="C++17">
-  <img src="https://img.shields.io/badge/Go-1.21+-00ADD8.svg?logo=go" alt="Go">
-  <img src="https://img.shields.io/badge/Rust-1.70+-DEA584.svg?logo=rust" alt="Rust">
-  <img src="https://img.shields.io/badge/Python-3.8+-3776AB.svg?logo=python" alt="Python">
+  <a href="README.md">English</a> | <b>简体中文</b> | <a href="https://lessup.github.io/compress-kit/">文档站点</a>
 </p>
 
-<p align="center">
-  <a href="README.md">English</a> | <b>简体中文</b> | <a href="https://lessup.github.io/compress-kit/">📖 文档站点</a>
-</p>
+CompressKit 是一个面向学习与验证的压缩算法仓库：同一组经典算法分别用
+C++17、Go、Rust 实现，再通过统一命令行契约和跨语言解码矩阵验证格式兼容性。
+它不是黑盒压缩库，而是可以阅读、运行、对比和验证的多语言算法实验室。
 
----
+## 包含内容
 
-## 📋 前置要求
+| 算法 | C++17 | Go | Rust | 适用场景 |
+|------|------:|---:|-----:|----------|
+| Huffman 编码 | ✓ | ✓ | ✓ | 通用文本/数据，学习前缀码 |
+| 算术编码 | ✓ | ✓ | ✓ | 理解熵编码与压缩率对比 |
+| 区间编码 | ✓ | ✓ | ✓ | 对比算术编码风格实现 |
+| RLE 行程编码 | ✓ | ✓ | ✓ | 高重复数据与简单格式学习 |
 
-| 语言 | 最低版本 | 安装方式 |
-|------|----------|----------|
-| C++ | GCC 9+ / Clang 10+ | `apt install g++` 或 `brew install gcc` |
-| Go | 1.21+ | [golang.org/dl](https://golang.org/dl) |
-| Rust | 1.70+ | [rustup.rs](https://rustup.rs) |
-| Python | 3.8+ | 仅需用于生成测试数据 |
+所有命令行工具都遵循：
 
-验证环境：
 ```bash
-g++ --version    # 必须支持 -std=c++17
-go version
-rustc --version
+<binary> <encode|decode> <input> <output>
 ```
 
----
-
-## ✨ 特性
-
-- 🔤 **多语言实现** — C++17、Go 1.21+、Rust 1.70+ 三种语言完整实现
-- 🔗 **跨语言兼容** — 用一种语言编码，另一种语言解码
-- 📚 **面向学习** — 清晰、文档完善的代码，便于学习和对比
-- 🧪 **完善测试** — CI 包含单元测试和跨语言验证
-- 📊 **性能基准** — 跨语言性能对比
-
-## 🧮 算法
-
-| 算法 | 压缩率 | 速度 | 适用场景 |
-|------|--------|------|----------|
-| [**Huffman**](https://lessup.github.io/compress-kit/zh/guide/algorithms#huffman-编码) | 中等 | 快 | 通用文本/数据 |
-| [**算术编码**](https://lessup.github.io/compress-kit/zh/guide/algorithms#算术编码) | 最高 | 中等 | 最大压缩需求 |
-| [**区间编码**](https://lessup.github.io/compress-kit/zh/guide/algorithms#区间编码) | 高 | 快 | 平衡性能 |
-| [**RLE**](https://lessup.github.io/compress-kit/zh/guide/algorithms#行程长度编码-rle) | 可变 | 最快 | 重复数据（位图、日志） |
-
-### 算法选择指南
-
-```
-你的数据是否高度重复？
-├── 是 → 使用 RLE（最快，适合重复模式）
-└── 否 →
-    是否需要最大压缩？
-    ├── 是 → 使用算术编码（最接近熵限）
-    └── 否 →
-        速度是否关键？
-        ├── 是 → 使用区间编码（快速 + 压缩好）
-        └── 否 → 使用 Huffman（简单通用）
-```
-
-## 🚀 快速开始
+## 快速开始
 
 ```bash
 git clone https://github.com/LessUp/compress-kit.git
 cd compress-kit
 
-# 1. 构建所有实现
 make build
-
-# 2. 生成测试数据（需要 Python 3.8+）
-make test-data
-
-# 3. 运行测试
 make test
 ```
 
-### 快速验证
+最小跨语言验证：
 
 ```bash
-# 创建测试文件
-echo "Hello, World! Hello, World!" > input.txt
-
-# 使用 C++ 编码
+printf "Hello CompressKit\n" > input.txt
 ./algorithms/huffman/cpp/huffman_cpp encode input.txt output.huf
-
-# 使用 Go 解码
 ./algorithms/huffman/go/huffman_go decode output.huf restored.txt
-
-# 验证
-diff input.txt restored.txt && echo "✓ 跨语言验证通过"
+diff input.txt restored.txt
 ```
 
-### 跨语言验证（替代方式）
+## 文档
 
-```bash
-# 使用 C++ 编码
-./algorithms/huffman/cpp/huffman_cpp encode input.txt output.huf
-
-# 使用 Go 解码
-./algorithms/huffman/go/huffman_go decode output.huf restored.txt
-diff input.txt restored.txt  # 无输出 = 完全相同
-```
-
-**C++ ↔ Go ↔ Rust** — 所有实现共享相同的二进制格式。
-
-## 项目结构
-
-```
-compress-kit/
-├── algorithms/           # 压缩算法实现
-│   ├── huffman/         # 前缀码压缩
-│   ├── arithmetic/      # 算术编码
-│   ├── range/           # 区间编码
-│   └── rle/             # 行程编码
-│       ├── cpp/         # C++17: 单文件，零依赖
-│       ├── go/          # Go 1.21+: 库 API + CLI
-│       ├── rust/        # Rust 1.70+: rustc 或 cargo
-│       └── benchmark/   # 性能脚本
-├── docs/                # VitePress 文档站点（en + zh）
-├── specs/               # 规范驱动开发文档
-├── tests/               # 测试数据生成
-└── Makefile             # 构建入口
-```
-
-## 构建与测试
-
-| 命令 | 描述 |
+| 目标 | 链接 |
 |------|------|
-| `make build` | 构建所有实现 |
-| `make test` | 运行单元测试 |
-| `make bench` | 运行基准测试 |
-| `make clean` | 清理构建产物 |
+| 完整文档门户 | <https://lessup.github.io/compress-kit/> |
+| 环境准备与首次运行 | <https://lessup.github.io/compress-kit/zh/guide/getting-started> |
+| 算法对比 | <https://lessup.github.io/compress-kit/zh/guide/algorithms> |
+| API 参考 | <https://lessup.github.io/compress-kit/zh/api/streaming> |
+| 跨语言测试 | <https://lessup.github.io/compress-kit/zh/testing/cross-language> |
 
-## 💻 使用方法
+## 仓库结构
 
-所有实现遵循统一的 CLI 接口：
-
-```bash
-<可执行文件> <encode|decode> <输入> <输出>
+```text
+algorithms/   # huffman、arithmetic、range、rle；每个算法含 cpp/go/rust
+tests/        # 生成语料、streaming 契约、跨语言 conformance 矩阵
+docs/         # VitePress 文档站点
+openspec/     # 项目规范与已归档设计变更
 ```
 
-### CLI 示例
+## 工程基线
 
-```bash
-# Huffman - C++
-./algorithms/huffman/cpp/huffman_cpp encode input.txt output.huf
-./algorithms/huffman/cpp/huffman_cpp decode output.huf restored.txt
-
-# Huffman - Go
-./algorithms/huffman/go/huffman_go encode input.txt output.huf
-./algorithms/huffman/go/huffman_go decode output.huf restored.txt
-
-# Huffman - Rust
-./algorithms/huffman/rust/huffman_rust encode input.txt output.huf
-./algorithms/huffman/rust/huffman_rust decode output.huf restored.txt
-
-# 所有工具都支持 --help 查看详细选项
-./algorithms/huffman/go/huffman_go --help
-```
-
-### Go 库使用
-
-```go
-import "github.com/LessUp/compress-kit/algorithms/huffman/go"
-
-err := huffman.EncodeFile("input.bin", "output.huf")
-err = huffman.DecodeFile("output.huf", "decoded.bin")
-```
-
-注意：作为库使用时直接导入包调用函数。独立 CLI 使用请用 `go build -o huffman_go ./cmd` 构建。
-
-## 📚 文档
-
-| 资源 | 链接 |
+| 命令 | 用途 |
 |------|------|
-| 📖 完整文档 | [lessup.github.io/compress-kit](https://lessup.github.io/compress-kit/) |
-| 🔧 API 参考 | [Go](https://lessup.github.io/compress-kit/zh/api/go) · [Rust](https://lessup.github.io/compress-kit/zh/api/rust) · [C++](https://lessup.github.io/compress-kit/zh/api/cpp) |
-| 📊 基准测试 | [性能对比](https://lessup.github.io/compress-kit/zh/benchmarks/results) |
-| 🤝 贡献指南 | [如何参与](https://lessup.github.io/compress-kit/zh/guide/contributing) |
-| 📋 技术规范 | [specs/](specs/) |
+| `make build` | 构建全部 C++/Go/Rust CLI 工具 |
+| `make test` | 运行单元、streaming、跨语言 conformance 测试 |
+| `make test-conformance` | 单独运行可执行解码矩阵 |
+| `make bench` | 运行基准脚本 |
+| `npm run docs:build` | 构建文档站 |
 
-## 🎯 项目特点
-
-- **📖 学习** — 对比 C++、Go、Rust 的清晰实现
-- **✅ 验证** — 跨语言测试保证格式兼容
-- **📐 SDD** — 采用规范驱动开发方法
-
-## 🤝 参与贡献
-
-本项目遵循**规范驱动开发 (SDD)**：
-
-1. 先阅读规范 — `/specs/` 是单一真实来源
-2. 代码前先更新规范 — 接口变更时规范优先
-3. 跨语言测试 — 验证 C++ ↔ Go ↔ Rust 兼容性
-
-详见 [贡献指南](https://lessup.github.io/compress-kit/zh/guide/contributing)。
-
-## ⚠️ 安全说明
-
-- **最大输入文件大小：** 4 GiB
-- **最大输出文件大小：** 1 GiB（防止解压炸弹攻击）
-- 所有二进制格式包含完整性校验
-- 文件格式在主要版本内稳定且向后兼容
-
-## 📜 更新日志
-
-查看 [CHANGELOG.md](CHANGELOG.md) 了解版本历史和迁移指南。
+已知限制：Range Coder 在大文件解码上存在已记录的性能问题；本地
+conformance 和 benchmark 路径会对 Range 大样本做限制。处理大输入前请先阅读
+Range Coder 文档。
 
 ## 许可证
 

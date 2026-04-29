@@ -56,4 +56,4 @@ impl Error for CodecError {}
 
 /// Security limits.
 pub const MAX_INPUT_SIZE: usize = 4 * 1024 * 1024 * 1024; // 4 GiB
-pub const MAX_OUTPUT_SIZE: usize = 1 * 1024 * 1024 * 1024; // 1 GiB
+pub const MAX_OUTPUT_SIZE: usize = 1024 * 1024 * 1024; // 1 GiB

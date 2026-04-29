@@ -1,5 +1,5 @@
 .PHONY: build build-huffman build-arithmetic build-range build-rle \
-       test test-huffman-go test-arithmetic-go test-range-go test-rle-go \
+       test test-conformance test-huffman-go test-arithmetic-go test-range-go test-rle-go \
        test-shared-cpp test-shared-go test-shared-rust \
        test-huffman-rust test-arithmetic-rust test-range-rust test-rle-rust \
        test-data bench clean format lint spec-init spec-list spec-status
@@ -34,9 +34,10 @@ build-rle:
 # ── Test ───────────────────────────────────────────────────────────────────
 
 test: test-data \
-      test-shared-cpp test-shared-go test-shared-rust \
-      test-huffman-go test-arithmetic-go test-range-go test-rle-go \
-      test-huffman-rust test-arithmetic-rust test-range-rust test-rle-rust
+       test-shared-cpp test-shared-go test-shared-rust \
+       test-huffman-go test-arithmetic-go test-range-go test-rle-go \
+       test-huffman-rust test-arithmetic-rust test-range-rust test-rle-rust \
+       test-conformance
 
 test-shared-cpp:
 	g++ -std=c++17 -O2 -Wall -Wextra -Werror -DCOMPRESSKIT_NO_MAIN -Ialgorithms/shared/cpp/include algorithms/shared/cpp/src/buffer_api.cpp algorithms/huffman/cpp/main.cpp algorithms/arithmetic/cpp/main.cpp algorithms/range/cpp/main.cpp algorithms/rle/cpp/main.cpp algorithms/shared/cpp/tests/test_lifecycle.cpp -o algorithms/shared/cpp/tests/test_lifecycle
@@ -72,6 +73,9 @@ test-range-rust:
 test-rle-rust:
 	cargo test --manifest-path algorithms/rle/rust/Cargo.toml
 
+test-conformance: build test-data
+	python3 tests/conformance/run_decode_matrix.py
+
 # ── Data / Bench / Clean ──────────────────────────────────────────────────
 
 test-data:
@@ -82,12 +86,16 @@ bench: test-data
 
 clean:
 	rm -rf reports tests/data
+	rm -rf docs/.vitepress/dist
 	rm -rf algorithms/huffman/benchmark/tmp algorithms/arithmetic/benchmark/tmp algorithms/range/benchmark/tmp algorithms/rle/benchmark/tmp
 	rm -f algorithms/huffman/cpp/huffman_cpp algorithms/huffman/go/huffman_go algorithms/huffman/rust/huffman_rust algorithms/huffman/rust/huffman_rust_test
 	rm -f algorithms/arithmetic/cpp/arithmetic_cpp algorithms/arithmetic/go/arithmetic_go algorithms/arithmetic/rust/arithmetic_rust algorithms/arithmetic/rust/arithmetic_rust_test
-	rm -f algorithms/range/cpp/rangecoder_cpp algorithms/range/go/rangecoder_go algorithms/range/rust/target
+	rm -f algorithms/range/cpp/rangecoder_cpp algorithms/range/go/rangecoder_go
+	rm -rf algorithms/huffman/rust/target algorithms/arithmetic/rust/target
+	rm -rf algorithms/range/rust/target
 	rm -f algorithms/rle/cpp/rle_cpp algorithms/rle/go/rle_go algorithms/rle/rust/rle_rust algorithms/rle/rust/rle_rust_test
-	cargo clean --manifest-path algorithms/range/rust/Cargo.toml 2>/dev/null || true
+	rm -f algorithms/shared/cpp/tests/test_lifecycle
+	rm -rf algorithms/rle/rust/target algorithms/shared/rust/target
 
 # ── Format & Lint ───────────────────────────────────────────────────────────
 
@@ -95,25 +103,27 @@ format:
 	@echo "Formatting Go code..."
 	gofmt -w algorithms/*/go
 	@echo "Formatting Rust code..."
-	cargo fmt --manifest-path algorithms/huffman/rust/Cargo.toml 2>/dev/null || true
-	cargo fmt --manifest-path algorithms/arithmetic/rust/Cargo.toml 2>/dev/null || true
-	cargo fmt --manifest-path algorithms/rle/rust/Cargo.toml 2>/dev/null || true
-	cd algorithms/range/rust && cargo fmt 2>/dev/null || true
-	@echo "Formatting C++ code (if clang-format available)..."
+	cargo fmt --manifest-path algorithms/huffman/rust/Cargo.toml
+	cargo fmt --manifest-path algorithms/arithmetic/rust/Cargo.toml
+	cargo fmt --manifest-path algorithms/range/rust/Cargo.toml
+	cargo fmt --manifest-path algorithms/rle/rust/Cargo.toml
+	cargo fmt --manifest-path algorithms/shared/rust/Cargo.toml
+	@command -v clang-format >/dev/null || { echo "clang-format is required for C++ formatting"; exit 1; }
+	@echo "Formatting C++ code..."
 	@for f in algorithms/*/cpp/main.cpp algorithms/shared/cpp/src/buffer_api.cpp algorithms/shared/cpp/tests/test_lifecycle.cpp; do \
-		clang-format -i "$$f" 2>/dev/null || true; \
+		clang-format -i "$$f"; \
 	done
 	@echo "Done!"
 
 lint:
 	@echo "Linting Go code..."
-	go vet ./algorithms/shared/go/... ./algorithms/huffman/go/... ./algorithms/arithmetic/go/... ./algorithms/range/go/... ./algorithms/rle/go/... 2>/dev/null || true
+	go vet ./algorithms/shared/go/... ./algorithms/huffman/go/... ./algorithms/arithmetic/go/... ./algorithms/range/go/... ./algorithms/rle/go/...
 	@echo "Linting Rust code..."
-	cd algorithms/huffman/rust && cargo clippy --all-targets -- -D warnings 2>/dev/null || true
-	cd algorithms/arithmetic/rust && cargo clippy --all-targets -- -D warnings 2>/dev/null || true
-	cd algorithms/range/rust && cargo clippy -- -D warnings 2>/dev/null || true
-	cd algorithms/rle/rust && cargo clippy --all-targets -- -D warnings 2>/dev/null || true
-	cd algorithms/shared/rust && cargo clippy --all-targets -- -D warnings 2>/dev/null || true
+	cargo clippy --manifest-path algorithms/huffman/rust/Cargo.toml --all-targets -- -D warnings
+	cargo clippy --manifest-path algorithms/arithmetic/rust/Cargo.toml --all-targets -- -D warnings
+	cargo clippy --manifest-path algorithms/range/rust/Cargo.toml --all-targets -- -D warnings
+	cargo clippy --manifest-path algorithms/rle/rust/Cargo.toml --all-targets -- -D warnings
+	cargo clippy --manifest-path algorithms/shared/rust/Cargo.toml --all-targets -- -D warnings
 	@echo "Done!"
 
 # ── OpenSpec ────────────────────────────────────────────────────────────────

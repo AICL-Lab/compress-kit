@@ -1,164 +1,110 @@
-# Project Philosophy: OpenSpec-Driven Development
+# CompressKit Agent Guide
 
-This project uses **OpenSpec** for spec-driven development. All code implementations must be based on specifications in the `openspec/specs/` directory as the Single Source of Truth.
+This file is the project-level operating guide for AI agents working in
+`LessUp/compress-kit`.
 
-## Brand Guidelines
+## Project identity
 
-- **Project Name**: CompressKit
-- **Repository**: `github.com/LessUp/compress-kit`
-- **Documentation**: `https://lessup.github.io/compress-kit/`
+- Product name: **CompressKit**
+- Repository: `LessUp/compress-kit`
+- Documentation: <https://lessup.github.io/compress-kit/>
+- Default branch: `master`
 
-⚠️ Always use `CompressKit` and `LessUp/compress-kit` consistently. Never use `encoding` or `LessUp/encoding`.
+Do not use the old external branding `encoding` or `LessUp/encoding`.
 
-## Known Limitations
+## What this repository is
 
-### Range Coder Performance Issue
-The Range Coder has a known decode performance issue for files >500KB. This is documented and should not be "fixed" without explicit scope change. See `docs/en/algorithms/range.md` for details.
+CompressKit is a multi-language educational compression laboratory. It keeps
+four classic lossless algorithms implemented in three languages:
 
-## OpenSpec Setup
+| Algorithm | Languages | Stable CLI |
+|-----------|-----------|------------|
+| Huffman Coding | C++17, Go, Rust | `<binary> encode|decode <input> <output>` |
+| Arithmetic Coding | C++17, Go, Rust | `<binary> encode|decode <input> <output>` |
+| Range Coder | C++17, Go, Rust | `<binary> encode|decode <input> <output>` |
+| RLE | C++17, Go, Rust | `<binary> encode|decode <input> <output>` |
 
-### Installation
+The core engineering promise is cross-language binary compatibility for each
+algorithm's current stable format.
 
-```bash
-# Requires Node.js 20.19.0+
-npm install -g @fission-ai/openspec@latest
-```
+## Source of truth
 
-### Verification
+OpenSpec requirements in `openspec/specs/` are normative:
 
-```bash
-openspec --version
-openspec list
-```
+- `encoding-project`: product scope, algorithms, security limits, branding
+- `core-architecture`: directory layout, CLI shape, binary-format architecture
+- `cross-language-testing`: conformance, benchmark expectations, known issues
 
-## Directory Structure
+Archived proposals in `openspec/changes/archive/` are historical or deferred
+design context. Do not treat deferred archive entries as active implementation
+requirements unless a new OpenSpec change is explicitly opened.
 
-| Directory | Purpose |
-|-----------|---------|
-| `openspec/specs/` | Main specification documents |
-| `openspec/changes/` | Active change proposals |
-| `openspec/changes/archive/` | Completed and archived changes |
-| `openspec/config.yaml` | OpenSpec configuration |
-| `docs/` | User-facing documentation (VitePress) |
+## Change policy
 
-## AI Agent Workflow
+Create or update an OpenSpec change before implementing:
 
-When developing a new feature, fixing a bug, or making architectural changes, follow this workflow:
+- new algorithms
+- binary format changes
+- public API or CLI contract changes
+- cross-language conformance semantics
+- CI behavior that changes required quality gates
 
-### Step 1: Review Specs (审查规范)
+Small documentation fixes, internal refactors, and bug fixes that preserve the
+existing contract may be implemented directly, but still check the relevant spec
+first.
 
-Before any code changes:
-```bash
-# Check current specs
-openspec list
+## Validation commands
 
-# View specific spec
-cat openspec/specs/<capability>/spec.md
-```
-
-- Read relevant specs in `openspec/specs/`
-- If user request conflicts with specs, **stop and ask** whether to create a change proposal
-- 如果用户指令与现有 Spec 冲突，请立即停止，询问是否需要创建变更提案
-
-### Step 2: Create Proposal (创建提案)
-
-For new features or significant changes, use OpenSpec workflow:
-
-```bash
-# Start a new change proposal
-/opsx:propose "add-lz77-compression"
-```
-
-This creates `openspec/changes/add-lz77-compression/` with:
-- `proposal.md` - Rationale and scope
-- `specs/` - Delta specs (ADDED/MODIFIED/REMOVED requirements)
-- `design.md` - Technical approach
-- `tasks.md` - Implementation checklist
-
-等待用户确认提案后再进入实现阶段。
-
-### Step 3: Implement (代码实现)
-
-After proposal approval:
-
-```bash
-# Start implementing tasks
-/opsx:apply add-lz77-compression
-```
-
-- Implement tasks from `tasks.md` in order
-- Mark tasks complete: `- [ ]` → `- [x]`
-- Follow requirement keywords: `SHALL`, `MUST`
-- Keep code changes minimal and focused
-
-### Step 4: Test Against Spec (测试验证)
-
-Write tests based on scenarios in specs:
-
-```bash
-# Run cross-language tests
-make test
-
-# Run benchmarks
-make bench
-```
-
-Each requirement has scenarios in GIVEN/WHEN/THEN format - ensure tests cover these.
-
-### Step 5: Archive (归档)
-
-When implementation is complete:
-
-```bash
-# Archive the change
-/opsx:archive add-lz77-compression
-```
-
-This:
-1. Syncs delta specs to main specs (if any)
-2. Moves change to `openspec/changes/archive/YYYY-MM-DD-add-lz77-compression/`
-
-## OpenSpec Commands Reference
+Use the smallest command that proves the change, then run the broader baseline
+before completing significant work.
 
 | Command | Purpose |
 |---------|---------|
-| `/opsx:propose <name>` | Create new change proposal with all artifacts |
-| `/opsx:apply <name>` | Implement tasks from a change |
-| `/opsx:archive <name>` | Archive completed change |
-| `/opsx:sync <name>` | Sync delta specs to main specs without archiving |
+| `make build` | Build every C++/Go/Rust CLI |
+| `make test` | Main repository baseline: unit, streaming, conformance |
+| `make test-conformance` | Cross-language encode/decode matrix |
+| `make lint` | Existing lint path |
+| `make format` | Existing formatter path |
+| `npm run docs:build` | VitePress documentation build |
+| `openspec validate --all` | Validate specs and archived changes |
 
-## Code Generation Rules
+## Known limitation
 
-- Binary format changes MUST update `openspec/specs/core-architecture/spec.md`
-- New algorithms MUST update `openspec/specs/encoding-project/spec.md`
-- Test changes MUST update `openspec/specs/cross-language-testing/spec.md`
-- All error messages MUST be in English
-- Follow language-specific conventions:
-  - **C++17**: Google Style Guide, snake_case, PascalCase classes
-  - **Go 1.21+**: gofmt, go vet, Effective Go
-  - **Rust 1.70+**: rustfmt, clippy, Rust API Guidelines
-  - **Python 3.8+**: PEP 8
+Range Coder decode performance is known to degrade on files larger than 500 KiB.
+This is documented in the Range Coder docs and `cross-language-testing` spec.
+Do not "fix" it unless the requested scope explicitly targets Range Coder
+performance. Conformance and benchmark code should cap Range-heavy sweeps at
+small inputs.
 
-## Why OpenSpec Matters
+## Generated artifacts
 
-1. **Structured Change Management**: Each change is a self-contained unit with proposal, specs, design, and tasks
-2. **Delta Spec Tracking**: Track what requirements are ADDED/MODIFIED/REMOVED
-3. **Archive History**: Completed changes preserved with timestamps
-4. **AI-Native Workflow**: Commands designed for AI agent execution
+Do not commit generated outputs:
 
-## Project-Specific Notes
+- `tests/data/*.bin`
+- algorithm binaries such as `huffman_cpp`, `huffman_go`, `huffman_rust`
+- Rust `target/`
+- `reports/`
+- `docs/.vitepress/dist/`
+- temporary conformance directories under `tests/.conformance-*`
 
-This project implements compression algorithms (Huffman, Arithmetic Coding, Range Coder, RLE) in multiple languages (C++17, Go, Rust). Key considerations:
+Run `make clean` when you need to inspect a source-only tree.
 
-- **Cross-Language Compatibility**: All implementations must share identical binary file formats
-- **Unified CLI Interface**: `./binary <encode|decode> <input> <output>`
-- **Security Constraints**: Max input 4 GiB, max output 1 GiB to prevent decompression bombs
-- **Testing Focus**: Cross-language encode/decode verification is mandatory
+## Style expectations
 
-## Current Specs
+- Error messages in code must be English.
+- C++17: follow the existing `.clang-format` / Google-style layout.
+- Go: use `gofmt` and `go vet`.
+- Rust: use `rustfmt` and `cargo clippy` where the existing workflow calls it.
+- Python scripts are tooling only; keep them deterministic and dependency-light.
+- Documentation is bilingual when user-facing. README files should remain concise
+  repository gateways; detailed explanations belong in `docs/`.
 
-| Spec | Description |
-|------|-------------|
-| [encoding-project](openspec/specs/encoding-project/spec.md) | Product requirements, algorithm status, security/quality requirements |
-| [core-architecture](openspec/specs/core-architecture/spec.md) | Directory structure, CLI patterns, frequency table format, CI/CD design |
-| [cross-language-testing](openspec/specs/cross-language-testing/spec.md) | Correctness tests, benchmarks, known issues |
+## Review checklist for agents
+
+Before finishing a code-affecting change:
+
+1. Check whether `openspec/specs/` needed updates.
+2. Verify the relevant language tests.
+3. If encoded bytes or decoding behavior changed, run `make test-conformance`.
+4. If docs changed, run `npm run docs:build`.
+5. Confirm no generated artifacts are staged.

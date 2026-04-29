@@ -1,5 +1,10 @@
 # Change Proposal: add-shared-frame-format
 
+> **Disposition:** Deferred during the 2026-04-29 finalization pass. This proposal
+> is preserved as future design context, but it was not applied to the main
+> specs because the current terminal baseline keeps the existing per-algorithm
+> binary formats stable.
+
 ## Summary
 
 Define a unified binary frame envelope for all CompressKit compressed files, adding a versioned header with magic bytes, algorithm ID, flags, content size, checksum, and optional extension fields (dictionary ID, skippable metadata blocks).

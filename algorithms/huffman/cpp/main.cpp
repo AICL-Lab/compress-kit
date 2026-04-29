@@ -1,15 +1,15 @@
 #include <cstdint>
-#include <vector>
 #include <fstream>
 #include <iostream>
-#include <string>
-#include <queue>
 #include <memory>
+#include <queue>
+#include <string>
+#include <vector>
 
 #include "compresskit/buffer_api.hpp"
 
 class BitWriter {
-public:
+   public:
     explicit BitWriter(std::ostream& s) : stream(s), buffer(0), bits_in_buffer(0) {}
 
     void write_bit(int bit) {
@@ -31,15 +31,16 @@ public:
         }
     }
 
-private:
+   private:
     std::ostream& stream;
     uint8_t buffer;
     int bits_in_buffer;
 };
 
 class BitReader {
-public:
-    explicit BitReader(std::istream& s) : stream(s), current_byte(0), bits_remaining(0), reached_eof(false) {}
+   public:
+    explicit BitReader(std::istream& s)
+        : stream(s), current_byte(0), bits_remaining(0), reached_eof(false) {}
 
     int read_bit() {
         if (bits_remaining == 0) {
@@ -55,11 +56,9 @@ public:
         return (current_byte >> bits_remaining) & 1;
     }
 
-    bool eof() const {
-        return reached_eof;
-    }
+    bool eof() const { return reached_eof; }
 
-private:
+   private:
     std::istream& stream;
     uint8_t current_byte;
     int bits_remaining;
@@ -68,7 +67,7 @@ private:
 
 static const uint32_t SYMBOL_LIMIT = 257;
 static const uint32_t EOF_SYMBOL = SYMBOL_LIMIT - 1;
-static const uint64_t MAX_INPUT_SIZE = 4ULL * 1024 * 1024 * 1024; // 4 GiB max
+static const uint64_t MAX_INPUT_SIZE = 4ULL * 1024 * 1024 * 1024;  // 4 GiB max
 
 struct Node {
     uint32_t symbol;
@@ -80,11 +79,14 @@ struct Node {
 // Custom deleter for Node pointers to enable RAII with smart pointers
 struct NodeDeleter {
     void operator()(Node* node) const {
-        if (!node) return;
+        if (!node)
+            return;
         // Recursively delete children
         NodeDeleter deleter;
-        if (node->left) deleter(node->left);
-        if (node->right) deleter(node->right);
+        if (node->left)
+            deleter(node->left);
+        if (node->right)
+            deleter(node->right);
         delete node;
     }
 };

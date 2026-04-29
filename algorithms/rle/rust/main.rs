@@ -10,7 +10,7 @@ use compresskit_codec::codec::{decode_buffer, encode_buffer};
 // All three language implementations use the same format for cross-validation and benchmarking.
 
 // Maximum output size limit (1 GiB) to prevent decompression bomb attacks
-const MAX_OUTPUT_SIZE: u64 = 1 * 1024 * 1024 * 1024;
+const MAX_OUTPUT_SIZE: u64 = 1024 * 1024 * 1024;
 
 fn write_u32_le<W: Write>(w: &mut W, v: u32) -> io::Result<()> {
     let bytes = v.to_le_bytes();
@@ -155,9 +155,7 @@ pub fn rle_decode_file(input_path: &str, output_path: &str) -> io::Result<()> {
         let mut remaining = count;
         while remaining > 0 {
             let chunk = remaining.min(BUF_SIZE as u32) as usize;
-            for i in 0..chunk {
-                buf[i] = value;
-            }
+            buf[..chunk].fill(value);
             writer.write_all(&buf[..chunk])?;
             total_written += chunk as u64;
             remaining -= chunk as u32;
@@ -166,59 +164,6 @@ pub fn rle_decode_file(input_path: &str, output_path: &str) -> io::Result<()> {
 
     writer.flush()?;
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::fs;
-    use std::path::PathBuf;
-    use std::time::{SystemTime, UNIX_EPOCH};
-
-    fn make_paths(prefix: &str) -> (PathBuf, PathBuf, PathBuf, PathBuf) {
-        let mut dir = std::env::temp_dir();
-        let stamp = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_nanos();
-        dir.push(format!(
-            "encoding_rle_{}_{}_{}",
-            prefix,
-            std::process::id(),
-            stamp
-        ));
-        fs::create_dir_all(&dir).unwrap();
-        let input = dir.join("input.bin");
-        let encoded = dir.join("encoded.rle");
-        let output = dir.join("output.bin");
-        (dir, input, encoded, output)
-    }
-
-    #[test]
-    fn roundtrip_bytes() {
-        let (dir, input, encoded, output) = make_paths("roundtrip");
-        let mut data = vec![0xAA; 2048];
-        data.extend_from_slice(&b"run-length-rust-test-data-".repeat(128));
-        data.extend(std::iter::repeat(0x00).take(512));
-        fs::write(&input, &data).unwrap();
-
-        rle_encode_file(input.to_str().unwrap(), encoded.to_str().unwrap()).unwrap();
-        rle_decode_file(encoded.to_str().unwrap(), output.to_str().unwrap()).unwrap();
-
-        let decoded = fs::read(&output).unwrap();
-        assert_eq!(decoded, data);
-        fs::remove_dir_all(dir).unwrap();
-    }
-
-    #[test]
-    fn decode_rejects_zero_count() {
-        let (dir, input, _, output) = make_paths("invalid");
-        fs::write(&input, [0u8, 0, 0, 0, 0x42]).unwrap();
-
-        let result = rle_decode_file(input.to_str().unwrap(), output.to_str().unwrap());
-        assert!(result.is_err());
-        fs::remove_dir_all(dir).unwrap();
-    }
 }
 
 fn main() {
@@ -281,4 +226,57 @@ fn run_decode(input_path: &str, output_path: &str) -> io::Result<()> {
             format!("cannot open output file for writing: {output_path}: {e}"),
         )
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use std::path::PathBuf;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn make_paths(prefix: &str) -> (PathBuf, PathBuf, PathBuf, PathBuf) {
+        let mut dir = std::env::temp_dir();
+        let stamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        dir.push(format!(
+            "encoding_rle_{}_{}_{}",
+            prefix,
+            std::process::id(),
+            stamp
+        ));
+        fs::create_dir_all(&dir).unwrap();
+        let input = dir.join("input.bin");
+        let encoded = dir.join("encoded.rle");
+        let output = dir.join("output.bin");
+        (dir, input, encoded, output)
+    }
+
+    #[test]
+    fn roundtrip_bytes() {
+        let (dir, input, encoded, output) = make_paths("roundtrip");
+        let mut data = vec![0xAA; 2048];
+        data.extend_from_slice(&b"run-length-rust-test-data-".repeat(128));
+        data.extend(std::iter::repeat(0x00).take(512));
+        fs::write(&input, &data).unwrap();
+
+        rle_encode_file(input.to_str().unwrap(), encoded.to_str().unwrap()).unwrap();
+        rle_decode_file(encoded.to_str().unwrap(), output.to_str().unwrap()).unwrap();
+
+        let decoded = fs::read(&output).unwrap();
+        assert_eq!(decoded, data);
+        fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn decode_rejects_zero_count() {
+        let (dir, input, _, output) = make_paths("invalid");
+        fs::write(&input, [0u8, 0, 0, 0, 0x42]).unwrap();
+
+        let result = rle_decode_file(input.to_str().unwrap(), output.to_str().unwrap());
+        assert!(result.is_err());
+        fs::remove_dir_all(dir).unwrap();
+    }
 }

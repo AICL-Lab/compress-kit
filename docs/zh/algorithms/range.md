@@ -155,7 +155,7 @@ let decoded = rangecoder::decode(&encoded, &cum_freq, data.len())?;
 
 - [算术编码](/zh/algorithms/arithmetic) — 浮点数等价实现
 - [基准测试](/zh/benchmarks/results) — 性能对比
-- [文件格式规范](https://github.com/LessUp/compress-kit/tree/master/specs/rfc)
+- [OpenSpec 架构规范](https://github.com/LessUp/compress-kit/tree/master/openspec/specs/core-architecture)
 
 ## 已知限制
 

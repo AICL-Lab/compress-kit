@@ -5,46 +5,76 @@ version: 2
 updates:
   # Go modules
   - package-ecosystem: "gomod"
+    directory: "/algorithms/shared/go"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 2
+
+  - package-ecosystem: "gomod"
     directory: "/algorithms/huffman/go"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 2
 
   - package-ecosystem: "gomod"
     directory: "/algorithms/arithmetic/go"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 2
 
   - package-ecosystem: "gomod"
     directory: "/algorithms/range/go"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 2
 
   - package-ecosystem: "gomod"
     directory: "/algorithms/rle/go"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 2
 
   # Rust cargo
+  - package-ecosystem: "cargo"
+    directory: "/algorithms/shared/rust"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 2
+
+  - package-ecosystem: "cargo"
+    directory: "/algorithms/huffman/rust"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 2
+
+  - package-ecosystem: "cargo"
+    directory: "/algorithms/arithmetic/rust"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 2
+
   - package-ecosystem: "cargo"
     directory: "/algorithms/range/rust"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 2
+
+  - package-ecosystem: "cargo"
+    directory: "/algorithms/rle/rust"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 2
 
   # Node.js (documentation site)
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 2
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 2

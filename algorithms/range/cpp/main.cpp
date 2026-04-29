@@ -1,10 +1,10 @@
-#include <cstdint>
-#include <vector>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <stdexcept>
 #include <chrono>
+#include <cstdint>
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 #include "compresskit/buffer_api.hpp"
 
@@ -14,8 +14,8 @@ static const uint32_t SYMBOL_LIMIT = 257;
 static const uint32_t EOF_SYMBOL = SYMBOL_LIMIT - 1;
 static const uint32_t MAX_TOTAL = 1u << 24;
 static const uint32_t RENORM_THRESHOLD = 1u << 24;
-static const uint64_t MAX_INPUT_SIZE = 4ULL * 1024 * 1024 * 1024;  // 4 GiB max
-static const uint64_t MAX_OUTPUT_SIZE = 1ULL * 1024 * 1024 * 1024; // 1 GiB max
+static const uint64_t MAX_INPUT_SIZE = 4ULL * 1024 * 1024 * 1024;   // 4 GiB max
+static const uint64_t MAX_OUTPUT_SIZE = 1ULL * 1024 * 1024 * 1024;  // 1 GiB max
 
 static void scale_frequencies(std::vector<uint32_t>& freq) {
     uint64_t total = 0;
@@ -88,10 +88,8 @@ static bool read_u32_le(const std::vector<uint8_t>& in, size_t& pos, uint32_t& v
     if (pos + 4 > in.size()) {
         return false;
     }
-    v = static_cast<uint32_t>(in[pos]) |
-        (static_cast<uint32_t>(in[pos + 1]) << 8) |
-        (static_cast<uint32_t>(in[pos + 2]) << 16) |
-        (static_cast<uint32_t>(in[pos + 3]) << 24);
+    v = static_cast<uint32_t>(in[pos]) | (static_cast<uint32_t>(in[pos + 1]) << 8) |
+        (static_cast<uint32_t>(in[pos + 2]) << 16) | (static_cast<uint32_t>(in[pos + 3]) << 24);
     pos += 4;
     return true;
 }
@@ -132,9 +130,8 @@ static bool read_header(const std::vector<uint8_t>& in, size_t& pos, std::vector
 }
 
 class RangeEncoder {
-public:
-    explicit RangeEncoder(std::vector<uint8_t>& out)
-        : out_(out), low_(0), high_(0xFFFFFFFFu) {}
+   public:
+    explicit RangeEncoder(std::vector<uint8_t>& out) : out_(out), low_(0), high_(0xFFFFFFFFu) {}
 
     void encode_symbol(uint32_t symbol, const std::vector<uint32_t>& cumulative) {
         uint64_t range = static_cast<uint64_t>(high_) - low_ + 1;
@@ -161,14 +158,14 @@ public:
         }
     }
 
-private:
+   private:
     std::vector<uint8_t>& out_;
     uint32_t low_;
     uint32_t high_;
 };
 
 class RangeDecoder {
-public:
+   public:
     RangeDecoder(const uint8_t* data, size_t size)
         : data_(data), size_(size), pos_(0), low_(0), high_(0xFFFFFFFFu), code_(0) {
         for (int i = 0; i < 4; ++i) {
@@ -212,7 +209,7 @@ public:
         return symbol;
     }
 
-private:
+   private:
     const uint8_t* data_;
     size_t size_;
     size_t pos_;
@@ -282,7 +279,7 @@ std::vector<uint8_t> decode(const std::vector<uint8_t>& encoded) {
     return out;
 }
 
-} // namespace range_coder
+}  // namespace range_coder
 
 static std::vector<uint8_t> read_file(const std::string& path) {
     std::ifstream in(path, std::ios::binary);
@@ -305,7 +302,8 @@ static void write_file(const std::string& path, const std::vector<uint8_t>& data
         throw std::runtime_error("Cannot open output file");
     }
     if (!data.empty()) {
-        out.write(reinterpret_cast<const char*>(data.data()), static_cast<std::streamsize>(data.size()));
+        out.write(reinterpret_cast<const char*>(data.data()),
+                  static_cast<std::streamsize>(data.size()));
     }
 }
 
@@ -343,10 +341,10 @@ static void run_benchmark(std::size_t size_bytes, int iterations) {
     std::cout << "Input size: " << size_bytes << " bytes" << std::endl;
     std::cout << "Iterations: " << iterations << std::endl;
     std::cout << "Encoded size (last run): " << encoded.size() << " bytes" << std::endl;
-    std::cout << "Encode time: " << enc_dur.count() << " s, throughput: "
-              << (total_mb / enc_dur.count()) << " MiB/s" << std::endl;
-    std::cout << "Decode time: " << dec_dur.count() << " s, throughput: "
-              << (total_mb / dec_dur.count()) << " MiB/s" << std::endl;
+    std::cout << "Encode time: " << enc_dur.count()
+              << " s, throughput: " << (total_mb / enc_dur.count()) << " MiB/s" << std::endl;
+    std::cout << "Decode time: " << dec_dur.count()
+              << " s, throughput: " << (total_mb / dec_dur.count()) << " MiB/s" << std::endl;
 }
 #endif
 
@@ -391,7 +389,8 @@ int main(int argc, char** argv) {
             }
             std::string input_path = argv[2];
             std::string output_path = argv[3];
-            if (!compresskit::encode_file_via_buffer(rangecoder_encode_file, input_path, output_path)) {
+            if (!compresskit::encode_file_via_buffer(rangecoder_encode_file, input_path,
+                                                     output_path)) {
                 return 1;
             }
         } else if (mode == "decode") {
@@ -401,11 +400,12 @@ int main(int argc, char** argv) {
             }
             std::string input_path = argv[2];
             std::string output_path = argv[3];
-            if (!compresskit::decode_file_via_buffer(rangecoder_decode_file, input_path, output_path)) {
+            if (!compresskit::decode_file_via_buffer(rangecoder_decode_file, input_path,
+                                                     output_path)) {
                 return 1;
             }
         } else if (mode == "bench") {
-            std::size_t size_bytes = 1u << 20; // 1 MiB
+            std::size_t size_bytes = 1u << 20;  // 1 MiB
             int iterations = 20;
             if (argc >= 3) {
                 size_bytes = static_cast<std::size_t>(std::stoul(argv[2]));

@@ -59,63 +59,87 @@ pub fn encode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
     freq[EOF_SYMBOL as usize] = 1;
     scale_frequencies(&mut freq);
     let cumulative = build_cumulative(&freq);
-    
+
     let mut output = Vec::new();
     output.extend_from_slice(b"AENC");
     output.extend_from_slice(&(SYMBOL_LIMIT as u32).to_le_bytes());
     for &f in &freq {
         output.extend_from_slice(&f.to_le_bytes());
     }
-    
+
     let mut low = 0u64;
     let mut high = FULL_RANGE - 1;
     let mut pending_bits = 0u64;
     let mut bitstring = String::new();
-    
-    let emit_bit = |bit: u8, bitstring: &mut String, pending_bits: &mut u64| {
+
+    fn emit_bit(bit: u8, bitstring: &mut String, pending_bits: &mut u64) {
         bitstring.push(if bit == 0 { '0' } else { '1' });
         for _ in 0..*pending_bits {
             bitstring.push(if bit == 0 { '1' } else { '0' });
         }
         *pending_bits = 0;
-    };
-    
-    for &b in input.iter().chain(&[EOF_SYMBOL as u8]) {
-        let sym = if b == EOF_SYMBOL as u8 { EOF_SYMBOL } else { b as u32 };
-        let range = high - low + 1;
+    }
+    for &b in input {
+        encode_symbol(
+            b as u32,
+            &cumulative,
+            &mut low,
+            &mut high,
+            &mut pending_bits,
+            &mut bitstring,
+        );
+    }
+    encode_symbol(
+        EOF_SYMBOL,
+        &cumulative,
+        &mut low,
+        &mut high,
+        &mut pending_bits,
+        &mut bitstring,
+    );
+
+    fn encode_symbol(
+        sym: u32,
+        cumulative: &[u32],
+        low: &mut u64,
+        high: &mut u64,
+        pending_bits: &mut u64,
+        bitstring: &mut String,
+    ) {
+        let range = *high - *low + 1;
         let total = cumulative[cumulative.len() - 1] as u64;
         let sym_low = cumulative[sym as usize] as u64;
         let sym_high = cumulative[sym as usize + 1] as u64;
-        
-        high = low + (range * sym_high) / total - 1;
-        low = low + (range * sym_low) / total;
-        
+
+        *high = *low + (range * sym_high) / total - 1;
+        *low += (range * sym_low) / total;
+
         loop {
-            if high < HALF_RANGE {
-                emit_bit(0, &mut bitstring, &mut pending_bits);
-                low <<= 1;
-                high = (high << 1) | 1;
-            } else if low >= HALF_RANGE {
-                emit_bit(1, &mut bitstring, &mut pending_bits);
-                low = (low - HALF_RANGE) << 1;
-                high = ((high - HALF_RANGE) << 1) | 1;
-            } else if low >= FIRST_QUARTER && high < THIRD_QUARTER {
-                pending_bits += 1;
-                low = (low - FIRST_QUARTER) << 1;
-                high = ((high - FIRST_QUARTER) << 1) | 1;
+            if *high < HALF_RANGE {
+                emit_bit(0, bitstring, pending_bits);
+                *low <<= 1;
+                *high = (*high << 1) | 1;
+            } else if *low >= HALF_RANGE {
+                emit_bit(1, bitstring, pending_bits);
+                *low = (*low - HALF_RANGE) << 1;
+                *high = ((*high - HALF_RANGE) << 1) | 1;
+            } else if *low >= FIRST_QUARTER && *high < THIRD_QUARTER {
+                *pending_bits += 1;
+                *low = (*low - FIRST_QUARTER) << 1;
+                *high = ((*high - FIRST_QUARTER) << 1) | 1;
             } else {
                 break;
             }
         }
     }
-    
+
     pending_bits += 1;
     if low < FIRST_QUARTER {
         emit_bit(0, &mut bitstring, &mut pending_bits);
     } else {
         emit_bit(1, &mut bitstring, &mut pending_bits);
     }
-    
+
     let mut byte = 0u8;
     let mut bit_count = 0;
     for ch in bitstring.bytes() {
@@ -131,58 +155,70 @@ pub fn encode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
         byte <<= 8 - bit_count;
         output.push(byte);
     }
-    
+
     Ok(output)
 }
 
 pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
     if input.len() < 8 {
-        return Err(io::Error::new(io::ErrorKind::InvalidData, "input too short"));
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "input too short",
+        ));
     }
     if &input[0..4] != b"AENC" {
         return Err(io::Error::new(io::ErrorKind::InvalidData, "invalid magic"));
     }
-    
+
     let count = u32::from_le_bytes([input[4], input[5], input[6], input[7]]) as usize;
     if count != SYMBOL_LIMIT {
-        return Err(io::Error::new(io::ErrorKind::InvalidData, "invalid symbol count"));
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "invalid symbol count",
+        ));
     }
-    
+
     let mut pos = 8;
     let mut freq = vec![0u32; count];
     for f in freq.iter_mut() {
         if pos + 4 > input.len() {
-            return Err(io::Error::new(io::ErrorKind::InvalidData, "truncated freq table"));
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "truncated freq table",
+            ));
         }
         *f = u32::from_le_bytes([input[pos], input[pos + 1], input[pos + 2], input[pos + 3]]);
         pos += 4;
     }
-    
+
     let cumulative = build_cumulative(&freq);
     let total = cumulative[cumulative.len() - 1] as u64;
-    
+
     let mut low = 0u64;
     let mut high = FULL_RANGE - 1;
     let mut code = 0u64;
-    
+
     let mut bit_buffer = Vec::new();
     for &byte in &input[pos..] {
         for i in (0..8).rev() {
             bit_buffer.push((byte >> i) & 1);
         }
     }
-    
-    for i in 0..STATE_BITS.min(bit_buffer.len() as u64) {
-        code = (code << 1) | (bit_buffer[i as usize] as u64);
+
+    for i in 0..STATE_BITS {
+        code <<= 1;
+        if (i as usize) < bit_buffer.len() {
+            code |= bit_buffer[i as usize] as u64;
+        }
     }
     let mut bit_pos = STATE_BITS as usize;
-    
+
     let mut output = Vec::new();
     loop {
         let range = high - low + 1;
         let offset = code - low;
-        let value = (offset * total) / range;
-        
+        let value = ((offset + 1) * total - 1) / range;
+
         let mut sym = 0usize;
         for i in 0..cumulative.len() - 1 {
             if value >= cumulative[i] as u64 && value < cumulative[i + 1] as u64 {
@@ -190,7 +226,7 @@ pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
                 break;
             }
         }
-        
+
         if sym == EOF_SYMBOL as usize {
             break;
         }
@@ -201,12 +237,12 @@ pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
             ));
         }
         output.push(sym as u8);
-        
+
         let sym_low = cumulative[sym] as u64;
         let sym_high = cumulative[sym + 1] as u64;
         high = low + (range * sym_high) / total - 1;
-        low = low + (range * sym_low) / total;
-        
+        low += (range * sym_low) / total;
+
         loop {
             if high < HALF_RANGE {
                 low <<= 1;
@@ -237,7 +273,7 @@ pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
             }
         }
     }
-    
+
     Ok(output)
 }
 
@@ -461,5 +497,18 @@ impl CodecDecoder for StreamingDecoder {
 
     fn state(&self) -> State {
         self.state
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{decode, encode};
+
+    #[test]
+    fn roundtrip_zero_byte_without_confusing_it_with_eof() {
+        let encoded = encode(&[0x00]).unwrap();
+        let decoded = decode(&encoded).unwrap();
+
+        assert_eq!(decoded, vec![0x00]);
     }
 }

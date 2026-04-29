@@ -43,7 +43,8 @@ impl<'a, W: Write> WriteEncoder<'a, W> {
 
     fn flush_out_buf(&mut self) -> io::Result<()> {
         if self.out_buf_offset > 0 {
-            self.writer.write_all(&self.out_buf[..self.out_buf_offset])?;
+            self.writer
+                .write_all(&self.out_buf[..self.out_buf_offset])?;
             self.out_buf_offset = 0;
         }
         Ok(())
@@ -64,10 +65,7 @@ impl<'a, W: Write> WriteEncoder<'a, W> {
                     self.flush_out_buf()?;
                     let new_size = Self::grow_buffer(self.out_buf.len(), MAX_OUTPUT_SIZE);
                     if new_size <= self.out_buf.len() {
-                        return Err(io::Error::new(
-                            io::ErrorKind::Other,
-                            CodecError::SizeLimit,
-                        ));
+                        return Err(io::Error::new(io::ErrorKind::Other, CodecError::SizeLimit));
                     }
                     self.out_buf.resize(new_size, 0);
                     self.out_buf_offset = 0;
@@ -96,10 +94,7 @@ impl<'a, W: Write> Write for WriteEncoder<'a, W> {
                     self.flush_out_buf()?;
                     let new_size = Self::grow_buffer(self.out_buf.len(), MAX_OUTPUT_SIZE);
                     if new_size <= self.out_buf.len() {
-                        return Err(io::Error::new(
-                            io::ErrorKind::Other,
-                            CodecError::SizeLimit,
-                        ));
+                        return Err(io::Error::new(io::ErrorKind::Other, CodecError::SizeLimit));
                     }
                     self.out_buf.resize(new_size, 0);
                     self.out_buf_offset = 0;

@@ -1,17 +1,19 @@
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <algorithm>
 
 #include "compresskit/buffer_api.hpp"
 
 // Simple Run-Length encoding implementation.
 // Format: repeatedly write (count, value) pairs until EOF.
-// - count: 4-byte unsigned integer, little-endian, represents how many times value repeats, must be > 0.
+// - count: 4-byte unsigned integer, little-endian, represents how many times value repeats, must be
+// > 0.
 // - value: 1 byte, represents the byte value to repeat.
-// This format is simple; all three language implementations are fully consistent for cross-decoding and benchmarking.
+// This format is simple; all three language implementations are fully consistent for cross-decoding
+// and benchmarking.
 
 // Maximum output size limit (1 GiB) to prevent decompression bomb attacks
 static const uint64_t MAX_OUTPUT_SIZE = 1ULL * 1024 * 1024 * 1024;
@@ -43,11 +45,8 @@ static bool read_u32_le(std::istream& in, uint32_t& out_value) {
         in.setstate(std::ios::badbit);
         return false;
     }
-    out_value =
-        (static_cast<uint32_t>(buf[0])      ) |
-        (static_cast<uint32_t>(buf[1]) << 8 ) |
-        (static_cast<uint32_t>(buf[2]) << 16) |
-        (static_cast<uint32_t>(buf[3]) << 24);
+    out_value = (static_cast<uint32_t>(buf[0])) | (static_cast<uint32_t>(buf[1]) << 8) |
+                (static_cast<uint32_t>(buf[2]) << 16) | (static_cast<uint32_t>(buf[3]) << 24);
     return true;
 }
 
@@ -157,7 +156,8 @@ static bool rle_decode_file_checked(const std::string& input_path, const std::st
         unsigned char value = static_cast<unsigned char>(value_char);
 
         while (count > 0) {
-            std::size_t chunk = static_cast<std::size_t>(std::min<uint32_t>(count, static_cast<uint32_t>(BUF_SIZE)));
+            std::size_t chunk = static_cast<std::size_t>(
+                std::min<uint32_t>(count, static_cast<uint32_t>(BUF_SIZE)));
             std::memset(buffer, static_cast<int>(value), chunk);
             out.write(buffer, static_cast<std::streamsize>(chunk));
             if (!out) {

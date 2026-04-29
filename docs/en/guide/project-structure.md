@@ -1,222 +1,67 @@
 # Project Structure
 
-See also: [Streaming API](/en/api/streaming)
+CompressKit is organized around algorithms first, then languages. This keeps the
+same algorithm easy to compare across C++17, Go, and Rust without hiding
+language-specific conventions.
 
-This guide explains the project organization, file formats, and conventions used across all implementations.
+## Source layout
 
-## Directory Layout
+```text
+algorithms/
+├── shared/        # streaming and buffer API foundations
+├── huffman/       # cpp/, go/, rust/
+├── arithmetic/    # cpp/, go/, rust/
+├── range/         # cpp/, go/, rust/
+└── rle/           # cpp/, go/, rust/
 
-```
-compress-kit/
-├── algorithms/huffman/              # Huffman coding implementation
-│   ├── cpp/              #   C++ single-file implementation
-│   ├── go/               #   Go module (go.mod)
-│   ├── rust/             #   Rust implementation
-│   └── benchmark/        #   Cross-language benchmark scripts
-├── algorithms/arithmetic/           # Arithmetic coding implementation
-│   ├── cpp/              #   C++ single-file implementation
-│   ├── go/               #   Go implementation
-│   ├── rust/             #   Rust implementation
-│   └── benchmark/        #   Cross-language benchmark
-├── algorithms/range/                # Range coder implementation
-│   ├── cpp/              #   C++ single-file implementation
-│   ├── go/               #   Go library + CLI
-│   ├── rust/             #   Rust library crate + CLI
-│   └── benchmark/        #   Cross-language benchmark
-├── algorithms/rle/                  # Run-length encoding
-│   ├── cpp/              #   C++ single-file implementation
-│   ├── go/               #   Go implementation
-│   ├── rust/             #   Rust implementation
-│   └── benchmark/        #   Cross-language benchmark
-├── algorithms/shared/    # Shared streaming/buffer foundations
-│   ├── cpp/              #   C++ headers, buffer shim, lifecycle tests
-│   ├── go/               #   Shared Go codec module
-│   └── rust/             #   Shared Rust codec crate
-├── tests/                # Test data generation
-│   ├── gen_testdata.py   #   Generate benchmark test files
-│   └── data/             #   Generated test data
-├── docs/                 # Documentation site (VitePress)
-│   ├── .vitepress/       #   VitePress configuration
-│   ├── en/               #   English documentation
-│   ├── zh/               #   Chinese documentation
-│   └── public/           #   Static assets (logo, etc.)
-├── .github/workflows/    # GitHub Actions CI/CD
-├── Makefile              # Build, test, and benchmark entry point
-├── package.json          # npm scripts for docs
-└── go.work               # Go workspace (multi-module)
+tests/
+├── gen_testdata.py
+├── streaming_api_contract/
+└── conformance/
+
+docs/              # VitePress site: root portal + en/ + zh/
+openspec/          # stable specs and archived design changes
 ```
 
-## Language Implementation Standards
+## Responsibility boundaries
 
-| Language | Version | Build Method | Characteristics |
-|----------|---------|--------------|-----------------|
-| **C++** | C++17 | `g++ -std=c++17 -O2` | Single file, zero dependencies |
-| **Go** | 1.21+ | Go modules (`go.mod` + `cmd/`) | All implementations provide library API + CLI |
-| **Rust** | 1.70+ | Cargo / `rustc` | Range coder provides library crate |
+| Area | Owns | Does not own |
+|------|------|--------------|
+| `algorithms/<algo>/<lang>/` | Algorithm implementation, CLI entrypoint, language tests | Global docs or cross-language orchestration |
+| `algorithms/shared/` | Streaming lifecycle, buffer convenience APIs, shared contract tests | Algorithm-specific file formats |
+| `tests/conformance/` | Cross-language encode/decode matrix for stable formats | Future shared-frame validation |
+| `tests/data/` | Generated local corpus from `make test-data` | Source-controlled fixtures |
+| `docs/` | User-facing guide, API notes, known limitations | OpenSpec change tracking |
+| `openspec/` | Normative requirements and archived proposal history | Marketing copy |
 
-## Unified CLI Interface
+## Binary formats
 
-All implementations follow the same command-line pattern:
+The current terminal baseline keeps per-algorithm formats stable:
 
-```bash
-<algorithm>_<lang> encode <input_file> <output_file>
-<algorithm>_<lang> decode <input_file> <output_file>
-```
+| Algorithm | Magic/header | Extension | Payload |
+|-----------|--------------|-----------|---------|
+| Huffman | `HFMN` + frequency table | `.huf` | Bit stream |
+| Arithmetic | `AENC` + frequency table | `.aenc` | Bit stream |
+| Range Coder | `RCNC` + frequency table | `.rcnc` | Byte stream |
+| RLE | No magic header | `.rle` | `(count: uint32 LE, value: byte)` pairs |
 
-### Binary Names
+Future shared-frame proposals are archived under `openspec/changes/archive/` and
+are not part of the active file format contract.
 
-| Algorithm | C++ | Go | Rust |
-|-----------|-----|-----|------|
-| Huffman | `huffman_cpp` | `huffman_go` | `huffman_rust` |
-| Arithmetic | `arithmetic_cpp` | `arithmetic_go` | `arithmetic_rust` |
-| Range Coder | `rangecoder_cpp` | `rangecoder_go` | `rangecoder` (cargo) |
-| RLE | `rle_cpp` | `rle_go` | `rle_rust` |
+## Generated artifacts
 
-### Usage Examples
+Build outputs and generated data are intentionally ignored:
 
-```bash
-# Encode with Huffman (C++)
-./huffman_cpp encode document.txt document.huf
+- algorithm binaries such as `huffman_cpp`, `huffman_go`, `huffman_rust`
+- Rust `target/` directories
+- `tests/data/*.bin`
+- benchmark reports and temporary conformance directories
+- `docs/.vitepress/dist/`
 
-# Decode with Range Coder (Go)
-./rangecoder_go decode data.rcnc data.bin
+Use `make clean` before packaging or reviewing repository shape.
 
-# Encode with RLE (Rust)
-./rle_rust encode bitmap.raw bitmap.rle
-```
+## Related pages
 
-## File Format Compatibility
-
-All language implementations of the same algorithm use **identical binary formats**.
-
-### Format Summary
-
-| Algorithm | Magic Header | Extension | Structure |
-|-----------|--------------|-----------|-----------|
-| Huffman | `HFMN` | `.huf` | Magic + frequency table + bit stream |
-| Arithmetic | `AENC` | `.aenc` | Magic + frequency table + bit stream |
-| Range Coder | `RCNC` | `.rcnc` | Magic + frequency table + byte stream |
-| RLE | None | `.rle` | (count: 4B LE, value: 1B) pairs |
-
-### Cross-Language Verification
-
-| Encode ↓ / Decode → | C++ | Go | Rust |
-|---------------------|-----|-----|------|
-| C++ | ✓ | ✓ | ✓ |
-| Go | ✓ | ✓ | ✓ |
-| Rust | ✓ | ✓ | ✓ |
-
-Any combination works: **C++ ↔ Go ↔ Rust**
-
-## CI/CD Pipeline
-
-### Workflows
-
-| Workflow | File | Trigger | Purpose |
-|----------|------|---------|---------|
-| **CI** | `.github/workflows/ci.yml` | Push / PR | Build, test, correctness verification |
-| **Pages** | `.github/workflows/pages.yml` | `docs/` changes | Deploy documentation |
-
-### CI Job Matrix
-
-```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  build-cpp  │     │  build-go   │     │ build-rust  │
-│  ├ Ubuntu   │     │  Ubuntu     │     │  Ubuntu     │
-│  └ macOS    │     │             │     │             │
-└──────┬──────┘     └──────┬──────┘     └──────┬──────┘
-       │                   │                   │
-       └───────────────────┼───────────────────┘
-                           │
-                    ┌──────▼──────┐
-                    │ correctness │
-                    │   tests     │
-                    │  (Python)   │
-                    └─────────────┘
-```
-
-### CI Checks
-
-1. **Build Jobs**: Compile all implementations on Ubuntu and macOS (C++)
-2. **Test Jobs**: Run Go `go test` and Rust `cargo test`
-3. **Lint Jobs**: Go vet, Rust clippy
-4. **Correctness Jobs**: Cross-language encode/decode verification
-
-## Security Considerations
-
-### Input/Output Size Limits
-
-All implementations enforce the following limits:
-
-| Limit | Value | Purpose |
-|-------|-------|---------|
-| Max input size | 4 GiB | Prevent frequency overflow |
-| Max output size | 1 GiB | Prevent decompression bombs |
-
-These limits are applied before processing begins to prevent:
-- Integer overflow attacks
-- Decompression bomb attacks
-- Excessive memory usage
-
-## Build System Details
-
-### Makefile Targets
-
-| Target | Description |
-|--------|-------------|
-| `build` | Build all implementations |
-| `build-huffman` | Build Huffman (C++, Go, Rust) |
-| `build-arithmetic` | Build Arithmetic (C++, Go, Rust) |
-| `build-range` | Build Range Coder (C++, Go, Rust) |
-| `build-rle` | Build RLE (C++, Go, Rust) |
-| `test` | Run all Go and Rust unit tests |
-| `bench` | Generate test data and run all benchmarks |
-| `test-data` | Generate test data only |
-| `clean` | Remove all build artifacts and reports |
-
-### Go Workspace
-
-The project uses Go workspaces to manage multiple modules:
-
-```go
-// go.work
-go 1.21
-
-use (
-    ./algorithms/shared/go
-    ./algorithms/huffman/go
-    ./algorithms/arithmetic/go
-    ./algorithms/range/go
-    ./algorithms/rle/go
-)
-```
-
-This allows:
-- Cross-module dependencies
-- Unified build commands
-- IDE support for all Go modules
-
-## Documentation Site
-
-The documentation is built with [VitePress](https://vitepress.dev/):
-
-```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run docs:dev
-
-# Build for production
-npm run docs:build
-```
-
-The built site is in `docs/.vitepress/dist/` and deployed to GitHub Pages.
-
----
-
-## Related Documentation
-
-- [Getting Started](/en/guide/getting-started) - Setup and basic usage
-- [Algorithms Guide](/en/guide/algorithms) - Algorithm explanations
-- [GitHub Repository](https://github.com/LessUp/compress-kit) - Source code
+- [Getting Started](/en/guide/getting-started)
+- [Streaming API](/en/api/streaming)
+- [Cross-Language Testing](/en/testing/cross-language)

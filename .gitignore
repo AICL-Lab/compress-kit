@@ -9,6 +9,8 @@ reports/
 
 # Test data
 tests/data/*.bin
+tests/.conformance-*/
+tests/bench/results/
 
 # Encoded output files
 **/*.enc
@@ -92,4 +94,3 @@ specs-backup-*.tar.gz
 # BMad Method V6
 _bmad/
 _bmad-output/
-.github/copilot-instructions.md

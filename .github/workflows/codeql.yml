@@ -5,9 +5,9 @@ name: CodeQL
 
 on:
   push:
-    branches: [main, master]
+    branches: [master]
   pull_request:
-    branches: [main, master]
+    branches: [master]
   schedule:
     # Run weekly on Monday at 00:00 UTC
     - cron: '0 0 * * 1'
@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['cpp', 'go', 'python']
+        language: ['cpp', 'go']
 
     steps:
       - name: Checkout code

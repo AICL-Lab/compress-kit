@@ -11,14 +11,14 @@
 | g++ 或 clang++ | 9+ / 10+ | C++17 编译 |
 | Go | 1.21+ | Go 实现 |
 | Rust (cargo) | 1.70+ | Rust 实现 |
-| Python | 3.8+ | 基准测试脚本 |
+| Python | 3.8+ | 测试编排与基准测试脚本 |
 | Make | 任意版本 | 构建自动化 |
 
 ### 可选工具
 
 | 工具 | 用途 |
 |------|------|
-| Node.js 18+ | 文档站点开发 |
+| Node.js 20.19+ | 文档站点与 OpenSpec 工具链 |
 | clang-format | C++ 代码格式化 |
 
 ### 安装方法
@@ -120,7 +120,8 @@ diff input.bin decoded.bin  # 无输出 = 相同
 make test
 ```
 
-这将运行共享 streaming 层测试，以及所有算法的 Go 和 Rust 单元测试。
+这将运行共享 streaming 层测试、Go/Rust 单元测试，以及可执行的跨语言
+conformance 解码矩阵。
 
 ### 运行特定算法测试
 
@@ -164,7 +165,8 @@ Compression ratio: 1.23
 | `make build-arithmetic` | 仅构建算术编码实现 |
 | `make build-range` | 仅构建区间编码实现 |
 | `make build-rle` | 仅构建 RLE 实现 |
-| `make test` | 运行所有 Go 和 Rust 单元测试 |
+| `make test` | 运行单元、streaming、conformance 测试 |
+| `make test-conformance` | 运行跨语言解码矩阵 |
 | `make bench` | 生成测试数据并运行基准测试 |
 | `make test-data` | 仅生成测试数据 |
 | `make clean` | 删除所有构建产物和报告 |

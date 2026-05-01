@@ -8,6 +8,7 @@ const sharedSidebar = {
       items: [
         { text: 'Introduction', link: '/en/' },
         { text: 'Quick Start', link: '/en/guide/getting-started' },
+        { text: 'Architecture', link: '/en/guide/architecture' },
         { text: 'Project Structure', link: '/en/guide/project-structure' },
       ],
     },
@@ -53,6 +54,7 @@ const sharedSidebar = {
       items: [
         { text: '项目介绍', link: '/zh/' },
         { text: '快速开始', link: '/zh/guide/getting-started' },
+        { text: '架构设计', link: '/zh/guide/architecture' },
         { text: '项目结构', link: '/zh/guide/project-structure' },
       ],
     },
@@ -162,7 +164,7 @@ export default defineConfig({
     ['meta', { property: 'og:description', content: 'Classic lossless compression algorithms in C++17, Go, and Rust with cross-language binary verification.' }],
     ['meta', { property: 'og:url', content: 'https://lessup.github.io/compress-kit/' }],
     ['meta', { property: 'og:site_name', content: 'CompressKit' }],
-    ['meta', { property: 'og:image', content: '/compress-kit/og-image.png' }],
+    ['meta', { property: 'og:image', content: '/compress-kit/og-image.svg' }],
     ['meta', { property: 'og:image:width', content: '1200' }],
     ['meta', { property: 'og:image:height', content: '630' }],
     
@@ -171,7 +173,7 @@ export default defineConfig({
     ['meta', { name: 'twitter:site', content: '@compresskit' }],
     ['meta', { name: 'twitter:title', content: 'CompressKit | Compression Algorithms Collection' }],
     ['meta', { name: 'twitter:description', content: 'Classic lossless compression algorithms in C++17, Go, and Rust with cross-language binary verification.' }],
-    ['meta', { name: 'twitter:image', content: '/compress-kit/og-image.png' }],
+    ['meta', { name: 'twitter:image', content: '/compress-kit/og-image.svg' }],
     
     // Favicon
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/compress-kit/logo.svg' }],

@@ -7,6 +7,7 @@ const (
 	eofSymbol              = symbolLimit - 1
 	maxTotal        uint32 = 1 << 24
 	renormThreshold        = uint32(1) << 24
+	maxOutputSize          = 1 << 30 // 1 GiB maximum decoded output
 )
 
 func scaleFrequencies(freq []uint32) {
@@ -257,6 +258,9 @@ func Decode(encoded []byte) ([]byte, error) {
 			break
 		}
 		out = append(out, byte(sym))
+		if len(out) > maxOutputSize {
+			return nil, errors.New("range: output exceeds maximum size (1 GiB)")
+		}
 	}
 	return out, nil
 }

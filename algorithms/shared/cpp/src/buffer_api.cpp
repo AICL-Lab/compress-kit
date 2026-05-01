@@ -3,8 +3,8 @@
 #include <unistd.h>
 
 #include <algorithm>
-#include <cstdlib>
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <limits>
 #include <stdexcept>
@@ -23,9 +23,12 @@ class ScopedTempFile {
     explicit ScopedTempFile(const char* prefix) {
         // Use platform-appropriate temp directory
         const char* tmp_dir = std::getenv("TMPDIR");
-        if (!tmp_dir) tmp_dir = std::getenv("TMP");
-        if (!tmp_dir) tmp_dir = std::getenv("TEMP");
-        if (!tmp_dir) tmp_dir = "/tmp";
+        if (!tmp_dir)
+            tmp_dir = std::getenv("TMP");
+        if (!tmp_dir)
+            tmp_dir = std::getenv("TEMP");
+        if (!tmp_dir)
+            tmp_dir = "/tmp";
         std::string pattern = std::string(tmp_dir) + "/" + prefix + "-XXXXXX";
         std::vector<char> buffer(pattern.begin(), pattern.end());
         buffer.push_back('\0');

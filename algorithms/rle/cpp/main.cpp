@@ -11,7 +11,8 @@
 // Format:
 // - Magic number: 4 bytes "RLE\x00" for format identification
 // - Followed by (count, value) pairs until EOF:
-//   - count: 4-byte unsigned integer, little-endian, represents how many times value repeats, must be > 0.
+//   - count: 4-byte unsigned integer, little-endian, represents how many times value repeats, must
+//   be > 0.
 //   - value: 1 byte, represents the byte value to repeat.
 // This format is simple; all three language implementations are fully consistent for cross-decoding
 // and benchmarking.

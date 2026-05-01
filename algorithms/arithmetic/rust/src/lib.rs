@@ -70,15 +70,8 @@ pub fn encode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
     let mut low = 0u64;
     let mut high = FULL_RANGE - 1;
     let mut pending_bits = 0u64;
-    let mut bitstring = String::new();
+    let mut bit_writer = BitWriter::new();
 
-    fn emit_bit(bit: u8, bitstring: &mut String, pending_bits: &mut u64) {
-        bitstring.push(if bit == 0 { '0' } else { '1' });
-        for _ in 0..*pending_bits {
-            bitstring.push(if bit == 0 { '1' } else { '0' });
-        }
-        *pending_bits = 0;
-    }
     for &b in input {
         encode_symbol(
             b as u32,
@@ -86,7 +79,7 @@ pub fn encode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
             &mut low,
             &mut high,
             &mut pending_bits,
-            &mut bitstring,
+            &mut bit_writer,
         );
     }
     encode_symbol(
@@ -95,68 +88,100 @@ pub fn encode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
         &mut low,
         &mut high,
         &mut pending_bits,
-        &mut bitstring,
+        &mut bit_writer,
     );
-
-    fn encode_symbol(
-        sym: u32,
-        cumulative: &[u32],
-        low: &mut u64,
-        high: &mut u64,
-        pending_bits: &mut u64,
-        bitstring: &mut String,
-    ) {
-        let range = *high - *low + 1;
-        let total = cumulative[cumulative.len() - 1] as u64;
-        let sym_low = cumulative[sym as usize] as u64;
-        let sym_high = cumulative[sym as usize + 1] as u64;
-
-        *high = *low + (range * sym_high) / total - 1;
-        *low += (range * sym_low) / total;
-
-        loop {
-            if *high < HALF_RANGE {
-                emit_bit(0, bitstring, pending_bits);
-                *low <<= 1;
-                *high = (*high << 1) | 1;
-            } else if *low >= HALF_RANGE {
-                emit_bit(1, bitstring, pending_bits);
-                *low = (*low - HALF_RANGE) << 1;
-                *high = ((*high - HALF_RANGE) << 1) | 1;
-            } else if *low >= FIRST_QUARTER && *high < THIRD_QUARTER {
-                *pending_bits += 1;
-                *low = (*low - FIRST_QUARTER) << 1;
-                *high = ((*high - FIRST_QUARTER) << 1) | 1;
-            } else {
-                break;
-            }
-        }
-    }
 
     pending_bits += 1;
     if low < FIRST_QUARTER {
-        emit_bit(0, &mut bitstring, &mut pending_bits);
+        emit_bit(0, &mut bit_writer, &mut pending_bits);
     } else {
-        emit_bit(1, &mut bitstring, &mut pending_bits);
+        emit_bit(1, &mut bit_writer, &mut pending_bits);
     }
 
-    let mut byte = 0u8;
-    let mut bit_count = 0;
-    for ch in bitstring.bytes() {
-        byte = (byte << 1) | (if ch == b'1' { 1 } else { 0 });
-        bit_count += 1;
-        if bit_count == 8 {
-            output.push(byte);
-            byte = 0;
-            bit_count = 0;
-        }
-    }
-    if bit_count > 0 {
-        byte <<= 8 - bit_count;
-        output.push(byte);
-    }
+    bit_writer.flush();
+    output.extend(bit_writer.bytes());
 
     Ok(output)
+}
+
+/// Efficient bit writer that stores bits in bytes (8 bits per byte)
+struct BitWriter {
+    buffer: Vec<u8>,
+    current_byte: u8,
+    bit_pos: usize, // 0-7, next bit position to write
+}
+
+impl BitWriter {
+    fn new() -> Self {
+        BitWriter {
+            buffer: Vec::new(),
+            current_byte: 0,
+            bit_pos: 0,
+        }
+    }
+
+    fn write_bit(&mut self, bit: u8) {
+        self.current_byte |= bit << (7 - self.bit_pos);
+        self.bit_pos += 1;
+        if self.bit_pos == 8 {
+            self.buffer.push(self.current_byte);
+            self.current_byte = 0;
+            self.bit_pos = 0;
+        }
+    }
+
+    fn flush(&mut self) {
+        if self.bit_pos > 0 {
+            self.buffer.push(self.current_byte);
+        }
+    }
+
+    fn bytes(self) -> Vec<u8> {
+        self.buffer
+    }
+}
+
+fn emit_bit(bit: u8, bit_writer: &mut BitWriter, pending_bits: &mut u64) {
+    bit_writer.write_bit(bit);
+    for _ in 0..*pending_bits {
+        bit_writer.write_bit(if bit == 0 { 1 } else { 0 });
+    }
+    *pending_bits = 0;
+}
+
+fn encode_symbol(
+    sym: u32,
+    cumulative: &[u32],
+    low: &mut u64,
+    high: &mut u64,
+    pending_bits: &mut u64,
+    bit_writer: &mut BitWriter,
+) {
+    let range = *high - *low + 1;
+    let total = cumulative[cumulative.len() - 1] as u64;
+    let sym_low = cumulative[sym as usize] as u64;
+    let sym_high = cumulative[sym as usize + 1] as u64;
+
+    *high = *low + (range * sym_high) / total - 1;
+    *low += (range * sym_low) / total;
+
+    loop {
+        if *high < HALF_RANGE {
+            emit_bit(0, bit_writer, pending_bits);
+            *low <<= 1;
+            *high = (*high << 1) | 1;
+        } else if *low >= HALF_RANGE {
+            emit_bit(1, bit_writer, pending_bits);
+            *low = (*low - HALF_RANGE) << 1;
+            *high = ((*high - HALF_RANGE) << 1) | 1;
+        } else if *low >= FIRST_QUARTER && *high < THIRD_QUARTER {
+            *pending_bits += 1;
+            *low = (*low - FIRST_QUARTER) << 1;
+            *high = ((*high - FIRST_QUARTER) << 1) | 1;
+        } else {
+            break;
+        }
+    }
 }
 
 pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {

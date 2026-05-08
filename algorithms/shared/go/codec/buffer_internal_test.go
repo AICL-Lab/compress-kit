@@ -93,3 +93,99 @@ func (e *capRetryEncoder) Finish(out []byte) (int, error) {
 	}
 	return 0, ErrBufTooSmall
 }
+
+type scriptedCall struct {
+	written int
+	err     error
+	payload []byte
+}
+
+type scriptedEncoder struct {
+	process []scriptedCall
+	finish  []scriptedCall
+}
+
+func (e *scriptedEncoder) Process(in []byte, out []byte) (int, error) {
+	call := e.process[0]
+	e.process = e.process[1:]
+	copy(out, call.payload)
+	return call.written, call.err
+}
+
+func (e *scriptedEncoder) Flush(out []byte) (int, error) { return 0, nil }
+func (e *scriptedEncoder) Reset()                        {}
+func (e *scriptedEncoder) State() State                  { return StateStreaming }
+
+func (e *scriptedEncoder) Finish(out []byte) (int, error) {
+	call := e.finish[0]
+	e.finish = e.finish[1:]
+	copy(out, call.payload)
+	return call.written, call.err
+}
+
+type scriptedDecoder struct {
+	process []scriptedCall
+	finish  []scriptedCall
+}
+
+func (d *scriptedDecoder) Process(in []byte, out []byte) (int, error) {
+	call := d.process[0]
+	d.process = d.process[1:]
+	copy(out, call.payload)
+	return call.written, call.err
+}
+
+func (d *scriptedDecoder) Flush(out []byte) (int, error) { return 0, nil }
+func (d *scriptedDecoder) Reset()                        {}
+func (d *scriptedDecoder) State() State                  { return StateStreaming }
+
+func (d *scriptedDecoder) Finish(out []byte) (int, error) {
+	call := d.finish[0]
+	d.finish = d.finish[1:]
+	copy(out, call.payload)
+	return call.written, call.err
+}
+
+func TestEncodeBuffer_PreservesOutputAcrossFinishRetry(t *testing.T) {
+	stub := &scriptedEncoder{
+		process: []scriptedCall{{written: 0, err: nil}},
+		finish: []scriptedCall{
+			{written: 3, err: ErrBufTooSmall, payload: []byte("abc")},
+			{written: 3, err: nil, payload: []byte("def")},
+		},
+	}
+
+	out, err := EncodeBuffer(stub, []byte("ignored"))
+	if err != nil {
+		t.Fatalf("EncodeBuffer() error = %v", err)
+	}
+	if string(out) != "abcdef" {
+		t.Fatalf("EncodeBuffer() = %q, want %q", out, "abcdef")
+	}
+}
+
+func TestEncodeBuffer_ReturnsSizeLimitWhenGrowthStops(t *testing.T) {
+	// Empty input gives encodeLimit == initialSize == 2048, so growth stops immediately.
+	_, err := EncodeBuffer(&capRetryEncoder{}, []byte{})
+	if err != ErrSizeLimit {
+		t.Fatalf("EncodeBuffer() error = %v, want ErrSizeLimit", err)
+	}
+}
+
+func TestDecodeBuffer_PreservesOutputAcrossFinishRetry(t *testing.T) {
+	stub := &scriptedDecoder{
+		process: []scriptedCall{{written: 0, err: nil}},
+		finish: []scriptedCall{
+			{written: 3, err: ErrBufTooSmall, payload: []byte("ghi")},
+			{written: 3, err: nil, payload: []byte("jkl")},
+		},
+	}
+
+	out, err := DecodeBuffer(stub, []byte("ignored"))
+	if err != nil {
+		t.Fatalf("DecodeBuffer() error = %v", err)
+	}
+	if string(out) != "ghijkl" {
+		t.Fatalf("DecodeBuffer() = %q, want %q", out, "ghijkl")
+	}
+}

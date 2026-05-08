@@ -25,6 +25,45 @@ fn encode_buffer_limit(input_len: usize) -> Result<usize, CodecError> {
         .ok_or(CodecError::SizeLimit)
 }
 
+type BufferStep<'a> = dyn FnMut(&mut [u8]) -> Result<usize, CodecError> + 'a;
+
+/// Runs one streaming step (`process` or `finish`), retrying with a larger
+/// buffer when the codec reports `BufTooSmall`.
+fn run_buffer_step(
+    out_buf: &mut Vec<u8>,
+    total_written: usize,
+    limit: usize,
+    step: &mut BufferStep<'_>,
+) -> Result<usize, CodecError> {
+    let mut total_written = total_written;
+
+    loop {
+        match step(&mut out_buf[total_written..]) {
+            Ok(n) => {
+                total_written = total_written.checked_add(n).ok_or(CodecError::SizeLimit)?;
+                if total_written > limit {
+                    return Err(CodecError::SizeLimit);
+                }
+                return Ok(total_written);
+            }
+            Err(CodecError::BufTooSmall) => {
+                debug_assert!(total_written <= limit);
+                if out_buf.len() >= limit {
+                    return Err(CodecError::SizeLimit);
+                }
+
+                let new_size = grow_buffer(out_buf.len(), limit);
+                if new_size <= out_buf.len() {
+                    return Err(CodecError::SizeLimit);
+                }
+
+                out_buf.resize(new_size, 0);
+            }
+            Err(err) => return Err(err),
+        }
+    }
+}
+
 /// EncodeBuffer is a convenience function that encodes input using the streaming API.
 /// Equivalent to: new encoder → Process(input) → Finish() → collect output.
 ///
@@ -44,56 +83,34 @@ pub fn encode_buffer(encoder: &mut dyn Encoder, input: &[u8]) -> Result<Vec<u8>,
         .saturating_add(2048)
         .min(encode_limit);
     let mut out_buf = vec![0u8; initial_size];
-    let mut total_written = 0;
+    let mut process = |output: &mut [u8]| encoder.process(input, output);
+    let mut total_written = run_buffer_step(&mut out_buf, 0, encode_limit, &mut process)?;
 
-    // Process input
-    loop {
-        match encoder.process(input, &mut out_buf[total_written..]) {
-            Ok(n) => {
-                total_written += n;
-                break;
-            }
-            Err(CodecError::BufTooSmall) => {
-                if total_written > encode_limit {
-                    return Err(CodecError::SizeLimit);
-                }
-                if out_buf.len() >= encode_limit {
-                    return Err(CodecError::SizeLimit);
-                }
-                let new_size = grow_buffer(out_buf.len(), encode_limit);
-                if new_size <= out_buf.len() {
-                    return Err(CodecError::SizeLimit);
-                }
-                out_buf.resize(new_size, 0);
-            }
-            Err(e) => return Err(e),
-        }
-    }
+    let mut finish = |output: &mut [u8]| encoder.finish(output);
+    total_written = run_buffer_step(&mut out_buf, total_written, encode_limit, &mut finish)?;
 
-    // Finish encoding
-    loop {
-        match encoder.finish(&mut out_buf[total_written..]) {
-            Ok(n) => {
-                total_written += n;
-                break;
-            }
-            Err(CodecError::BufTooSmall) => {
-                if out_buf.len() >= encode_limit {
-                    return Err(CodecError::SizeLimit);
-                }
-                let new_size = grow_buffer(out_buf.len(), encode_limit);
-                if new_size <= out_buf.len() {
-                    return Err(CodecError::SizeLimit);
-                }
-                out_buf.resize(new_size, 0);
-            }
-            Err(e) => return Err(e),
-        }
-    }
+    out_buf.truncate(total_written);
+    Ok(out_buf)
+}
 
-    if total_written > encode_limit {
+pub(crate) fn decode_buffer_with_limit(
+    decoder: &mut dyn Decoder,
+    input: &[u8],
+    limit: usize,
+) -> Result<Vec<u8>, CodecError> {
+    if input.len() > MAX_INPUT_SIZE {
         return Err(CodecError::SizeLimit);
     }
+
+    // Allocate output buffer.
+    // Decode typically expands, so start with input size and grow as needed.
+    let initial_size = input.len().saturating_add(1024);
+    let mut out_buf = vec![0u8; initial_size];
+    let mut process = |output: &mut [u8]| decoder.process(input, output);
+    let mut total_written = run_buffer_step(&mut out_buf, 0, limit, &mut process)?;
+
+    let mut finish = |output: &mut [u8]| decoder.finish(output);
+    total_written = run_buffer_step(&mut out_buf, total_written, limit, &mut finish)?;
 
     out_buf.truncate(total_written);
     Ok(out_buf)
@@ -104,65 +121,53 @@ pub fn encode_buffer(encoder: &mut dyn Encoder, input: &[u8]) -> Result<Vec<u8>,
 ///
 /// Returns the complete decoded output or an error.
 pub fn decode_buffer(decoder: &mut dyn Decoder, input: &[u8]) -> Result<Vec<u8>, CodecError> {
-    if input.len() > MAX_INPUT_SIZE {
-        return Err(CodecError::SizeLimit);
+    decode_buffer_with_limit(decoder, input, MAX_OUTPUT_SIZE)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::decode_buffer_with_limit;
+    use crate::codec::encoder::Decoder;
+    use crate::codec::error::{CodecError, State};
+
+    struct LimitHitProcessDecoder {
+        process_calls: usize,
+        finish_calls: usize,
     }
 
-    // Allocate output buffer.
-    // Decode typically expands, so start with input size and grow as needed.
-    let initial_size = input.len().saturating_add(1024);
-    let mut out_buf = vec![0u8; initial_size];
-    let mut total_written = 0;
+    impl Decoder for LimitHitProcessDecoder {
+        fn process(&mut self, _: &[u8], _: &mut [u8]) -> Result<usize, CodecError> {
+            self.process_calls += 1;
+            Err(CodecError::BufTooSmall)
+        }
 
-    // Process input
-    loop {
-        match decoder.process(input, &mut out_buf[total_written..]) {
-            Ok(n) => {
-                total_written += n;
-                break;
-            }
-            Err(CodecError::BufTooSmall) => {
-                if total_written > MAX_OUTPUT_SIZE {
-                    return Err(CodecError::SizeLimit);
-                }
-                if out_buf.len() >= MAX_OUTPUT_SIZE {
-                    return Err(CodecError::SizeLimit);
-                }
-                let new_size = grow_buffer(out_buf.len(), MAX_OUTPUT_SIZE);
-                if new_size <= out_buf.len() {
-                    return Err(CodecError::SizeLimit);
-                }
-                out_buf.resize(new_size, 0);
-            }
-            Err(e) => return Err(e),
+        fn flush(&mut self, _: &mut [u8]) -> Result<usize, CodecError> {
+            Ok(0)
+        }
+
+        fn finish(&mut self, _: &mut [u8]) -> Result<usize, CodecError> {
+            self.finish_calls += 1;
+            Err(CodecError::Other("finish should not be called".into()))
+        }
+
+        fn reset(&mut self) {}
+
+        fn state(&self) -> State {
+            State::Streaming
         }
     }
 
-    // Finish decoding
-    loop {
-        match decoder.finish(&mut out_buf[total_written..]) {
-            Ok(n) => {
-                total_written += n;
-                break;
-            }
-            Err(CodecError::BufTooSmall) => {
-                if out_buf.len() >= MAX_OUTPUT_SIZE {
-                    return Err(CodecError::SizeLimit);
-                }
-                let new_size = grow_buffer(out_buf.len(), MAX_OUTPUT_SIZE);
-                if new_size <= out_buf.len() {
-                    return Err(CodecError::SizeLimit);
-                }
-                out_buf.resize(new_size, 0);
-            }
-            Err(e) => return Err(e),
-        }
-    }
+    #[test]
+    fn decode_buffer_stops_growing_at_decode_limit_boundary() {
+        let mut decoder = LimitHitProcessDecoder {
+            process_calls: 0,
+            finish_calls: 0,
+        };
 
-    if total_written > MAX_OUTPUT_SIZE {
-        return Err(CodecError::SizeLimit);
-    }
+        let err = decode_buffer_with_limit(&mut decoder, b"", 1024).unwrap_err();
 
-    out_buf.truncate(total_written);
-    Ok(out_buf)
+        assert_eq!(err, CodecError::SizeLimit);
+        assert_eq!(decoder.process_calls, 1);
+        assert_eq!(decoder.finish_calls, 0);
+    }
 }

@@ -189,3 +189,14 @@ func TestDecodeBuffer_PreservesOutputAcrossFinishRetry(t *testing.T) {
 		t.Fatalf("DecodeBuffer() = %q, want %q", out, "ghijkl")
 	}
 }
+
+func TestDecodeBuffer_ReturnsSizeLimitWhenGrowthStops(t *testing.T) {
+	stub := &scriptedDecoder{
+		process: []scriptedCall{{written: 0, err: ErrBufTooSmall}},
+	}
+
+	_, err := decodeBufferWithLimit(stub, []byte("ignored"), 1, 1)
+	if err != ErrSizeLimit {
+		t.Fatalf("decodeBufferWithLimit() error = %v, want ErrSizeLimit", err)
+	}
+}

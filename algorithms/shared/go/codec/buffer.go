@@ -42,60 +42,33 @@ func EncodeBuffer(encoder Encoder, input []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	// Allocate output buffer using a conservative estimate.
-	// Most algorithms need header + encoded data.
-	// Use 2x input size + 2KB overhead as a reasonable initial allocation.
-	initialSize := len(input)*2 + 2048
-	if initialSize > encodeLimit {
-		initialSize = encodeLimit
+	return encodeBufferWithLimit(encoder, input, len(input)*2+2048, encodeLimit)
+}
+
+func encodeBufferWithLimit(encoder Encoder, input []byte, initialSize int, limit int) ([]byte, error) {
+	if initialSize > limit {
+		initialSize = limit
 	}
+
 	outBuf := make([]byte, initialSize)
-	var totalWritten int
+	totalWritten := 0
 
-	var n int
-	for {
-		n, err = encoder.Process(input, outBuf[totalWritten:])
-		if err != ErrBufTooSmall {
-			break
-		}
-		totalWritten += n
-		if totalWritten > encodeLimit {
-			return nil, ErrSizeLimit
-		}
-		if len(outBuf) >= encodeLimit {
-			return nil, ErrSizeLimit
-		}
-		newSize := growBuffer(len(outBuf), encodeLimit)
-		if newSize <= len(outBuf) {
-			return nil, ErrSizeLimit
-		}
-		newBuf := make([]byte, newSize)
-		copy(newBuf, outBuf[:totalWritten])
-		outBuf = newBuf
-	}
+	var err error
+	outBuf, totalWritten, err = runBufferStep(outBuf, totalWritten, limit, func(out []byte) (int, error) {
+		return encoder.Process(input, out)
+	})
 	if err != nil {
 		return nil, err
 	}
-	totalWritten += n
 
-	// Finish encoding
-	for {
-		n, err = encoder.Finish(outBuf[totalWritten:])
-		if err != ErrBufTooSmall {
-			break
-		}
-		if len(outBuf) >= encodeLimit {
-			return nil, ErrSizeLimit
-		}
-		newBuf := make([]byte, growBuffer(len(outBuf), encodeLimit))
-		copy(newBuf, outBuf[:totalWritten])
-		outBuf = newBuf
-	}
+	outBuf, totalWritten, err = runBufferStep(outBuf, totalWritten, limit, func(out []byte) (int, error) {
+		return encoder.Finish(out)
+	})
 	if err != nil {
 		return nil, err
 	}
-	totalWritten += n
-	if totalWritten > encodeLimit {
+
+	if totalWritten > limit {
 		return nil, ErrSizeLimit
 	}
 
@@ -111,57 +84,29 @@ func DecodeBuffer(decoder Decoder, input []byte) ([]byte, error) {
 		return nil, ErrSizeLimit
 	}
 
-	// Allocate output buffer.
-	// Decode typically expands, so start with input size and grow as needed.
-	outBuf := make([]byte, len(input)+1024)
-	var totalWritten int
+	return decodeBufferWithLimit(decoder, input, len(input)+1024, MaxOutputSize)
+}
 
-	var n int
+func decodeBufferWithLimit(decoder Decoder, input []byte, initialSize int, limit int) ([]byte, error) {
+	outBuf := make([]byte, initialSize)
+	totalWritten := 0
+
 	var err error
-	for {
-		n, err = decoder.Process(input, outBuf[totalWritten:])
-		if err != ErrBufTooSmall {
-			break
-		}
-		totalWritten += n
-		if totalWritten > MaxOutputSize {
-			return nil, ErrSizeLimit
-		}
-		if len(outBuf) >= MaxOutputSize {
-			return nil, ErrSizeLimit
-		}
-		newSize := growBuffer(len(outBuf), MaxOutputSize)
-		if newSize <= len(outBuf) {
-			return nil, ErrSizeLimit
-		}
-		newBuf := make([]byte, newSize)
-		copy(newBuf, outBuf[:totalWritten])
-		outBuf = newBuf
-	}
+	outBuf, totalWritten, err = runBufferStep(outBuf, totalWritten, limit, func(out []byte) (int, error) {
+		return decoder.Process(input, out)
+	})
 	if err != nil {
 		return nil, err
 	}
-	totalWritten += n
 
-	// Finish decoding
-	for {
-		n, err = decoder.Finish(outBuf[totalWritten:])
-		if err != ErrBufTooSmall {
-			break
-		}
-		if len(outBuf) >= MaxOutputSize {
-			return nil, ErrSizeLimit
-		}
-		newBuf := make([]byte, growBuffer(len(outBuf), MaxOutputSize))
-		copy(newBuf, outBuf[:totalWritten])
-		outBuf = newBuf
-	}
+	outBuf, totalWritten, err = runBufferStep(outBuf, totalWritten, limit, func(out []byte) (int, error) {
+		return decoder.Finish(out)
+	})
 	if err != nil {
 		return nil, err
 	}
-	totalWritten += n
 
-	if totalWritten > MaxOutputSize {
+	if totalWritten > limit {
 		return nil, ErrSizeLimit
 	}
 

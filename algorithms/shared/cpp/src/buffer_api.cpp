@@ -302,23 +302,21 @@ Result<std::vector<uint8_t>> encode_buffer(Encoder& encoder, const std::vector<u
     std::vector<uint8_t> out(initial_size);
     std::size_t total_written = 0;
 
-    for (auto step : {0, 1}) {
-        Result<std::size_t> result = run_buffer_step(
-            out, total_written, limit, [&](MutableByteView out_view) {
-                if (step == 0) {
-                    return encoder.process({input.data(), input.size()}, out_view);
-                }
-                return encoder.finish(out_view);
-            });
-        if (!result.ok()) {
-            return {result.status, {}};
-        }
-        total_written = result.value;
+    Result<std::size_t> result = run_buffer_step(
+        out, total_written, limit,
+        [&](MutableByteView out_view) { return encoder.process({input.data(), input.size()}, out_view); });
+    if (!result.ok()) {
+        return {result.status, {}};
     }
+    total_written = result.value;
 
-    if (total_written > limit) {
-        return {StatusCode::ERR_SIZE_LIMIT, {}};
+    result = run_buffer_step(out, total_written, limit,
+                             [&](MutableByteView out_view) { return encoder.finish(out_view); });
+    if (!result.ok()) {
+        return {result.status, {}};
     }
+    total_written = result.value;
+
     out.resize(total_written);
     return {StatusCode::OK, std::move(out)};
 }
@@ -331,23 +329,21 @@ Result<std::vector<uint8_t>> decode_buffer(Decoder& decoder, const std::vector<u
     std::vector<uint8_t> out(input.size() + 1024);
     std::size_t total_written = 0;
 
-    for (auto step : {0, 1}) {
-        Result<std::size_t> result = run_buffer_step(
-            out, total_written, kMaxOutputSize, [&](MutableByteView out_view) {
-                if (step == 0) {
-                    return decoder.process({input.data(), input.size()}, out_view);
-                }
-                return decoder.finish(out_view);
-            });
-        if (!result.ok()) {
-            return {result.status, {}};
-        }
-        total_written = result.value;
+    Result<std::size_t> result = run_buffer_step(
+        out, total_written, kMaxOutputSize,
+        [&](MutableByteView out_view) { return decoder.process({input.data(), input.size()}, out_view); });
+    if (!result.ok()) {
+        return {result.status, {}};
     }
+    total_written = result.value;
 
-    if (total_written > kMaxOutputSize) {
-        return {StatusCode::ERR_SIZE_LIMIT, {}};
+    result = run_buffer_step(out, total_written, kMaxOutputSize,
+                             [&](MutableByteView out_view) { return decoder.finish(out_view); });
+    if (!result.ok()) {
+        return {result.status, {}};
     }
+    total_written = result.value;
+
     out.resize(total_written);
     return {StatusCode::OK, std::move(out)};
 }

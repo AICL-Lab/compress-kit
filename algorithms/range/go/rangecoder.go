@@ -1,6 +1,8 @@
 package rangecoder
 
-import "errors"
+import (
+	"github.com/LessUp/compress-kit/algorithms/shared/go/codec"
+)
 
 const (
 	symbolLimit            = 257
@@ -101,21 +103,21 @@ func writeHeader(out *[]byte, freq []uint32) {
 
 func readHeader(in []byte, pos *int) ([]uint32, error) {
 	if len(in) < 8 {
-		return nil, errors.New("range: input too short")
+		return nil, codec.NewError(codec.KindTruncated, "range: input too short")
 	}
 	if in[0] != 'R' || in[1] != 'C' || in[2] != 'N' || in[3] != 'C' {
-		return nil, errors.New("range: bad magic")
+		return nil, codec.NewError(codec.KindCorrupt, "range: bad magic")
 	}
 	*pos = 4
 	count, ok := readU32LE(in, pos)
 	if !ok || count == 0 || count > 1024 {
-		return nil, errors.New("range: bad header")
+		return nil, codec.NewError(codec.KindCorrupt, "range: bad header")
 	}
 	freq := make([]uint32, count)
 	for i := uint32(0); i < count; i++ {
 		v, ok := readU32LE(in, pos)
 		if !ok {
-			return nil, errors.New("range: truncated header")
+			return nil, codec.NewError(codec.KindTruncated, "range: truncated header")
 		}
 		freq[i] = v
 	}
@@ -243,7 +245,7 @@ func Decode(encoded []byte) ([]byte, error) {
 		return nil, err
 	}
 	if len(freq) != symbolLimit {
-		return nil, errors.New("range: unexpected symbol count")
+		return nil, codec.NewError(codec.KindCorrupt, "range: unexpected symbol count")
 	}
 	cum := buildCumulative(freq)
 	if pos >= len(encoded) {
@@ -259,7 +261,7 @@ func Decode(encoded []byte) ([]byte, error) {
 		}
 		out = append(out, byte(sym))
 		if len(out) > maxOutputSize {
-			return nil, errors.New("range: output exceeds maximum size (1 GiB)")
+			return nil, codec.NewError(codec.KindSizeLimit, "range: output exceeds maximum size (1 GiB)")
 		}
 	}
 	return out, nil

@@ -96,42 +96,37 @@ fn test_constants() {
 
 #[test]
 fn test_huffman_implements_traits() {
-    use huffman::{StreamingDecoder, StreamingEncoder};
-    let _enc: Box<dyn Encoder> = Box::new(StreamingEncoder::new());
-    let _dec: Box<dyn Decoder> = Box::new(StreamingDecoder::new());
+    let _enc: Box<dyn Encoder> = Box::new(huffman::new_encoder());
+    let _dec: Box<dyn Decoder> = Box::new(huffman::new_decoder());
 }
 
 #[test]
 fn test_arithmetic_implements_traits() {
-    use arithmetic::{StreamingDecoder, StreamingEncoder};
-    let _enc: Box<dyn Encoder> = Box::new(StreamingEncoder::new());
-    let _dec: Box<dyn Decoder> = Box::new(StreamingDecoder::new());
+    let _enc: Box<dyn Encoder> = Box::new(arithmetic::new_encoder());
+    let _dec: Box<dyn Decoder> = Box::new(arithmetic::new_decoder());
 }
 
 #[test]
 fn test_rle_implements_traits() {
-    use rle::{StreamingDecoder, StreamingEncoder};
-    let _enc: Box<dyn Encoder> = Box::new(StreamingEncoder::new());
-    let _dec: Box<dyn Decoder> = Box::new(StreamingDecoder::new());
+    let _enc: Box<dyn Encoder> = Box::new(rle::new_encoder());
+    let _dec: Box<dyn Decoder> = Box::new(rle::new_decoder());
 }
 
 #[test]
 fn test_range_implements_traits() {
-    use rangecoder::{StreamingDecoder, StreamingEncoder};
-    let _enc: Box<dyn Encoder> = Box::new(StreamingEncoder::new());
-    let _dec: Box<dyn Decoder> = Box::new(StreamingDecoder::new());
+    let _enc: Box<dyn Encoder> = Box::new(rangecoder::new_encoder());
+    let _dec: Box<dyn Decoder> = Box::new(rangecoder::new_decoder());
 }
 
 #[test]
 fn test_huffman_roundtrip_via_traits() {
-    use huffman::{StreamingDecoder, StreamingEncoder};
     let input = b"hello world";
-    let mut enc = StreamingEncoder::new();
+    let mut enc = huffman::new_encoder();
     let mut output = vec![0u8; 4096];
     enc.process(input, &mut output).unwrap();
     let written = enc.finish(&mut output).unwrap();
 
-    let mut dec = StreamingDecoder::new();
+    let mut dec = huffman::new_decoder();
     let mut decoded = vec![0u8; 4096];
     dec.process(&output[..written], &mut decoded).unwrap();
     let dec_written = dec.finish(&mut decoded).unwrap();
@@ -141,14 +136,13 @@ fn test_huffman_roundtrip_via_traits() {
 
 #[test]
 fn test_arithmetic_roundtrip_via_traits() {
-    use arithmetic::{StreamingDecoder, StreamingEncoder};
     let input = b"test data";
-    let mut enc = StreamingEncoder::new();
+    let mut enc = arithmetic::new_encoder();
     let mut output = vec![0u8; 4096];
     enc.process(input, &mut output).unwrap();
     let written = enc.finish(&mut output).unwrap();
 
-    let mut dec = StreamingDecoder::new();
+    let mut dec = arithmetic::new_decoder();
     let mut decoded = vec![0u8; 4096];
     dec.process(&output[..written], &mut decoded).unwrap();
     let dec_written = dec.finish(&mut decoded).unwrap();
@@ -158,14 +152,13 @@ fn test_arithmetic_roundtrip_via_traits() {
 
 #[test]
 fn test_rle_roundtrip_via_traits() {
-    use rle::{StreamingDecoder, StreamingEncoder};
     let input = b"aaabbbccc";
-    let mut enc = StreamingEncoder::new();
+    let mut enc = rle::new_encoder();
     let mut output = vec![0u8; 4096];
     enc.process(input, &mut output).unwrap();
     let written = enc.finish(&mut output).unwrap();
 
-    let mut dec = StreamingDecoder::new();
+    let mut dec = rle::new_decoder();
     let mut decoded = vec![0u8; 4096];
     dec.process(&output[..written], &mut decoded).unwrap();
     let dec_written = dec.finish(&mut decoded).unwrap();

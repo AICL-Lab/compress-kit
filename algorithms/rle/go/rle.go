@@ -4,7 +4,6 @@ package rle
 import (
 	"bufio"
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -18,9 +17,6 @@ const MaxOutputSize = 1 * 1024 * 1024 * 1024
 
 // rleMagic is the 4-byte magic number for RLE format identification
 const rleMagic = "RLE\x00"
-
-// ErrInvalidMagic indicates the file does not have a valid RLE magic number
-var ErrInvalidMagic = errors.New("invalid RLE file: bad magic number")
 
 // writeRun writes a single (count, value) pair to the output stream.
 func writeRun(w *bufio.Writer, count uint32, value byte) error {
@@ -89,12 +85,12 @@ func Decode(r io.Reader, w io.Writer) error {
 	magic := make([]byte, 4)
 	if _, err := io.ReadFull(br, magic); err != nil {
 		if err == io.EOF || err == io.ErrUnexpectedEOF {
-			return fmt.Errorf("cannot read magic number: %w", err)
+			return codec.NewError(codec.KindTruncated, "cannot read magic number")
 		}
-		return fmt.Errorf("failed to read magic: %w", err)
+		return codec.WrapError(codec.KindTruncated, "failed to read magic", err)
 	}
 	if string(magic) != rleMagic {
-		return ErrInvalidMagic
+		return codec.NewError(codec.KindCorrupt, "invalid RLE file: bad magic number")
 	}
 
 	buf := make([]byte, 4096)
@@ -107,24 +103,24 @@ func Decode(r io.Reader, w io.Writer) error {
 				break
 			}
 			if err == io.ErrUnexpectedEOF {
-				return fmt.Errorf("RLE data truncated: cannot read complete count field")
+				return codec.NewError(codec.KindTruncated, "RLE data truncated: cannot read complete count field")
 			}
-			return fmt.Errorf("failed to read count: %w", err)
+			return codec.WrapError(codec.KindTruncated, "failed to read count", err)
 		}
 		if count == 0 {
-			return fmt.Errorf("invalid RLE data: count should not be 0")
+			return codec.NewError(codec.KindCorrupt, "invalid RLE data: count should not be 0")
 		}
 
 		if totalWritten+uint64(count) > MaxOutputSize {
-			return fmt.Errorf("output size limit exceeded (max %d bytes)", MaxOutputSize)
+			return codec.NewError(codec.KindSizeLimit, fmt.Sprintf("output size limit exceeded (max %d bytes)", MaxOutputSize))
 		}
 
 		value, err := br.ReadByte()
 		if err != nil {
 			if err == io.EOF {
-				return fmt.Errorf("RLE data truncated: missing value byte")
+				return codec.NewError(codec.KindTruncated, "RLE data truncated: missing value byte")
 			}
-			return fmt.Errorf("failed to read value: %w", err)
+			return codec.WrapError(codec.KindTruncated, "failed to read value", err)
 		}
 
 		for count > 0 {
@@ -136,7 +132,7 @@ func Decode(r io.Reader, w io.Writer) error {
 				buf[i] = value
 			}
 			if _, err := bw.Write(buf[:chunk]); err != nil {
-				return fmt.Errorf("failed to write decoded data: %w", err)
+				return codec.WrapError(codec.KindCorrupt, "failed to write decoded data", err)
 			}
 			totalWritten += uint64(chunk)
 			count -= uint32(chunk)

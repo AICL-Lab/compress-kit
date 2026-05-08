@@ -427,7 +427,7 @@ fn run_encode(input_path: &str, output_path: &str) -> io::Result<()> {
             format!("cannot open input file for reading: {input_path}: {e}"),
         )
     })?;
-    let mut encoder = huffman::StreamingEncoder::new();
+    let mut encoder = huffman::new_encoder();
     let encoded = encode_buffer(&mut encoder, &input)
         .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
     std::fs::write(output_path, encoded).map_err(|e| {
@@ -445,7 +445,7 @@ fn run_decode(input_path: &str, output_path: &str) -> io::Result<()> {
             format!("cannot open input file for reading: {input_path}: {e}"),
         )
     })?;
-    let mut decoder = huffman::StreamingDecoder::new();
+    let mut decoder = huffman::new_decoder();
     let decoded = decode_buffer(&mut decoder, &input)
         .map_err(|e| io::Error::new(io::ErrorKind::Other, e.to_string()))?;
     std::fs::write(output_path, decoded).map_err(|e| {

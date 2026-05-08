@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::fmt;
+use std::io;
 
 /// Lifecycle state of an encoder or decoder.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -57,3 +58,76 @@ impl Error for CodecError {}
 /// Security limits.
 pub const MAX_INPUT_SIZE: usize = 4 * 1024 * 1024 * 1024; // 4 GiB
 pub const MAX_OUTPUT_SIZE: usize = 1024 * 1024 * 1024; // 1 GiB
+
+/// Converts an io::Error to a CodecError.
+///
+/// This is a standard conversion used by algorithms that internally use io::Error
+/// but need to return CodecError for the streaming API.
+///
+/// # Example
+///
+/// ```ignore
+/// use compresskit_codec::codec::io_error_to_codec_error;
+///
+/// let io_err = io::Error::new(io::ErrorKind::UnexpectedEof, "truncated");
+/// let codec_err = io_error_to_codec_error(io_err);
+/// assert_eq!(codec_err, CodecError::Truncated);
+/// ```
+pub fn io_error_to_codec_error(e: io::Error) -> CodecError {
+    match e.kind() {
+        io::ErrorKind::UnexpectedEof => CodecError::Truncated,
+        io::ErrorKind::InvalidData => {
+            let msg = e.to_string();
+            if msg.contains("truncated") || msg.contains("too short") {
+                CodecError::Truncated
+            } else if msg.contains("invalid") || msg.contains("bad") {
+                CodecError::Corrupt
+            } else {
+                CodecError::Other(msg)
+            }
+        }
+        _ => CodecError::Other(e.to_string()),
+    }
+}
+
+/// Converts an io::Error to a CodecError using a wrapper function.
+///
+/// This is useful for mapping errors in Result types.
+pub fn map_io_error<T>(result: Result<T, io::Error>) -> Result<T, CodecError> {
+    result.map_err(io_error_to_codec_error)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn io_error_truncated() {
+        let err = io::Error::new(io::ErrorKind::UnexpectedEof, "eof");
+        assert_eq!(io_error_to_codec_error(err), CodecError::Truncated);
+    }
+
+    #[test]
+    fn io_error_invalid_data_truncated() {
+        let err = io::Error::new(io::ErrorKind::InvalidData, "truncated data");
+        assert_eq!(io_error_to_codec_error(err), CodecError::Truncated);
+    }
+
+    #[test]
+    fn io_error_invalid_data_corrupt() {
+        let err = io::Error::new(io::ErrorKind::InvalidData, "invalid magic");
+        assert_eq!(io_error_to_codec_error(err), CodecError::Corrupt);
+    }
+
+    #[test]
+    fn io_error_invalid_data_other() {
+        let err = io::Error::new(io::ErrorKind::InvalidData, "unknown issue");
+        assert!(matches!(io_error_to_codec_error(err), CodecError::Other(_)));
+    }
+
+    #[test]
+    fn io_error_other() {
+        let err = io::Error::new(io::ErrorKind::PermissionDenied, "access denied");
+        assert!(matches!(io_error_to_codec_error(err), CodecError::Other(_)));
+    }
+}

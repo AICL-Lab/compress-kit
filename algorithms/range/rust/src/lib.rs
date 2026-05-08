@@ -292,7 +292,7 @@ pub fn decode(encoded: &[u8]) -> Result<Vec<u8>, RangeError> {
 
 // Streaming adapters
 use compresskit_codec::codec::{
-    CodecError, Decoder as CodecDecoder, Encoder as CodecEncoder, State, MAX_INPUT_SIZE,
+    BufferedDecoder, BufferedEncoder, CodecError, Decoder, Encoder,
 };
 
 impl From<RangeError> for CodecError {
@@ -309,200 +309,22 @@ impl From<RangeError> for CodecError {
     }
 }
 
-pub struct StreamingEncoder {
-    state: State,
-    buffer: Vec<u8>,
-    total_input: usize,
+/// Creates a new streaming Range encoder.
+pub fn new_encoder() -> impl Encoder {
+    BufferedEncoder::new(range_encode)
 }
 
-impl StreamingEncoder {
-    pub fn new() -> Self {
-        StreamingEncoder {
-            state: State::Ready,
-            buffer: Vec::new(),
-            total_input: 0,
-        }
-    }
+/// Creates a new streaming Range decoder.
+pub fn new_decoder() -> impl Decoder {
+    BufferedDecoder::new(range_decode)
 }
 
-impl Default for StreamingEncoder {
-    fn default() -> Self {
-        Self::new()
-    }
+fn range_encode(input: &[u8]) -> Result<Vec<u8>, CodecError> {
+    encode(input).map_err(CodecError::from)
 }
 
-impl CodecEncoder for StreamingEncoder {
-    fn process(&mut self, input: &[u8], _output: &mut [u8]) -> Result<usize, CodecError> {
-        match self.state {
-            State::Ready | State::Flushing => {
-                if self.total_input > MAX_INPUT_SIZE.saturating_sub(input.len()) {
-                    self.state = State::Error;
-                    return Err(CodecError::SizeLimit);
-                }
-                self.state = State::Streaming;
-                self.buffer.extend_from_slice(input);
-                self.total_input += input.len();
-                Ok(0)
-            }
-            State::Streaming => {
-                if self.total_input > MAX_INPUT_SIZE.saturating_sub(input.len()) {
-                    self.state = State::Error;
-                    return Err(CodecError::SizeLimit);
-                }
-                self.buffer.extend_from_slice(input);
-                self.total_input += input.len();
-                Ok(0)
-            }
-            State::Finished => {
-                self.state = State::Error;
-                Err(CodecError::InvalidState)
-            }
-            State::Error => Err(CodecError::InvalidState),
-        }
-    }
-
-    fn flush(&mut self, _output: &mut [u8]) -> Result<usize, CodecError> {
-        match self.state {
-            State::Ready => Ok(0),
-            State::Streaming => {
-                self.state = State::Flushing;
-                Ok(0)
-            }
-            State::Flushing => Ok(0),
-            State::Finished => {
-                self.state = State::Error;
-                Err(CodecError::InvalidState)
-            }
-            State::Error => Err(CodecError::InvalidState),
-        }
-    }
-
-    fn finish(&mut self, output: &mut [u8]) -> Result<usize, CodecError> {
-        match self.state {
-            State::Ready | State::Streaming | State::Flushing => {
-                let encoded = encode(&self.buffer)?;
-                if output.len() < encoded.len() {
-                    return Err(CodecError::BufTooSmall);
-                }
-                output[..encoded.len()].copy_from_slice(&encoded);
-                self.state = State::Finished;
-                Ok(encoded.len())
-            }
-            State::Finished => {
-                self.state = State::Error;
-                Err(CodecError::InvalidState)
-            }
-            State::Error => Err(CodecError::InvalidState),
-        }
-    }
-
-    fn reset(&mut self) {
-        self.state = State::Ready;
-        self.buffer.clear();
-        self.total_input = 0;
-    }
-
-    fn state(&self) -> State {
-        self.state
-    }
-}
-
-pub struct StreamingDecoder {
-    state: State,
-    buffer: Vec<u8>,
-    total_input: usize,
-}
-
-impl StreamingDecoder {
-    pub fn new() -> Self {
-        StreamingDecoder {
-            state: State::Ready,
-            buffer: Vec::new(),
-            total_input: 0,
-        }
-    }
-}
-
-impl Default for StreamingDecoder {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl CodecDecoder for StreamingDecoder {
-    fn process(&mut self, input: &[u8], _output: &mut [u8]) -> Result<usize, CodecError> {
-        match self.state {
-            State::Ready | State::Flushing => {
-                if self.total_input > MAX_INPUT_SIZE.saturating_sub(input.len()) {
-                    self.state = State::Error;
-                    return Err(CodecError::SizeLimit);
-                }
-                self.state = State::Streaming;
-                self.buffer.extend_from_slice(input);
-                self.total_input += input.len();
-                Ok(0)
-            }
-            State::Streaming => {
-                if self.total_input > MAX_INPUT_SIZE.saturating_sub(input.len()) {
-                    self.state = State::Error;
-                    return Err(CodecError::SizeLimit);
-                }
-                self.buffer.extend_from_slice(input);
-                self.total_input += input.len();
-                Ok(0)
-            }
-            State::Finished => {
-                self.state = State::Error;
-                Err(CodecError::InvalidState)
-            }
-            State::Error => Err(CodecError::InvalidState),
-        }
-    }
-
-    fn flush(&mut self, _output: &mut [u8]) -> Result<usize, CodecError> {
-        match self.state {
-            State::Ready => Ok(0),
-            State::Streaming => {
-                self.state = State::Flushing;
-                Ok(0)
-            }
-            State::Flushing => Ok(0),
-            State::Finished => {
-                self.state = State::Error;
-                Err(CodecError::InvalidState)
-            }
-            State::Error => Err(CodecError::InvalidState),
-        }
-    }
-
-    fn finish(&mut self, output: &mut [u8]) -> Result<usize, CodecError> {
-        match self.state {
-            State::Ready | State::Streaming | State::Flushing => {
-                let decoded = decode(&self.buffer)?;
-                if output.len() < decoded.len() {
-                    return Err(CodecError::BufTooSmall);
-                }
-                output[..decoded.len()].copy_from_slice(&decoded);
-                self.state = State::Finished;
-                Ok(decoded.len())
-            }
-            State::Finished => {
-                self.state = State::Error;
-                Err(CodecError::InvalidState)
-            }
-            State::Error => Err(CodecError::InvalidState),
-        }
-    }
-
-    fn reset(&mut self) {
-        self.state = State::Ready;
-        self.buffer.clear();
-        self.total_input = 0;
-    }
-
-    fn state(&self) -> State {
-        self.state
-    }
+fn range_decode(input: &[u8]) -> Result<Vec<u8>, CodecError> {
+    decode(input).map_err(CodecError::from)
 }
 
 #[cfg(test)]

@@ -1,7 +1,39 @@
+// Package codec_test implements the Streaming API Contract Test Suite.
+//
+// This file implements the contract test cases defined in:
+// tests/streaming_api_contract/contract_cases.md
+//
+// Contract Test Case Coverage:
+//
+// Lifecycle Tests (L1-L7):
+//   - L1: TestLifecycle_EmptyInput - empty input scenario
+//   - L2: TestLifecycle_SingleByte - single-byte input
+//   - L3: TestLifecycle_ChunkedInput - chunked input where output is delayed
+//   - L4: TestLifecycle_FlushWithoutFinish - flush without finish
+//   - L5: TestLifecycle_FinishAfterMultipleProcess - finish after multiple process calls
+//   - L6: TestLifecycle_ResetAfterFinish - reset after finish
+//   - L7: TestLifecycle_ResetAfterError - reset after error
+//
+// Buffer Contract Tests (B1-B3):
+//   - B1: TestBuffer_BufTooSmallTransactional - BUF_TOO_SMALL is transactional
+//   - B2: TestBuffer_EncodeFullPath - buffer encode full path
+//   - B3: TestBuffer_DecodeFullPath - buffer decode full path
+//
+// Error Handling Tests (E1-E5):
+//   - E1: TestError_TruncatedFrame - truncated frame on decode
+//   - E2: (partial) TestError_TruncatedFrame - corrupt data detection
+//   - E3: TestConstants - input size limit (4 GiB)
+//   - E4: TestConstants - output size limit (1 GiB)
+//   - E5: (covered in L5) - invalid state transitions
+//
+// Cross-Algorithm Tests (X1-X2):
+//   - X1: All tests run for all 4 algorithms (Huffman, Arithmetic, Range, RLE)
+//   - X2: Buffer API tests verify equivalence with streaming API
 package codec_test
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 
 	"arithmetic"
@@ -584,7 +616,7 @@ func TestError_TruncatedFrame(t *testing.T) {
 	// Try to decode
 	dec := huffman.NewStreamingDecoder()
 	_, err = codec.DecodeBuffer(dec, truncated)
-	if err != codec.ErrTruncated && err != codec.ErrCorrupt {
+	if !errors.Is(err, codec.ErrTruncated) && !errors.Is(err, codec.ErrCorrupt) {
 		t.Errorf("DecodeBuffer() error = %v, want ErrTruncated or ErrCorrupt", err)
 	}
 }
@@ -599,7 +631,7 @@ func TestError_ArithmeticTruncatedFrame(t *testing.T) {
 
 	truncated := encoded[:len(encoded)/2]
 	_, err = codec.DecodeBuffer(arithmetic.NewStreamingDecoder(), truncated)
-	if err != codec.ErrTruncated && err != codec.ErrCorrupt {
+	if !errors.Is(err, codec.ErrTruncated) && !errors.Is(err, codec.ErrCorrupt) {
 		t.Fatalf("DecodeBuffer() error = %v, want ErrTruncated or ErrCorrupt", err)
 	}
 }

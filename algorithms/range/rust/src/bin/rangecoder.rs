@@ -1,5 +1,4 @@
 use compresskit_codec::codec::{decode_buffer, encode_buffer};
-use rangecoder::{StreamingDecoder, StreamingEncoder};
 use std::env;
 use std::fs;
 use std::process;
@@ -35,7 +34,7 @@ fn main() {
 
 fn run_encode(input_path: &str, output_path: &str) -> Result<(), Box<dyn std::error::Error>> {
     let data = fs::read(input_path)?;
-    let mut encoder = StreamingEncoder::new();
+    let mut encoder = rangecoder::new_encoder();
     let encoded = encode_buffer(&mut encoder, &data)?;
     fs::write(output_path, &encoded)?;
     Ok(())
@@ -43,7 +42,7 @@ fn run_encode(input_path: &str, output_path: &str) -> Result<(), Box<dyn std::er
 
 fn run_decode(input_path: &str, output_path: &str) -> Result<(), Box<dyn std::error::Error>> {
     let data = fs::read(input_path)?;
-    let mut decoder = StreamingDecoder::new();
+    let mut decoder = rangecoder::new_decoder();
     let decoded = decode_buffer(&mut decoder, &data)?;
     fs::write(output_path, &decoded)?;
     Ok(())

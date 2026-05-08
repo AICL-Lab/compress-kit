@@ -218,14 +218,14 @@ func WriteFrequencies(w io.Writer, freq []uint32) error {
 func ReadFrequencies(r io.Reader) ([]uint32, error) {
 	var count uint32
 	if err := binary.Read(r, binary.LittleEndian, &count); err != nil {
-		return nil, fmt.Errorf("failed to read frequency table: %w", err)
+		return nil, codec.WrapError(codec.KindTruncated, "failed to read frequency table", err)
 	}
 	if count != uint32(SymbolLimit) {
-		return nil, fmt.Errorf("invalid frequency table size: %d", count)
+		return nil, codec.NewError(codec.KindCorrupt, fmt.Sprintf("invalid frequency table size: %d", count))
 	}
 	freq := make([]uint32, count)
 	if err := binary.Read(r, binary.LittleEndian, freq); err != nil {
-		return nil, fmt.Errorf("failed to read frequency table: %w", err)
+		return nil, codec.WrapError(codec.KindTruncated, "failed to read frequency table", err)
 	}
 	return freq, nil
 }
@@ -307,7 +307,7 @@ func Decode(r io.Reader, w io.Writer) error {
 
 	magic := make([]byte, 4)
 	if _, err := io.ReadFull(br, magic); err != nil || magic[0] != 'H' || magic[1] != 'F' || magic[2] != 'M' || magic[3] != 'N' {
-		return fmt.Errorf("invalid input file format")
+		return codec.NewError(codec.KindCorrupt, "invalid input file format")
 	}
 
 	freq, err := ReadFrequencies(br)
@@ -316,7 +316,7 @@ func Decode(r io.Reader, w io.Writer) error {
 	}
 	root := BuildTree(freq)
 	if root == nil {
-		return fmt.Errorf("decode failed")
+		return codec.NewError(codec.KindCorrupt, "decode failed")
 	}
 
 	bw := bufio.NewWriter(w)
@@ -331,13 +331,13 @@ func Decode(r io.Reader, w io.Writer) error {
 			if node.Left != nil {
 				node = node.Left
 			} else {
-				return fmt.Errorf("input data corrupted or truncated")
+				return codec.NewError(codec.KindCorrupt, "input data corrupted or truncated")
 			}
 		} else {
 			if node.Right != nil {
 				node = node.Right
 			} else {
-				return fmt.Errorf("input data corrupted or truncated")
+				return codec.NewError(codec.KindCorrupt, "input data corrupted or truncated")
 			}
 		}
 		if node.IsLeaf() {
@@ -347,7 +347,7 @@ func Decode(r io.Reader, w io.Writer) error {
 			}
 			totalWritten++
 			if totalWritten > codec.MaxOutputSize {
-				return fmt.Errorf("output size limit exceeded")
+				return codec.NewError(codec.KindSizeLimit, "output size limit exceeded")
 			}
 			if err := bw.WriteByte(byte(node.Symbol)); err != nil {
 				return err
@@ -360,7 +360,7 @@ func Decode(r io.Reader, w io.Writer) error {
 	}
 
 	if !sawEOF {
-		return fmt.Errorf("input data corrupted or truncated")
+		return codec.NewError(codec.KindTruncated, "input data corrupted or truncated")
 	}
 	return bw.Flush()
 }

@@ -348,14 +348,14 @@ func WriteFrequencies(w io.Writer, freq []uint32) error {
 func ReadFrequencies(r io.Reader) ([]uint32, error) {
 	var count uint32
 	if err := binary.Read(r, binary.LittleEndian, &count); err != nil {
-		return nil, fmt.Errorf("failed to read frequency table: %w", err)
+		return nil, codec.WrapError(codec.KindTruncated, "failed to read frequency table", err)
 	}
 	if count != uint32(SymbolLimit) {
-		return nil, fmt.Errorf("invalid frequency table size: %d", count)
+		return nil, codec.NewError(codec.KindCorrupt, fmt.Sprintf("invalid frequency table size: %d", count))
 	}
 	freq := make([]uint32, count)
 	if err := binary.Read(r, binary.LittleEndian, freq); err != nil {
-		return nil, fmt.Errorf("failed to read frequency table: %w", err)
+		return nil, codec.WrapError(codec.KindTruncated, "failed to read frequency table", err)
 	}
 	return freq, nil
 }
@@ -405,7 +405,7 @@ func Decode(r io.Reader, w io.Writer) error {
 
 	magic := make([]byte, 4)
 	if _, err := io.ReadFull(br, magic); err != nil || string(magic) != "AENC" {
-		return fmt.Errorf("invalid input file format")
+		return codec.NewError(codec.KindCorrupt, "invalid input file format")
 	}
 
 	freq, err := ReadFrequencies(br)
@@ -426,7 +426,7 @@ func Decode(r io.Reader, w io.Writer) error {
 		}
 		totalWritten++
 		if totalWritten > codec.MaxOutputSize {
-			return fmt.Errorf("output size limit exceeded")
+			return codec.NewError(codec.KindSizeLimit, "output size limit exceeded")
 		}
 		if err := bw.WriteByte(byte(sym)); err != nil {
 			return err

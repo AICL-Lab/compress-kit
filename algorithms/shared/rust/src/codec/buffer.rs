@@ -25,6 +25,46 @@ fn encode_buffer_limit(input_len: usize) -> Result<usize, CodecError> {
         .ok_or(CodecError::SizeLimit)
 }
 
+type BufferStep<'a> = dyn FnMut(&mut [u8]) -> Result<usize, CodecError> + 'a;
+
+fn run_buffer_step(
+    out_buf: &mut Vec<u8>,
+    total_written: usize,
+    limit: usize,
+    step: &mut BufferStep<'_>,
+) -> Result<usize, CodecError> {
+    let mut total_written = total_written;
+
+    loop {
+        let available = out_buf.len().saturating_sub(total_written);
+        match step(&mut out_buf[total_written..]) {
+            Ok(n) => {
+                total_written = total_written.checked_add(n).ok_or(CodecError::SizeLimit)?;
+                if total_written > limit {
+                    return Err(CodecError::SizeLimit);
+                }
+                return Ok(total_written);
+            }
+            Err(CodecError::BufTooSmall) => {
+                total_written = total_written
+                    .checked_add(available)
+                    .ok_or(CodecError::SizeLimit)?;
+                if total_written > limit || out_buf.len() >= limit {
+                    return Err(CodecError::SizeLimit);
+                }
+
+                let new_size = grow_buffer(out_buf.len(), limit);
+                if new_size <= out_buf.len() {
+                    return Err(CodecError::SizeLimit);
+                }
+
+                out_buf.resize(new_size, 0);
+            }
+            Err(err) => return Err(err),
+        }
+    }
+}
+
 /// EncodeBuffer is a convenience function that encodes input using the streaming API.
 /// Equivalent to: new encoder → Process(input) → Finish() → collect output.
 ///
@@ -44,56 +84,11 @@ pub fn encode_buffer(encoder: &mut dyn Encoder, input: &[u8]) -> Result<Vec<u8>,
         .saturating_add(2048)
         .min(encode_limit);
     let mut out_buf = vec![0u8; initial_size];
-    let mut total_written = 0;
+    let mut process = |output: &mut [u8]| encoder.process(input, output);
+    let mut total_written = run_buffer_step(&mut out_buf, 0, encode_limit, &mut process)?;
 
-    // Process input
-    loop {
-        match encoder.process(input, &mut out_buf[total_written..]) {
-            Ok(n) => {
-                total_written += n;
-                break;
-            }
-            Err(CodecError::BufTooSmall) => {
-                if total_written > encode_limit {
-                    return Err(CodecError::SizeLimit);
-                }
-                if out_buf.len() >= encode_limit {
-                    return Err(CodecError::SizeLimit);
-                }
-                let new_size = grow_buffer(out_buf.len(), encode_limit);
-                if new_size <= out_buf.len() {
-                    return Err(CodecError::SizeLimit);
-                }
-                out_buf.resize(new_size, 0);
-            }
-            Err(e) => return Err(e),
-        }
-    }
-
-    // Finish encoding
-    loop {
-        match encoder.finish(&mut out_buf[total_written..]) {
-            Ok(n) => {
-                total_written += n;
-                break;
-            }
-            Err(CodecError::BufTooSmall) => {
-                if out_buf.len() >= encode_limit {
-                    return Err(CodecError::SizeLimit);
-                }
-                let new_size = grow_buffer(out_buf.len(), encode_limit);
-                if new_size <= out_buf.len() {
-                    return Err(CodecError::SizeLimit);
-                }
-                out_buf.resize(new_size, 0);
-            }
-            Err(e) => return Err(e),
-        }
-    }
-
-    if total_written > encode_limit {
-        return Err(CodecError::SizeLimit);
-    }
+    let mut finish = |output: &mut [u8]| encoder.finish(output);
+    total_written = run_buffer_step(&mut out_buf, total_written, encode_limit, &mut finish)?;
 
     out_buf.truncate(total_written);
     Ok(out_buf)
@@ -112,56 +107,11 @@ pub fn decode_buffer(decoder: &mut dyn Decoder, input: &[u8]) -> Result<Vec<u8>,
     // Decode typically expands, so start with input size and grow as needed.
     let initial_size = input.len().saturating_add(1024);
     let mut out_buf = vec![0u8; initial_size];
-    let mut total_written = 0;
+    let mut process = |output: &mut [u8]| decoder.process(input, output);
+    let mut total_written = run_buffer_step(&mut out_buf, 0, MAX_OUTPUT_SIZE, &mut process)?;
 
-    // Process input
-    loop {
-        match decoder.process(input, &mut out_buf[total_written..]) {
-            Ok(n) => {
-                total_written += n;
-                break;
-            }
-            Err(CodecError::BufTooSmall) => {
-                if total_written > MAX_OUTPUT_SIZE {
-                    return Err(CodecError::SizeLimit);
-                }
-                if out_buf.len() >= MAX_OUTPUT_SIZE {
-                    return Err(CodecError::SizeLimit);
-                }
-                let new_size = grow_buffer(out_buf.len(), MAX_OUTPUT_SIZE);
-                if new_size <= out_buf.len() {
-                    return Err(CodecError::SizeLimit);
-                }
-                out_buf.resize(new_size, 0);
-            }
-            Err(e) => return Err(e),
-        }
-    }
-
-    // Finish decoding
-    loop {
-        match decoder.finish(&mut out_buf[total_written..]) {
-            Ok(n) => {
-                total_written += n;
-                break;
-            }
-            Err(CodecError::BufTooSmall) => {
-                if out_buf.len() >= MAX_OUTPUT_SIZE {
-                    return Err(CodecError::SizeLimit);
-                }
-                let new_size = grow_buffer(out_buf.len(), MAX_OUTPUT_SIZE);
-                if new_size <= out_buf.len() {
-                    return Err(CodecError::SizeLimit);
-                }
-                out_buf.resize(new_size, 0);
-            }
-            Err(e) => return Err(e),
-        }
-    }
-
-    if total_written > MAX_OUTPUT_SIZE {
-        return Err(CodecError::SizeLimit);
-    }
+    let mut finish = |output: &mut [u8]| decoder.finish(output);
+    total_written = run_buffer_step(&mut out_buf, total_written, MAX_OUTPUT_SIZE, &mut finish)?;
 
     out_buf.truncate(total_written);
     Ok(out_buf)

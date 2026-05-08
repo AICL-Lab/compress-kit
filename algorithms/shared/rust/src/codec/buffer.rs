@@ -93,11 +93,11 @@ pub fn encode_buffer(encoder: &mut dyn Encoder, input: &[u8]) -> Result<Vec<u8>,
     Ok(out_buf)
 }
 
-/// DecodeBuffer is a convenience function that decodes input using the streaming API.
-/// Equivalent to: new decoder → Process(input) → Finish() → collect output.
-///
-/// Returns the complete decoded output or an error.
-pub fn decode_buffer(decoder: &mut dyn Decoder, input: &[u8]) -> Result<Vec<u8>, CodecError> {
+pub(crate) fn decode_buffer_with_limit(
+    decoder: &mut dyn Decoder,
+    input: &[u8],
+    limit: usize,
+) -> Result<Vec<u8>, CodecError> {
     if input.len() > MAX_INPUT_SIZE {
         return Err(CodecError::SizeLimit);
     }
@@ -107,11 +107,19 @@ pub fn decode_buffer(decoder: &mut dyn Decoder, input: &[u8]) -> Result<Vec<u8>,
     let initial_size = input.len().saturating_add(1024);
     let mut out_buf = vec![0u8; initial_size];
     let mut process = |output: &mut [u8]| decoder.process(input, output);
-    let mut total_written = run_buffer_step(&mut out_buf, 0, MAX_OUTPUT_SIZE, &mut process)?;
+    let mut total_written = run_buffer_step(&mut out_buf, 0, limit, &mut process)?;
 
     let mut finish = |output: &mut [u8]| decoder.finish(output);
-    total_written = run_buffer_step(&mut out_buf, total_written, MAX_OUTPUT_SIZE, &mut finish)?;
+    total_written = run_buffer_step(&mut out_buf, total_written, limit, &mut finish)?;
 
     out_buf.truncate(total_written);
     Ok(out_buf)
+}
+
+/// DecodeBuffer is a convenience function that decodes input using the streaming API.
+/// Equivalent to: new decoder → Process(input) → Finish() → collect output.
+///
+/// Returns the complete decoded output or an error.
+pub fn decode_buffer(decoder: &mut dyn Decoder, input: &[u8]) -> Result<Vec<u8>, CodecError> {
+    decode_buffer_with_limit(decoder, input, MAX_OUTPUT_SIZE)
 }

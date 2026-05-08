@@ -1,5 +1,19 @@
 use compresskit_codec::codec::{decode_buffer, encode_buffer, CodecError, Decoder, Encoder, State};
 
+mod codec {
+    pub mod encoder {
+        pub use compresskit_codec::codec::{Decoder, Encoder};
+    }
+
+    pub mod error {
+        pub use compresskit_codec::codec::{CodecError, MAX_INPUT_SIZE, MAX_OUTPUT_SIZE};
+    }
+}
+
+#[allow(dead_code)]
+#[path = "../src/codec/buffer.rs"]
+mod internal_buffer;
+
 const ENCODE_SUFFIX: &[u8] = b"tail";
 const ENCODE_BODY: &[u8] = b"body";
 const DECODE_SUFFIX: &[u8] = b"done";
@@ -188,6 +202,33 @@ impl Encoder for LimitHitProcessEncoder {
     }
 }
 
+struct LimitHitProcessDecoder {
+    process_calls: usize,
+    finish_calls: usize,
+}
+
+impl Decoder for LimitHitProcessDecoder {
+    fn process(&mut self, _: &[u8], _: &mut [u8]) -> Result<usize, CodecError> {
+        self.process_calls += 1;
+        Err(CodecError::BufTooSmall)
+    }
+
+    fn flush(&mut self, _: &mut [u8]) -> Result<usize, CodecError> {
+        Ok(0)
+    }
+
+    fn finish(&mut self, _: &mut [u8]) -> Result<usize, CodecError> {
+        self.finish_calls += 1;
+        Err(CodecError::Other("finish should not be called".into()))
+    }
+
+    fn reset(&mut self) {}
+
+    fn state(&self) -> State {
+        State::Streaming
+    }
+}
+
 #[test]
 fn encode_buffer_retries_process_transactionally() {
     let mut encoder = RetryProcessEncoder {
@@ -264,4 +305,18 @@ fn encode_buffer_stops_growing_at_encode_limit_boundary() {
     assert_eq!(err, CodecError::SizeLimit);
     assert_eq!(encoder.process_calls, 1);
     assert_eq!(encoder.finish_calls, 0);
+}
+
+#[test]
+fn decode_buffer_stops_growing_at_decode_limit_boundary() {
+    let mut decoder = LimitHitProcessDecoder {
+        process_calls: 0,
+        finish_calls: 0,
+    };
+
+    let err = internal_buffer::decode_buffer_with_limit(&mut decoder, b"", 1024).unwrap_err();
+
+    assert_eq!(err, CodecError::SizeLimit);
+    assert_eq!(decoder.process_calls, 1);
+    assert_eq!(decoder.finish_calls, 0);
 }

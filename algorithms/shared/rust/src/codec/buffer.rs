@@ -36,7 +36,6 @@ fn run_buffer_step(
     let mut total_written = total_written;
 
     loop {
-        let available = out_buf.len().saturating_sub(total_written);
         match step(&mut out_buf[total_written..]) {
             Ok(n) => {
                 total_written = total_written.checked_add(n).ok_or(CodecError::SizeLimit)?;
@@ -46,9 +45,6 @@ fn run_buffer_step(
                 return Ok(total_written);
             }
             Err(CodecError::BufTooSmall) => {
-                total_written = total_written
-                    .checked_add(available)
-                    .ok_or(CodecError::SizeLimit)?;
                 if total_written > limit || out_buf.len() >= limit {
                     return Err(CodecError::SizeLimit);
                 }

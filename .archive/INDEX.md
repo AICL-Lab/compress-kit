@@ -1,17 +1,24 @@
 # Archive Index
 
-This directory contains historical artifacts retained for reference.
+本目录包含历史存档文档，仅供参考。
 
-## Contents
+## 目录结构
 
 ### specs-legacy-20260423/
+归档于 2026-04-23。包含已废弃的规范文档。
 
-Archived on 2026-04-23. Contains superseded specification documents.
+- `product/` - 旧产品需求（已被 `openspec/specs/encoding-project` 取代）
+- `rfc/` - 历史 RFC 文档（已实施或拒绝）
+- `testing/` - 旧测试规范（已被 `openspec/specs/cross-language-testing` 取代）
 
-- `product/` - Old product requirements (superseded by `openspec/specs/encoding-project`)
-- `rfc/` - Historical RFC documents (implemented or rejected)
-- `testing/` - Old testing specs (superseded by `openspec/specs/cross-language-testing`)
+### superpowers-20260508/
+归档于 2026-05-08。包含内部架构深化决策文档。
 
-## Related Archives
+- `architecture-deepening-summary.md` - 架构深化改进总结
+- `cpp-tempfile-adapter-evaluation.md` - C++ Temp-File 适配器解耦评估
+- `specs/` - 架构深化设计规范
+- `plans/` - 共享缓冲层深化实施计划
 
-- `openspec/changes/archive/` - Deferred or completed change proposals
+## 相关归档
+
+- `openspec/changes/archive/` - 延迟或已完成的变更提案

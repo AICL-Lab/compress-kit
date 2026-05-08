@@ -1,5 +1,7 @@
 package codec
 
+const encodeBufferInitialSlack = 2048 // Extra room for small outputs before the first retry.
+
 func growBuffer(currentLen int, limit int) int {
 	if currentLen <= 0 {
 		if limit < 1024 {
@@ -18,14 +20,13 @@ func growBuffer(currentLen int, limit int) int {
 }
 
 func encodeBufferLimit(inputLen int) (int, error) {
-	const overhead = 2048
 	if inputLen < 0 {
 		return 0, ErrSizeLimit
 	}
-	if inputLen > (int(^uint(0)>>1)-overhead)/8 {
+	if inputLen > (int(^uint(0)>>1)-encodeBufferInitialSlack)/8 {
 		return 0, ErrSizeLimit
 	}
-	return inputLen*8 + overhead, nil
+	return inputLen*8 + encodeBufferInitialSlack, nil
 }
 
 // EncodeBuffer is a convenience function that encodes input using the streaming API.
@@ -42,7 +43,7 @@ func EncodeBuffer(encoder Encoder, input []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	return encodeBufferWithLimit(encoder, input, len(input)*2+2048, encodeLimit)
+	return encodeBufferWithLimit(encoder, input, len(input)*2+encodeBufferInitialSlack, encodeLimit)
 }
 
 func encodeBufferWithLimit(encoder Encoder, input []byte, initialSize int, limit int) ([]byte, error) {
@@ -88,6 +89,10 @@ func DecodeBuffer(decoder Decoder, input []byte) ([]byte, error) {
 }
 
 func decodeBufferWithLimit(decoder Decoder, input []byte, initialSize int, limit int) ([]byte, error) {
+	if initialSize > limit {
+		initialSize = limit
+	}
+
 	outBuf := make([]byte, initialSize)
 	totalWritten := 0
 

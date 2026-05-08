@@ -1,7 +1,13 @@
 package codec
 
+// bufferStep appends output into the provided slice window.
+// If it returns ErrBufTooSmall, the reported byte count must already be copied
+// into out so runBufferStep can preserve that partial output before retrying.
 type bufferStep func(out []byte) (int, error)
 
+// runBufferStep owns the buffer-layer retry policy for BUF_TOO_SMALL handling.
+// It grows the caller-owned output buffer, preserves transactional partial
+// writes reported with ErrBufTooSmall, and stops at ErrSizeLimit.
 func runBufferStep(outBuf []byte, totalWritten int, limit int, step bufferStep) ([]byte, int, error) {
 	for {
 		n, err := step(outBuf[totalWritten:])

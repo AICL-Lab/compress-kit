@@ -106,6 +106,9 @@ type scriptedEncoder struct {
 }
 
 func (e *scriptedEncoder) Process(in []byte, out []byte) (int, error) {
+	if len(e.process) == 0 {
+		return 0, errors.New("scriptedEncoder.Process: script exhausted")
+	}
 	call := e.process[0]
 	e.process = e.process[1:]
 	copy(out, call.payload)
@@ -117,6 +120,9 @@ func (e *scriptedEncoder) Reset()                        {}
 func (e *scriptedEncoder) State() State                  { return StateStreaming }
 
 func (e *scriptedEncoder) Finish(out []byte) (int, error) {
+	if len(e.finish) == 0 {
+		return 0, errors.New("scriptedEncoder.Finish: script exhausted")
+	}
 	call := e.finish[0]
 	e.finish = e.finish[1:]
 	copy(out, call.payload)
@@ -129,6 +135,9 @@ type scriptedDecoder struct {
 }
 
 func (d *scriptedDecoder) Process(in []byte, out []byte) (int, error) {
+	if len(d.process) == 0 {
+		return 0, errors.New("scriptedDecoder.Process: script exhausted")
+	}
 	call := d.process[0]
 	d.process = d.process[1:]
 	copy(out, call.payload)
@@ -140,11 +149,28 @@ func (d *scriptedDecoder) Reset()                        {}
 func (d *scriptedDecoder) State() State                  { return StateStreaming }
 
 func (d *scriptedDecoder) Finish(out []byte) (int, error) {
+	if len(d.finish) == 0 {
+		return 0, errors.New("scriptedDecoder.Finish: script exhausted")
+	}
 	call := d.finish[0]
 	d.finish = d.finish[1:]
 	copy(out, call.payload)
 	return call.written, call.err
 }
+
+type captureBufferDecoder struct {
+	processLens []int
+}
+
+func (d *captureBufferDecoder) Process(in []byte, out []byte) (int, error) {
+	d.processLens = append(d.processLens, len(out))
+	return 0, nil
+}
+
+func (d *captureBufferDecoder) Flush(out []byte) (int, error)  { return 0, nil }
+func (d *captureBufferDecoder) Finish(out []byte) (int, error) { return 0, nil }
+func (d *captureBufferDecoder) Reset()                         {}
+func (d *captureBufferDecoder) State() State                   { return StateStreaming }
 
 func TestEncodeBuffer_PreservesOutputAcrossFinishRetry(t *testing.T) {
 	stub := &scriptedEncoder{
@@ -198,5 +224,31 @@ func TestDecodeBuffer_ReturnsSizeLimitWhenGrowthStops(t *testing.T) {
 	_, err := decodeBufferWithLimit(stub, []byte("ignored"), 1, 1)
 	if err != ErrSizeLimit {
 		t.Fatalf("decodeBufferWithLimit() error = %v, want ErrSizeLimit", err)
+	}
+}
+
+func TestDecodeBufferWithLimit_ClampsInitialSizeToLimit(t *testing.T) {
+	stub := &captureBufferDecoder{}
+
+	_, err := decodeBufferWithLimit(stub, []byte("ignored"), 8, 3)
+	if err != nil {
+		t.Fatalf("decodeBufferWithLimit() error = %v", err)
+	}
+	if len(stub.processLens) != 1 {
+		t.Fatalf("decodeBufferWithLimit() process calls = %d, want 1", len(stub.processLens))
+	}
+	if got := stub.processLens[0]; got != 3 {
+		t.Fatalf("decodeBufferWithLimit() initial buffer = %d, want 3", got)
+	}
+}
+
+func TestEncodeBuffer_ScriptExhaustionReturnsClearError(t *testing.T) {
+	stub := &scriptedEncoder{
+		process: []scriptedCall{{written: 0, err: nil}},
+	}
+
+	_, err := EncodeBuffer(stub, []byte("ignored"))
+	if err == nil || err.Error() != "scriptedEncoder.Finish: script exhausted" {
+		t.Fatalf("EncodeBuffer() error = %v, want scripted finish exhaustion", err)
 	}
 }

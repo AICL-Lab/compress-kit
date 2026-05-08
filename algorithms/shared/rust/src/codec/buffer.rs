@@ -27,6 +27,8 @@ fn encode_buffer_limit(input_len: usize) -> Result<usize, CodecError> {
 
 type BufferStep<'a> = dyn FnMut(&mut [u8]) -> Result<usize, CodecError> + 'a;
 
+/// Runs one streaming step (`process` or `finish`), retrying with a larger
+/// buffer when the codec reports `BufTooSmall`.
 fn run_buffer_step(
     out_buf: &mut Vec<u8>,
     total_written: usize,
@@ -45,7 +47,8 @@ fn run_buffer_step(
                 return Ok(total_written);
             }
             Err(CodecError::BufTooSmall) => {
-                if total_written > limit || out_buf.len() >= limit {
+                debug_assert!(total_written <= limit);
+                if out_buf.len() >= limit {
                     return Err(CodecError::SizeLimit);
                 }
 

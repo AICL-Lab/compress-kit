@@ -2,7 +2,7 @@
 
 See also: [Streaming API](/en/api/streaming)
 
-All C++ implementations remain single-file algorithm cores, but now share a C++17 streaming/buffer facade under `algorithms/shared/cpp/include/compresskit/`.
+All C++ implementations keep single-file algorithm cores, but now depend on a shared streaming/buffer facade under `algorithms/shared/cpp/include/compresskit/`.
 
 ## Compilation
 
@@ -101,9 +101,8 @@ Repeated `(count: uint32 LE, value: byte)` pairs.
 
 | Pattern | Description |
 |---------|-------------|
-| Single file | Each algorithm in one `main.cpp` |
-| Zero dependencies | Only standard library |
-| `#include <...>` | Standard library only |
+| Single-file core | Each algorithm core in one `main.cpp` |
+| Shared dependencies | Uses common code from `algorithms/shared/cpp/` |
 | Error handling | `fprintf(stderr, ...)` + `exit(1)` |
 | Memory management | `std::unique_ptr` with custom deleters |
 

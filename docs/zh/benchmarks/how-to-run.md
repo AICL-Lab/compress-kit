@@ -38,14 +38,18 @@ cd algorithms/rle/benchmark
 python3 bench.py
 ```
 
-## 测试数据
+## 基准测试配置
+
+### 测试数据
 
 | 文件 | 生成方式 | 大小 |
 |------|----------|------|
-| `random_1MiB.bin` | `os.urandom(1024*1024)` | 1 MiB |
-| `random_10MiB.bin` | `os.urandom(10*1024*1024)` | 10 MiB |
-| `repetitive_1MiB.bin` | 重复 256 字节模式 | 1 MiB |
-| `textli_1MiB.bin` | 加权英文字母 | 1 MiB |
+| `tests/data/random_1MiB.bin` | `os.urandom(1024*1024)` | 1 MiB |
+| `tests/data/random_10MiB.bin` | `os.urandom(10*1024*1024)` | 10 MiB |
+| `tests/data/repetitive_1MiB.bin` | 重复 256 字节模式 | 1 MiB |
+| `tests/data/repetitive_10MiB.bin` | 重复 256 字节模式 | 10 MiB |
+| `tests/data/textli_1MiB.bin` | 加权英文字母 | 1 MiB |
+| `tests/data/textli_10MiB.bin` | 加权英文字母 | 10 MiB |
 
 重新生成：
 
@@ -55,7 +59,7 @@ make test-data
 python3 tests/gen_testdata.py
 ```
 
-## 测量指标
+### 测量指标
 
 | 指标 | 描述 |
 |------|------|
@@ -64,6 +68,39 @@ python3 tests/gen_testdata.py
 | 编码速度 | MiB/s = 输入大小 / 编码时间 |
 | 解码速度 | MiB/s = 输入大小 / 解码时间 |
 | 压缩比 | 输出大小 / 输入大小（越小越好） |
+
+### 输出格式
+
+结果保存在 `reports/` 目录：
+
+```
+reports/
+├── huffman_cpp_report.txt
+├── huffman_go_report.txt
+├── huffman_rust_report.txt
+├── arithmetic_cpp_report.txt
+├── ...
+```
+
+每个报告包含：
+
+```
+Algorithm: Huffman
+Language: C++
+Input: 10 MiB random data
+Encode: 245 ms (40.8 MiB/s)
+Decode: 198 ms (50.5 MiB/s)
+Compression ratio: 1.23
+```
+
+## 添加新基准测试
+
+添加新测试数据集：
+
+1. 编辑 `tests/gen_testdata.py`
+2. 在 `generate_random_file()` 中添加生成代码或创建新生成器
+3. 运行 `make test-data`
+4. 编辑相应的 `benchmark/bench.py` 以包含新文件
 
 ## 故障排除
 

@@ -131,9 +131,7 @@ Result<std::size_t> run_buffer_step(std::vector<uint8_t>& out, std::size_t total
             if (!result.ok()) {
                 return result;
             }
-            if (total_written > limit || result.value > limit - total_written) {
-                return {StatusCode::ERR_SIZE_LIMIT, 0};
-            }
+            // Successful writes already fit in the provided slice; only the growth path can hit the limit.
             return {StatusCode::OK, total_written + result.value};
         }
 

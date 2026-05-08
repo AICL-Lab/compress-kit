@@ -22,7 +22,7 @@ struct ScriptedEncoder final : compresskit::Encoder {
     }
 
     compresskit::Result<std::size_t> flush(compresskit::MutableByteView) override {
-        // flush only satisfies the interface in this scripted test double.
+        // encode_buffer does not call flush; this only satisfies the interface in the scripted test double.
         return {compresskit::StatusCode::OK, 0};
     }
 
@@ -48,7 +48,7 @@ struct ScriptedDecoder final : compresskit::Decoder {
     }
 
     compresskit::Result<std::size_t> flush(compresskit::MutableByteView) override {
-        // flush only satisfies the interface in this scripted test double.
+        // decode_buffer does not call flush; this only satisfies the interface in the scripted test double.
         return {compresskit::StatusCode::OK, 0};
     }
 

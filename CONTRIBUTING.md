@@ -1,268 +1,183 @@
-# Contributing to encoding | 贡献指南
+# Contributing to CompressKit | 贡献指南
 
-Thank you for your interest in contributing to this project! 感谢你对本项目的关注！
+感谢你对 CompressKit 项目的关注！本指南将帮助你快速参与项目开发。
 
-## Table of Contents | 目录
+## 前置要求 | Prerequisites
 
-- [Prerequisites | 前置要求](#prerequisites--前置要求)
-- [Development Setup | 开发环境配置](#development-setup--开发环境配置)
-- [Code Style | 代码风格](#code-style--代码风格)
-- [Testing | 测试](#testing--测试)
-- [Pull Request Process | PR 流程](#pull-request-process--pr-流程)
+### 必需工具
 
-## Prerequisites | 前置要求
+- **C++ 编译器**: g++ 9+ 或 clang++ 10+ (支持 C++17)
+- **Go**: 1.19 或更高版本
+- **Rust**: 1.70 或更高版本（包含 rustfmt 和 clippy）
+- **Python**: 3.8 或更高版本（用于测试脚本）
+- **Make**: 简化构建命令
 
-Before you begin, ensure you have the following tools installed:
-
-开始之前，请确保已安装以下工具：
-
-### Required | 必需
-
-- **C++ Compiler**: g++ 9+ or clang++ 10+ (with C++17 support)
-- **Go**: 1.19 or later
-- **Rust**: 1.70 or later (with rustfmt and clippy)
-- **Python**: 3.8 or later (for benchmark scripts)
-
-### Optional | 可选
-
-- **Make**: For simplified build commands
-- **Docker**: For consistent build environment
-
-### Installation Examples | 安装示例
+### 安装示例
 
 **Ubuntu/Debian:**
 ```bash
-sudo apt update
-sudo apt install g++ golang rustc python3
+sudo apt update && sudo apt install g++ golang rustc cargo python3 make
 ```
 
-**macOS (with Homebrew):**
+**macOS (Homebrew):**
 ```bash
-brew install gcc go rust python3
+brew install gcc go rust python3 make
 ```
 
-**Windows:**
-- Install [MSYS2](https://www.msys2.org/) for g++
-- Install [Go](https://go.dev/dl/)
-- Install [Rust](https://rustup.rs/)
-- Install [Python](https://www.python.org/downloads/)
-
-## Development Setup | 开发环境配置
-
-1. **Fork and clone the repository | Fork 并克隆仓库**
+## 快速开始 | Quick Start
 
 ```bash
+# 克隆仓库
 git clone https://github.com/LessUp/compress-kit.git
 cd compress-kit
+
+# 构建所有实现
+make build
+
+# 运行测试套件
+make test
+
+# 运行跨语言一致性测试
+make test-conformance
 ```
 
-2. **Verify your environment | 验证环境**
+## 开发工作流 | Development Workflow
 
-```bash
-# Check C++ compiler
-g++ --version
-
-# Check Go
-go version
-
-# Check Rust
-rustc --version
-cargo --version
-
-# Check Python
-python3 --version
-```
-
-3. **Build all implementations | 构建所有实现**
-
-```bash
-# C++ (example: Huffman)
-cd algorithms/huffman/cpp && g++ -std=c++17 -O2 main.cpp -o huffman_cpp && cd ../..
-
-# Go (example: Huffman)
-cd algorithms/huffman/go && go build -o huffman_go . && cd ../..
-
-# Rust (example: Huffman)
-cd algorithms/huffman/rust && rustc -O main.rs -o huffman_rust && cd ../..
-```
-
-## Code Style | 代码风格
-
-### C++
-
-- Follow [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html)
-- Use 4 spaces for indentation
-- Use `snake_case` for functions and variables
-- Use `PascalCase` for classes and structs
-
-```bash
-# Format check (if clang-format is available)
-clang-format --dry-run --Werror *.cpp
-```
-
-### Go
-
-- Use `gofmt` for formatting (mandatory)
-- Use `go vet` for static analysis
-- Follow [Effective Go](https://go.dev/doc/effective_go)
-
-```bash
-# Format code
-gofmt -w .
-
-# Check for issues
-go vet ./...
-```
-
-### Rust
-
-- Use `rustfmt` for formatting (mandatory)
-- Use `clippy` for linting
-- Follow [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/)
-
-```bash
-# Format code
-cargo fmt
-
-# Lint code
-cargo clippy -- -D warnings
-```
-
-### Python
-
-- Follow [PEP 8](https://peps.python.org/pep-0008/)
-- Use 4 spaces for indentation
-
-## Testing | 测试
-
-### Running Benchmarks | 运行基准测试
-
-```bash
-# Generate test data
-python3 tests/gen_testdata.py
-
-# Run all benchmarks
-python3 scripts/run_all_bench.py
-
-# Run specific algorithm benchmark
-cd algorithms/huffman/benchmark && python3 bench.py
-cd algorithms/rle/benchmark && python3 bench.py
-```
-
-### Verifying Correctness | 验证正确性
-
-Each implementation should pass the encode-decode round-trip test:
-
-每个实现都应通过编码-解码往返测试：
-
-```bash
-# Example: Huffman C++
-./huffman_cpp encode input.bin encoded.huf
-./huffman_cpp decode encoded.huf decoded.bin
-diff input.bin decoded.bin  # Should produce no output
-```
-
-### Cross-Language Verification | 跨语言验证
-
-Files encoded by one language implementation should be decodable by others:
-
-一种语言编码的文件应能被其他语言正确解码：
-
-```bash
-# Encode with C++, decode with Go
-./huffman_cpp encode input.bin encoded.huf
-./huffman_go decode encoded.huf decoded.bin
-diff input.bin decoded.bin
-```
-
-## Spec-Driven Development | 规范驱动开发
-
-This project follows **Spec-Driven Development (SDD)**. All code implementations must be based on the specification documents in `/specs/`.
-
-本项目遵循**规范驱动开发（SDD）**。所有代码实现必须以 `/specs/` 目录下的规范文档为依据。
-
-### Workflow | 工作流
-
-1. **Review Specs First | 先审查规范**: Before writing any code, read the relevant documents in `/specs/product/`, `/specs/rfc/`, or `/specs/testing/`.
-   
-   编写代码前，请先阅读 `/specs/product/`、`/specs/rfc/` 或 `/specs/testing/` 中的相关文档。
-
-2. **Update Specs First | 先更新规范**: For new features or interface changes, propose spec changes first. Wait for confirmation before coding.
-   
-   对于新功能或接口变更，请先提议更新规范文档，确认后再编写代码。
-
-3. **Implement to Spec | 按规范实现**: Code must 100% adhere to spec definitions (naming, API paths, data types, etc.).
-   
-   代码必须 100% 遵守规范定义（命名、API 路径、数据类型等）。
-
-4. **Test Against Spec | 按规范测试**: Write tests based on the acceptance criteria in `/specs/`.
-   
-   根据 `/specs/` 中的验收标准编写测试。
-
-See [AGENTS.md](AGENTS.md) for the complete AI workflow instructions.
-
-完整的 AI 工作流指令，请参阅 [AGENTS.md](AGENTS.md)。
-
-## Pull Request Process | PR 流程
-
-1. **Create a feature branch | 创建功能分支**
+### 1. 创建功能分支
 
 ```bash
 git checkout -b feature/your-feature-name
 ```
 
-2. **Make your changes | 进行修改**
-
-- Write clean, readable code
-- Add comments for complex logic
-- Update documentation if needed
-
-3. **Test your changes | 测试修改**
+### 2. 开发与测试
 
 ```bash
-# Build and test
-# Run benchmarks to verify correctness
+# 开发过程中持续运行测试
+make test
+
+# 代码格式检查
+make lint
+
+# 跨语言验证
+make test-conformance
 ```
 
-4. **Commit with clear messages | 提交清晰的 commit 信息**
+### 3. 提交变更
+
+使用规范的 commit 信息格式：
+
+- `feat:` 新功能
+- `fix:` Bug 修复
+- `docs:` 文档更新
+- `refactor:` 代码重构
+- `test:` 测试相关
+- `chore:` 维护性工作
 
 ```bash
 git commit -m "feat: add XXX feature"
-# or
-git commit -m "fix: resolve XXX issue"
 ```
 
-Commit message format | 提交信息格式:
-- `feat:` New feature | 新功能
-- `fix:` Bug fix | 修复 bug
-- `docs:` Documentation | 文档
-- `style:` Code style | 代码风格
-- `refactor:` Refactoring | 重构
-- `test:` Tests | 测试
-- `chore:` Maintenance | 维护
+### 4. 创建 Pull Request
 
-5. **Push and create PR | 推送并创建 PR**
+推送分支后，在 GitHub 上创建 PR。确保：
+
+- ✅ 所有测试通过
+- ✅ 代码格式符合规范
+- ✅ 跨语言二进制兼容性未被破坏
+- ✅ 相关文档已更新
+
+## 代码规范 | Code Style
+
+### C++ (C++17)
+
+- 遵循 [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html)
+- 使用 4 空格缩进
+- 函数和变量使用 `snake_case`
+- 类和结构体使用 `PascalCase`
 
 ```bash
-git push origin feature/your-feature-name
+# 格式检查
+clang-format --dry-run --Werror algorithms/**/*.cpp
 ```
 
-Then create a Pull Request on GitHub.
+### Go
 
-6. **PR Checklist | PR 检查清单**
+- 使用 `gofmt` 格式化（强制）
+- 使用 `go vet` 静态分析
+- 遵循 [Effective Go](https://go.dev/doc/effective_go)
 
-Before submitting, ensure:
+```bash
+# 格式化
+gofmt -w algorithms/
 
-提交前请确保：
+# 静态检查
+go vet ./algorithms/...
+```
 
-- [ ] Code compiles without errors | 代码编译无错误
-- [ ] All tests pass | 所有测试通过
-- [ ] Code follows the style guide | 代码符合风格指南
-- [ ] Documentation is updated | 文档已更新
-- [ ] CHANGELOG.md is updated (if applicable) | CHANGELOG 已更新（如适用）
+### Rust
 
-## Questions? | 有问题？
+- 使用 `rustfmt` 格式化（强制）
+- 使用 `clippy` 进行 lint
+- 遵循 [Rust API Guidelines](https://rust-lang.github.io/api-guidelines/)
 
-Feel free to open an issue if you have any questions or suggestions!
+```bash
+# 格式化
+cargo fmt --all
 
-如有任何问题或建议，欢迎提交 Issue！
+# Lint 检查
+cargo clippy --all-targets -- -D warnings
+```
+
+## 核心约束 | Core Constraints
+
+### 二进制格式兼容性
+
+**最重要：** 维护跨语言二进制格式兼容性是项目的核心约束。
+
+- Magic Numbers 不可更改
+- Frequency Table 格式必须统一
+- 编码在一种语言，解码在另一种语言必须正常工作
+
+### 安全限制
+
+- 输入大小上限：4 GiB
+- 解码输出上限：1 GiB
+- 这些限制用于防止解压缩炸弹攻击
+
+### 已知限制
+
+Range Coder 在大文件（>500KB）上性能下降，这是已知问题，不建议修复。
+
+## 规范驱动开发 | Spec-Driven Development
+
+本项目遵循 **OpenSpec 工作流**：
+
+1. **变更前先提案**：对于二进制格式、公共 API、跨语言语义等变更，需要先创建 OpenSpec change
+2. **审查规范**：在 `/openspec/specs/` 中查看相关规范文档
+3. **按规范实现**：代码实现必须遵守规范定义
+4. **验证合规**：测试必须验证规范合规性
+
+小型的文档修复、内部重构、保持现有契约的 bug 修复可以直接实施。
+
+## 项目结构 | Project Structure
+
+```
+algorithms/           # 四种算法的 C++/Go/Rust 实现
+├── huffman/
+├── arithmetic/
+├── range/
+└── rle/
+tests/                # 测试套件和跨语言验证
+docs/                 # VitePress 文档站点
+openspec/             # OpenSpec 规范和变更提案
+```
+
+## 获取帮助 | Get Help
+
+- 查看 [文档站点](https://lessup.github.io/compress-kit/)
+- 阅读 [架构指南](CONTEXT.md)
+- 提交 [Issue](https://github.com/LessUp/compress-kit/issues)
+
+---
+
+**许可**：MIT License · 版权所有 © 2025-2026 LessUp

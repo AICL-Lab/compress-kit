@@ -14,6 +14,7 @@ style categories and uses semantic versioning for releases.
 - Added `.clippy.toml` for Rust linting configuration.
 - Executable cross-language conformance matrix via `make test-conformance`.
 - Streaming API lifecycle and buffer contract coverage across shared C++/Go/Rust layers.
+- Unified CLI launcher module for all algorithms (shared/go/cli, shared/cpp/cli_launcher, shared/rust/cli).
 
 ### Fixed
 
@@ -22,6 +23,8 @@ style categories and uses semantic versioning for releases.
 - Rust Huffman encoding performance improved by using `Vec<u8>` instead of `String` for bitstream.
 - Fixed Rust Arithmetic Coding streaming decode compatibility for short bitstreams.
 - Fixed Rust Arithmetic Coding treatment of `0x00` input bytes so they are not confused with the EOF symbol.
+- Unified buffer growth strategies across C++, Go, and Rust for semantic consistency.
+- Transactional retry logic now preserves partial writes correctly.
 
 ### Changed
 
@@ -30,6 +33,8 @@ style categories and uses semantic versioning for releases.
 - Refined README and documentation entry points so the GitHub README stays a concise repository gateway.
 - Removed 41 unused BMAD skills from `.claude/skills/` directory (~2MB reduction).
 - Simplified `AGENTS.md` and `CLAUDE.md` for better AI agent guidance.
+- **Architecture Deepening**: Unified CLI entry points (94% boilerplate reduction) and buffer layer orchestration.
+- Archived internal decision documents to `.archive/superpowers-20260508/` for cleaner documentation structure.
 
 ## [1.0.0] - 2026-01-07
 

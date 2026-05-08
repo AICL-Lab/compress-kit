@@ -1,5 +1,8 @@
 package codec
 
+const encodeBufferInitialSlack = 2048 // Extra room for small outputs before the first retry.
+const decodeBufferInitialSlack = 1024 // Extra room for small decoded outputs before the first retry.
+
 func growBuffer(currentLen int, limit int) int {
 	if currentLen <= 0 {
 		if limit < 1024 {
@@ -18,14 +21,13 @@ func growBuffer(currentLen int, limit int) int {
 }
 
 func encodeBufferLimit(inputLen int) (int, error) {
-	const overhead = 2048
 	if inputLen < 0 {
 		return 0, ErrSizeLimit
 	}
-	if inputLen > (int(^uint(0)>>1)-overhead)/8 {
+	if inputLen > (int(^uint(0)>>1)-encodeBufferInitialSlack)/8 {
 		return 0, ErrSizeLimit
 	}
-	return inputLen*8 + overhead, nil
+	return inputLen*8 + encodeBufferInitialSlack, nil
 }
 
 // EncodeBuffer is a convenience function that encodes input using the streaming API.
@@ -42,28 +44,33 @@ func EncodeBuffer(encoder Encoder, input []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	initialSize := len(input)*2 + 2048
-	if initialSize > encodeLimit {
-		initialSize = encodeLimit
-	}
-	outBuf := make([]byte, initialSize)
-	var totalWritten int
+	return encodeBufferWithLimit(encoder, input, len(input)*2+encodeBufferInitialSlack, encodeLimit)
+}
 
-	outBuf, totalWritten, err = runBufferStep(outBuf, totalWritten, encodeLimit, func(out []byte) (int, error) {
+func encodeBufferWithLimit(encoder Encoder, input []byte, initialSize int, limit int) ([]byte, error) {
+	if initialSize > limit {
+		initialSize = limit
+	}
+
+	outBuf := make([]byte, initialSize)
+	totalWritten := 0
+
+	var err error
+	outBuf, totalWritten, err = runBufferStep(outBuf, totalWritten, limit, func(out []byte) (int, error) {
 		return encoder.Process(input, out)
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	outBuf, totalWritten, err = runBufferStep(outBuf, totalWritten, encodeLimit, func(out []byte) (int, error) {
+	outBuf, totalWritten, err = runBufferStep(outBuf, totalWritten, limit, func(out []byte) (int, error) {
 		return encoder.Finish(out)
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	if totalWritten > encodeLimit {
+	if totalWritten > limit {
 		return nil, ErrSizeLimit
 	}
 
@@ -79,25 +86,33 @@ func DecodeBuffer(decoder Decoder, input []byte) ([]byte, error) {
 		return nil, ErrSizeLimit
 	}
 
-	outBuf := make([]byte, len(input)+1024)
-	var totalWritten int
-	var err error
+	return decodeBufferWithLimit(decoder, input, len(input)+decodeBufferInitialSlack, MaxOutputSize)
+}
 
-	outBuf, totalWritten, err = runBufferStep(outBuf, totalWritten, MaxOutputSize, func(out []byte) (int, error) {
+func decodeBufferWithLimit(decoder Decoder, input []byte, initialSize int, limit int) ([]byte, error) {
+	if initialSize > limit {
+		initialSize = limit
+	}
+
+	outBuf := make([]byte, initialSize)
+	totalWritten := 0
+
+	var err error
+	outBuf, totalWritten, err = runBufferStep(outBuf, totalWritten, limit, func(out []byte) (int, error) {
 		return decoder.Process(input, out)
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	outBuf, totalWritten, err = runBufferStep(outBuf, totalWritten, MaxOutputSize, func(out []byte) (int, error) {
+	outBuf, totalWritten, err = runBufferStep(outBuf, totalWritten, limit, func(out []byte) (int, error) {
 		return decoder.Finish(out)
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	if totalWritten > MaxOutputSize {
+	if totalWritten > limit {
 		return nil, ErrSizeLimit
 	}
 

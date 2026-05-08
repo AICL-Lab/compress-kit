@@ -59,17 +59,6 @@ std::size_t encode_limit_for(std::size_t input_size) {
     return input_size * 8 + kInitialEncodeOverhead;
 }
 
-std::size_t grow_buffer(std::size_t current_len, std::size_t limit) {
-    if (current_len == 0) {
-        return std::min<std::size_t>(1024, limit);
-    }
-    std::size_t next = current_len * 2;
-    if (next < current_len) {  // overflow
-        return limit;
-    }
-    return std::min(next, limit);
-}
-
 bool write_file(const std::string& path, const std::vector<uint8_t>& data) {
     std::ofstream out(path, std::ios::binary);
     if (!out) {
@@ -130,6 +119,29 @@ Result<std::vector<uint8_t>> run_transform(FileTransform transform,
 
 Result<std::size_t> invalid_state_result() {
     return {StatusCode::ERR_INVALID_STATE, 0};
+}
+
+template <typename Step>
+Result<std::size_t> run_buffer_step(std::vector<uint8_t>& out, std::size_t total_written,
+                                    std::size_t limit, Step step) {
+    for (;;) {
+        Result<std::size_t> result =
+            step({out.data() + total_written, out.size() - total_written});
+        if (result.status != StatusCode::BUF_TOO_SMALL) {
+            if (!result.ok()) {
+                return result;
+            }
+            // Successful writes already fit in the provided slice; only the growth path can hit the limit.
+            return {StatusCode::OK, total_written + result.value};
+        }
+
+        total_written += result.value;
+        if (total_written > limit || out.size() >= limit) {
+            return {StatusCode::ERR_SIZE_LIMIT, 0};
+        }
+
+        out.resize(std::min(limit, std::max<std::size_t>(out.size() * 2, out.size() + 1)));
+    }
 }
 
 }  // namespace
@@ -288,42 +300,21 @@ Result<std::vector<uint8_t>> encode_buffer(Encoder& encoder, const std::vector<u
     std::vector<uint8_t> out(initial_size);
     std::size_t total_written = 0;
 
-    for (;;) {
-        Result<std::size_t> result = encoder.process(
-            {input.data(), input.size()}, {out.data() + total_written, out.size() - total_written});
-        if (result.status != StatusCode::BUF_TOO_SMALL) {
-            if (!result.ok()) {
-                return {result.status, {}};
-            }
-            total_written += result.value;
-            break;
-        }
-        total_written += result.value;
-        if (total_written > limit || out.size() >= limit) {
-            return {StatusCode::ERR_SIZE_LIMIT, {}};
-        }
-        out.resize(grow_buffer(out.size(), limit));
+    Result<std::size_t> result = run_buffer_step(
+        out, total_written, limit,
+        [&](MutableByteView out_view) { return encoder.process({input.data(), input.size()}, out_view); });
+    if (!result.ok()) {
+        return {result.status, {}};
     }
+    total_written = result.value;
 
-    for (;;) {
-        Result<std::size_t> result =
-            encoder.finish({out.data() + total_written, out.size() - total_written});
-        if (result.status != StatusCode::BUF_TOO_SMALL) {
-            if (!result.ok()) {
-                return {result.status, {}};
-            }
-            total_written += result.value;
-            break;
-        }
-        if (out.size() >= limit) {
-            return {StatusCode::ERR_SIZE_LIMIT, {}};
-        }
-        out.resize(grow_buffer(out.size(), limit));
+    result = run_buffer_step(out, total_written, limit,
+                             [&](MutableByteView out_view) { return encoder.finish(out_view); });
+    if (!result.ok()) {
+        return {result.status, {}};
     }
+    total_written = result.value;
 
-    if (total_written > limit) {
-        return {StatusCode::ERR_SIZE_LIMIT, {}};
-    }
     out.resize(total_written);
     return {StatusCode::OK, std::move(out)};
 }
@@ -336,42 +327,21 @@ Result<std::vector<uint8_t>> decode_buffer(Decoder& decoder, const std::vector<u
     std::vector<uint8_t> out(input.size() + 1024);
     std::size_t total_written = 0;
 
-    for (;;) {
-        Result<std::size_t> result = decoder.process(
-            {input.data(), input.size()}, {out.data() + total_written, out.size() - total_written});
-        if (result.status != StatusCode::BUF_TOO_SMALL) {
-            if (!result.ok()) {
-                return {result.status, {}};
-            }
-            total_written += result.value;
-            break;
-        }
-        total_written += result.value;
-        if (total_written > kMaxOutputSize || out.size() >= kMaxOutputSize) {
-            return {StatusCode::ERR_SIZE_LIMIT, {}};
-        }
-        out.resize(grow_buffer(out.size(), kMaxOutputSize));
+    Result<std::size_t> result = run_buffer_step(
+        out, total_written, kMaxOutputSize,
+        [&](MutableByteView out_view) { return decoder.process({input.data(), input.size()}, out_view); });
+    if (!result.ok()) {
+        return {result.status, {}};
     }
+    total_written = result.value;
 
-    for (;;) {
-        Result<std::size_t> result =
-            decoder.finish({out.data() + total_written, out.size() - total_written});
-        if (result.status != StatusCode::BUF_TOO_SMALL) {
-            if (!result.ok()) {
-                return {result.status, {}};
-            }
-            total_written += result.value;
-            break;
-        }
-        if (out.size() >= kMaxOutputSize) {
-            return {StatusCode::ERR_SIZE_LIMIT, {}};
-        }
-        out.resize(grow_buffer(out.size(), kMaxOutputSize));
+    result = run_buffer_step(out, total_written, kMaxOutputSize,
+                             [&](MutableByteView out_view) { return decoder.finish(out_view); });
+    if (!result.ok()) {
+        return {result.status, {}};
     }
+    total_written = result.value;
 
-    if (total_written > kMaxOutputSize) {
-        return {StatusCode::ERR_SIZE_LIMIT, {}};
-    }
     out.resize(total_written);
     return {StatusCode::OK, std::move(out)};
 }

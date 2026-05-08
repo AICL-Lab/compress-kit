@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <string>
@@ -11,6 +12,58 @@ struct AlgorithmCase {
     const char* name;
     compresskit::BufferEncoder (*make_encoder)();
     compresskit::BufferDecoder (*make_decoder)();
+};
+
+struct ScriptedEncoder final : compresskit::Encoder {
+    int finish_calls = 0;
+
+    compresskit::Result<std::size_t> process(compresskit::ByteView, compresskit::MutableByteView) override {
+        return {compresskit::StatusCode::OK, 0};
+    }
+
+    compresskit::Result<std::size_t> flush(compresskit::MutableByteView) override {
+        // encode_buffer does not call flush; this only satisfies the interface in the scripted test double.
+        return {compresskit::StatusCode::OK, 0};
+    }
+
+    compresskit::Result<std::size_t> finish(compresskit::MutableByteView out) override {
+        ++finish_calls;
+        if (finish_calls == 1) {
+            std::copy_n("abc", 3, out.data);
+            return {compresskit::StatusCode::BUF_TOO_SMALL, 3};
+        }
+        std::copy_n("def", 3, out.data);
+        return {compresskit::StatusCode::OK, 3};
+    }
+
+    void reset() noexcept override {}
+    compresskit::State state() const noexcept override { return compresskit::State::STREAMING; }
+};
+
+struct ScriptedDecoder final : compresskit::Decoder {
+    int finish_calls = 0;
+
+    compresskit::Result<std::size_t> process(compresskit::ByteView, compresskit::MutableByteView) override {
+        return {compresskit::StatusCode::OK, 0};
+    }
+
+    compresskit::Result<std::size_t> flush(compresskit::MutableByteView) override {
+        // decode_buffer does not call flush; this only satisfies the interface in the scripted test double.
+        return {compresskit::StatusCode::OK, 0};
+    }
+
+    compresskit::Result<std::size_t> finish(compresskit::MutableByteView out) override {
+        ++finish_calls;
+        if (finish_calls == 1) {
+            std::copy_n("uvw", 3, out.data);
+            return {compresskit::StatusCode::BUF_TOO_SMALL, 3};
+        }
+        std::copy_n("xyz", 3, out.data);
+        return {compresskit::StatusCode::OK, 3};
+    }
+
+    void reset() noexcept override {}
+    compresskit::State state() const noexcept override { return compresskit::State::STREAMING; }
 };
 
 void test_roundtrip_and_lifecycle(const AlgorithmCase& algorithm) {
@@ -60,6 +113,22 @@ void test_roundtrip_and_lifecycle(const AlgorithmCase& algorithm) {
     assert(buffer_encoded.value == encoded);
 }
 
+void test_encode_buffer_preserves_finish_retry_prefix() {
+    ScriptedEncoder encoder;
+    auto encoded = compresskit::encode_buffer(encoder, std::vector<uint8_t>{'x'});
+    assert(encoded.status == compresskit::StatusCode::OK);
+    assert(encoder.finish_calls == 2);
+    assert(std::string(encoded.value.begin(), encoded.value.end()) == "abcdef");
+}
+
+void test_decode_buffer_preserves_finish_retry_prefix() {
+    ScriptedDecoder decoder;
+    auto decoded = compresskit::decode_buffer(decoder, std::vector<uint8_t>{'x'});
+    assert(decoded.status == compresskit::StatusCode::OK);
+    assert(decoder.finish_calls == 2);
+    assert(std::string(decoded.value.begin(), decoded.value.end()) == "uvwxyz");
+}
+
 }  // namespace
 
 int main() {
@@ -73,6 +142,9 @@ int main() {
     for (const AlgorithmCase& algorithm : algorithms) {
         test_roundtrip_and_lifecycle(algorithm);
     }
+
+    test_encode_buffer_preserves_finish_retry_prefix();
+    test_decode_buffer_preserves_finish_retry_prefix();
 
     return 0;
 }

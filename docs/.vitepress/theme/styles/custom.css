@@ -1,4 +1,4 @@
-/* Custom styles */
+/* Custom styles — only rules not covered by components.css or vars.css */
 
 /* Algorithm comparison table - highlight compression ratios */
 .vp-doc table td:last-child {
@@ -13,48 +13,4 @@
 /* Improve dark mode contrast for code blocks */
 .dark .vp-doc div[class*='language-'] {
   border: 1px solid var(--vp-c-border);
-}
-
-/* Hero image sizing */
-.VPHero .image-container {
-  width: 200px;
-  height: 200px;
-}
-
-.VPHero .image-bg {
-  width: 200px;
-  height: 200px;
-}
-
-/* Feature card hover effect */
-.VPFeature {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.VPFeature:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.dark .VPFeature:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--vp-c-divider);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--vp-c-text-3);
 }

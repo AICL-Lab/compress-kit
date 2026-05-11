@@ -1,12 +1,17 @@
 <script setup lang="ts">
+import { useData, withBase } from 'vitepress'
+import { computed } from 'vue'
+const { localeIndex } = useData()
+const lang = computed(() => localeIndex.value === 'root' ? 'en' : localeIndex.value)
 const currentYear = new Date().getFullYear()
+const link = (path: string) => withBase(`/${lang.value}${path}`)
 </script>
 
 <template>
   <footer class="ck-footer">
     <div class="footer-container">
       <div class="footer-brand">
-        <img src="/logo.svg" alt="CompressKit" class="footer-logo" />
+        <img :src="withBase('/logo.svg')" alt="CompressKit" class="footer-logo" />
         <p class="footer-tagline">
           Production-ready compression algorithms in C++17, Go, and Rust
         </p>
@@ -23,10 +28,10 @@ const currentYear = new Date().getFullYear()
         <div class="footer-column">
           <h4>Documentation</h4>
           <ul>
-            <li><a href="/en/guide/getting-started">Getting Started</a></li>
-            <li><a href="/en/guide/algorithms">Algorithms</a></li>
-            <li><a href="/en/benchmarks/results">Benchmarks</a></li>
-            <li><a href="/en/api/go">API Reference</a></li>
+            <li><a :href="link('/guide/getting-started')">Getting Started</a></li>
+            <li><a :href="link('/guide/algorithms')">Algorithms</a></li>
+            <li><a :href="link('/benchmarks/results')">Benchmarks</a></li>
+            <li><a :href="link('/api/go')">API Reference</a></li>
           </ul>
         </div>
         
@@ -43,7 +48,7 @@ const currentYear = new Date().getFullYear()
         <div class="footer-column">
           <h4>Community</h4>
           <ul>
-            <li><a href="/en/guide/contributing">Contributing</a></li>
+            <li><a :href="link('/guide/contributing')">Contributing</a></li>
             <li><a href="https://github.com/LessUp/compress-kit/blob/master/CODE_OF_CONDUCT.md" target="_blank" rel="noopener">Code of Conduct</a></li>
             <li><a href="https://github.com/LessUp/compress-kit/blob/master/SECURITY.md" target="_blank" rel="noopener">Security</a></li>
           </ul>

@@ -232,7 +232,6 @@ export default defineConfig({
     root: {
       label: 'English',
       lang: 'en-US',
-      link: '/en/',
       themeConfig: {
         nav: sharedNav('en'),
         sidebar: sharedSidebar['/en/'],
@@ -240,10 +239,7 @@ export default defineConfig({
           pattern: 'https://github.com/LessUp/compress-kit/edit/master/docs/:path',
           text: 'Edit this page on GitHub',
         },
-        footer: {
-          message: 'Released under the MIT License',
-          copyright: 'Copyright © 2025-2026 LessUp. Built with VitePress.',
-        },
+        footer: false,
         outline: {
           level: [2, 3],
           label: 'On this page',
@@ -291,10 +287,7 @@ export default defineConfig({
           pattern: 'https://github.com/LessUp/compress-kit/edit/master/docs/:path',
           text: '在 GitHub 上编辑此页',
         },
-        footer: {
-          message: '基于 MIT 许可证发布',
-          copyright: '版权所有 © 2025-2026 LessUp. 使用 VitePress 构建。',
-        },
+        footer: false,
         outline: {
           level: [2, 3],
           label: '本页内容',
@@ -359,13 +352,6 @@ export default defineConfig({
     resolve: {
       alias: {
         '@theme': '/.vitepress/theme',
-      },
-    },
-    css: {
-      preprocessorOptions: {
-        scss: {
-          additionalData: '',
-        },
       },
     },
   },

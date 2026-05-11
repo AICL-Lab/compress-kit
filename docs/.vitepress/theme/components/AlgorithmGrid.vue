@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import { useData, withBase } from 'vitepress'
+import { computed } from 'vue'
+
+const { localeIndex } = useData()
+const lang = computed(() => localeIndex.value === 'root' ? 'en' : localeIndex.value)
+const algoLink = (slug: string) => withBase(`/${lang.value}/algorithms/${slug}`)
+
 interface Algorithm {
   id: string
   name: string
@@ -86,7 +93,7 @@ const getSpeedBadgeClass = (level: string) => {
     <a 
       v-for="(algo, index) in algorithms" 
       :key="algo.id"
-      :href="`/en/algorithms/${algo.slug}`"
+      :href="algoLink(algo.slug)"
       class="ck-algorithm-card ck-hover-lift"
       :style="{ animationDelay: `${index * 100}ms` }"
     >

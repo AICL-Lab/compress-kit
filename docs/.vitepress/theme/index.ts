@@ -2,9 +2,9 @@ import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
 import { h } from 'vue'
 import './styles/vars.css'
-import './styles/custom.css'
 import './styles/animations.css'
 import './styles/components.css'
+import './styles/custom.css'
 
 // Import custom components
 import StatsBar from './components/StatsBar.vue'

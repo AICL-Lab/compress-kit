@@ -20,18 +20,19 @@ import { onBeforeMount } from 'vue'
 onBeforeMount(() => {
   if (typeof window === 'undefined') return
 
+  const base = import.meta.env.BASE_URL
   const userLang = navigator.language || navigator.userLanguage || ''
   const savedLang = localStorage.getItem('docs-lang-preference')
 
   // Use saved preference if exists, otherwise use browser language
-  const targetLang = savedLang || (userLang.startsWith('zh') ? '/zh/' : '/en/')
+  const targetLang = savedLang || (userLang.startsWith('zh') ? `${base}zh/` : `${base}en/`)
   const currentPath = window.location.pathname
 
   // Only redirect if not already on correct language path
-  if (targetLang === '/zh/' && !currentPath.startsWith('/zh')) {
-    window.location.replace('/zh/')
-  } else if (targetLang === '/en/' && !currentPath.startsWith('/en')) {
-    window.location.replace('/en/')
+  if (targetLang.endsWith('/zh/') && !currentPath.includes('/zh/')) {
+    window.location.replace(`${base}zh/`)
+  } else if (targetLang.endsWith('/en/') && !currentPath.includes('/en/')) {
+    window.location.replace(`${base}en/`)
   }
 })
 </script>

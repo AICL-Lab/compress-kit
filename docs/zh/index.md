@@ -19,7 +19,7 @@ import { onBeforeMount } from 'vue'
 
 onBeforeMount(() => {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('docs-lang-preference', '/zh/')
+    localStorage.setItem('docs-lang-preference', `${import.meta.env.BASE_URL}zh/`)
   }
 })
 </script>

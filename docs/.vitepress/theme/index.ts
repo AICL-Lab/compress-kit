@@ -12,12 +12,13 @@ import AlgorithmGrid from './components/AlgorithmGrid.vue'
 import BenchmarkChart from './components/BenchmarkChart.vue'
 import CodeComparison from './components/CodeComparison.vue'
 import CustomFooter from './components/CustomFooter.vue'
+import LanguageDetector from './components/LanguageDetector.vue'
 
 export default {
   extends: DefaultTheme,
   Layout: () => {
     return h(DefaultTheme.Layout, null, {
-      'layout-bottom': () => h(CustomFooter),
+      'layout-bottom': () => h('div', [h(LanguageDetector), h(CustomFooter)]),
     })
   },
   enhanceApp({ app }) {

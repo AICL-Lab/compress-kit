@@ -14,6 +14,16 @@ hero:
       link: https://github.com/LessUp/compress-kit
 ---
 
+<script setup>
+import { onBeforeMount } from 'vue'
+
+onBeforeMount(() => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('docs-lang-preference', '/en/')
+  }
+})
+</script>
+
 ## Quick Start
 
 ```bash

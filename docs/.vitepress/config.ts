@@ -151,6 +151,7 @@ export default withMermaid(defineConfig({
     root: {
       label: 'English',
       lang: 'en-US',
+      link: '/en/',
       themeConfig: {
         nav: sharedNav('en'),
         sidebar: sharedSidebar['/en/'],

@@ -155,10 +155,26 @@ Streaming Layer 的核心控制逻辑，定义有效的状态转换。
 │          Streaming Layer            │  生命周期管理
 ├─────────────────────────────────────┤
 │          Algorithm Core             │  编码/解码逻辑
+├─────────────────────────────────────┤
+│          Shared Utilities           │  共享工具（Go）
 └─────────────────────────────────────┘
 ```
 
 **调用流向：** CLI → Buffer Layer → Streaming Layer → Algorithm Core
+
+### Shared Utilities（共享工具层）
+
+Go 语言实现的共享工具模块，位于 `algorithms/shared/go/codec/`：
+
+| 模块 | 功能 |
+|------|------|
+| `encoder.go` | Encoder/Decoder 接口、BufferedEncoder/BufferedDecoder |
+| `buffer.go` | EncodeBuffer/DecodeBuffer 便捷函数 |
+| `errors.go` | 错误类型、安全限制常量 |
+| `bits.go` | BitWriter/BitReader 位操作 |
+| `files.go` | EncodeFile/DecodeFile 文件操作 |
+| `frequency.go` | SymbolLimit/EOFSymbol 常量、频率表工具函数 |
+| `writer.go` | WriterEncoder io.Writer 适配器 |
 
 ## 跨语言一致性
 

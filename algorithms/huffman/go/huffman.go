@@ -14,9 +14,11 @@ import (
 
 const (
 	// SymbolLimit is the number of possible symbols (256 bytes + 1 EOF symbol).
-	SymbolLimit = 257
+	// This is an alias for codec.SymbolLimit for backward compatibility.
+	SymbolLimit = codec.SymbolLimit
 	// EOFSymbol is the symbol index used to mark end-of-stream.
-	EOFSymbol = SymbolLimit - 1
+	// This is an alias for codec.EOFSymbol for backward compatibility.
+	EOFSymbol = codec.EOFSymbol
 	// MaxInputSize is the maximum allowed input file size (4 GiB) to prevent
 	// frequency overflow and decompression bomb attacks.
 	MaxInputSize = 4 * 1024 * 1024 * 1024
@@ -96,79 +98,6 @@ func BuildTree(freq []uint32) *Node {
 		heap.Push(h, parent)
 	}
 	return heap.Pop(h).(*Node)
-}
-
-// BitWriter writes individual bits to an underlying writer, buffering until
-// a full byte is available.
-type BitWriter struct {
-	w            *bufio.Writer
-	buffer       byte
-	bitsInBuffer uint8
-}
-
-// NewBitWriter creates a BitWriter wrapping the given io.Writer.
-func NewBitWriter(w io.Writer) *BitWriter {
-	return &BitWriter{w: bufio.NewWriter(w)}
-}
-
-// WriteBit queues a single bit for writing.
-func (b *BitWriter) WriteBit(bit int) error {
-	b.buffer = (b.buffer << 1) | byte(bit&1)
-	b.bitsInBuffer++
-	if b.bitsInBuffer == 8 {
-		if err := b.w.WriteByte(b.buffer); err != nil {
-			return err
-		}
-		b.bitsInBuffer = 0
-		b.buffer = 0
-	}
-	return nil
-}
-
-// Flush writes any pending bits and flushes the underlying writer.
-func (b *BitWriter) Flush() error {
-	if b.bitsInBuffer > 0 {
-		b.buffer <<= (8 - b.bitsInBuffer)
-		if err := b.w.WriteByte(b.buffer); err != nil {
-			return err
-		}
-		b.bitsInBuffer = 0
-		b.buffer = 0
-	}
-	return b.w.Flush()
-}
-
-// BitReader reads individual bits from an underlying buffered reader.
-type BitReader struct {
-	r             *bufio.Reader
-	currentByte   byte
-	bitsRemaining uint8
-	reachedEOF    bool
-}
-
-// NewBitReader creates a BitReader wrapping the given bufio.Reader.
-func NewBitReader(r *bufio.Reader) *BitReader {
-	return &BitReader{r: r}
-}
-
-// ReadBit returns the next bit (0 or 1).
-func (b *BitReader) ReadBit() int {
-	if b.bitsRemaining == 0 {
-		c, err := b.r.ReadByte()
-		if err != nil {
-			b.reachedEOF = true
-			return 0
-		}
-		b.currentByte = c
-		b.bitsRemaining = 8
-	}
-	b.bitsRemaining--
-	return int((b.currentByte >> b.bitsRemaining) & 1)
-}
-
-// EOF returns true if the underlying reader has been exhausted.
-func (b *BitReader) EOF() bool {
-	return b.reachedEOF
 }
 
 // BuildFrequenciesFromFile reads the file and counts byte frequencies.
@@ -275,7 +204,7 @@ func Encode(input io.Reader, w io.Writer) error {
 	if err := WriteFrequencies(w, freq); err != nil {
 		return err
 	}
-	bw := NewBitWriter(w)
+	bw := codec.NewBitWriter(w)
 	for _, b := range data {
 		code := codes[int(b)]
 		for i := 0; i < len(code); i++ {
@@ -320,7 +249,7 @@ func Decode(r io.Reader, w io.Writer) error {
 	}
 
 	bw := bufio.NewWriter(w)
-	bitReader := NewBitReader(br)
+	bitReader := codec.NewBitReader(br)
 	node := root
 	sawEOF := false
 	var totalWritten uint64
@@ -367,38 +296,10 @@ func Decode(r io.Reader, w io.Writer) error {
 
 // EncodeFile is a convenience function for file-based encoding.
 func EncodeFile(inputPath, outputPath string) error {
-	input, err := os.ReadFile(inputPath)
-	if err != nil {
-		return fmt.Errorf("cannot open input file: %s: %w", inputPath, err)
-	}
-
-	encoded, err := codec.EncodeBuffer(NewStreamingEncoder(), input)
-	if err != nil {
-		return err
-	}
-
-	if err := os.WriteFile(outputPath, encoded, 0o644); err != nil {
-		return fmt.Errorf("cannot open output file: %s: %w", outputPath, err)
-	}
-
-	return nil
+	return codec.EncodeFile(NewStreamingEncoder(), inputPath, outputPath)
 }
 
 // DecodeFile is a convenience function for file-based decoding.
 func DecodeFile(inputPath, outputPath string) error {
-	input, err := os.ReadFile(inputPath)
-	if err != nil {
-		return fmt.Errorf("cannot open input file: %s: %w", inputPath, err)
-	}
-
-	decoded, err := codec.DecodeBuffer(NewStreamingDecoder(), input)
-	if err != nil {
-		return err
-	}
-
-	if err := os.WriteFile(outputPath, decoded, 0o644); err != nil {
-		return fmt.Errorf("cannot open output file: %s: %w", outputPath, err)
-	}
-
-	return nil
+	return codec.DecodeFile(NewStreamingDecoder(), inputPath, outputPath)
 }

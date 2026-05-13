@@ -5,8 +5,6 @@ import (
 )
 
 const (
-	symbolLimit            = 257
-	eofSymbol              = symbolLimit - 1
 	maxTotal        uint32 = 1 << 24
 	renormThreshold        = uint32(1) << 24
 	maxOutputSize          = 1 << 30 // 1 GiB maximum decoded output
@@ -50,11 +48,11 @@ func scaleFrequencies(freq []uint32) {
 }
 
 func buildFrequencies(data []byte) []uint32 {
-	freq := make([]uint32, symbolLimit)
+	freq := make([]uint32, codec.SymbolLimit)
 	for _, b := range data {
 		freq[int(b)]++
 	}
-	freq[eofSymbol] = 1
+	freq[codec.EOFSymbol] = 1
 	scaleFrequencies(freq)
 	return freq
 }
@@ -232,7 +230,7 @@ func Encode(input []byte) ([]byte, error) {
 	for _, b := range input {
 		enc.encodeSymbol(uint32(b), cum)
 	}
-	enc.encodeSymbol(eofSymbol, cum)
+	enc.encodeSymbol(codec.EOFSymbol, cum)
 	enc.finish()
 
 	return out, nil
@@ -244,7 +242,7 @@ func Decode(encoded []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(freq) != symbolLimit {
+	if len(freq) != codec.SymbolLimit {
 		return nil, codec.NewError(codec.KindCorrupt, "range: unexpected symbol count")
 	}
 	cum := buildCumulative(freq)
@@ -256,7 +254,7 @@ func Decode(encoded []byte) ([]byte, error) {
 	out := make([]byte, 0, len(encoded))
 	for {
 		sym := dec.decodeSymbol(cum)
-		if sym == uint32(eofSymbol) {
+		if sym == uint32(codec.EOFSymbol) {
 			break
 		}
 		out = append(out, byte(sym))
@@ -265,4 +263,14 @@ func Decode(encoded []byte) ([]byte, error) {
 		}
 	}
 	return out, nil
+}
+
+// EncodeFile is a convenience function for file-based encoding.
+func EncodeFile(inputPath, outputPath string) error {
+	return codec.EncodeFile(NewStreamingEncoder(), inputPath, outputPath)
+}
+
+// DecodeFile is a convenience function for file-based decoding.
+func DecodeFile(inputPath, outputPath string) error {
+	return codec.DecodeFile(NewStreamingDecoder(), inputPath, outputPath)
 }

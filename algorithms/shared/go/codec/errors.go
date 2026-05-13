@@ -5,28 +5,6 @@ import (
 	"fmt"
 )
 
-// StatusCode represents codec operation result codes.
-type StatusCode int
-
-const (
-	// StatusOK indicates success.
-	StatusOK StatusCode = iota
-	// StatusBufTooSmall indicates the output buffer is too small.
-	StatusBufTooSmall
-	// StatusTruncated indicates input stream ends prematurely.
-	StatusTruncated
-	// StatusCorrupt indicates data corruption or integrity check failure.
-	StatusCorrupt
-	// StatusInvalidState indicates the operation is not valid in the current state.
-	StatusInvalidState
-	// StatusSizeLimit indicates input or output exceeds security limits.
-	StatusSizeLimit
-	// StatusVersionUnsupported indicates frame version is not supported.
-	StatusVersionUnsupported
-	// StatusUnknownAlgo indicates unknown algorithm ID in frame header.
-	StatusUnknownAlgo
-)
-
 // ErrorKind represents the category of a codec error.
 // Used for structured error reporting across algorithms.
 type ErrorKind int

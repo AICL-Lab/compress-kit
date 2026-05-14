@@ -3,8 +3,8 @@ package huffman
 
 import (
 	"bufio"
+	"bytes"
 	"container/heap"
-	"encoding/binary"
 	"fmt"
 	"io"
 	"os"
@@ -130,33 +130,15 @@ func BuildFrequenciesFromFile(path string) ([]uint32, error) {
 }
 
 // WriteFrequencies serializes a frequency table to the writer.
+// This is an alias for codec.WriteFrequencies for backward compatibility.
 func WriteFrequencies(w io.Writer, freq []uint32) error {
-	count := uint32(len(freq))
-	if err := binary.Write(w, binary.LittleEndian, count); err != nil {
-		return err
-	}
-	for _, v := range freq {
-		if err := binary.Write(w, binary.LittleEndian, v); err != nil {
-			return err
-		}
-	}
-	return nil
+	return codec.WriteFrequencies(w, freq)
 }
 
 // ReadFrequencies deserializes a frequency table from the reader.
+// This is an alias for codec.ReadFrequencies for backward compatibility.
 func ReadFrequencies(r io.Reader) ([]uint32, error) {
-	var count uint32
-	if err := binary.Read(r, binary.LittleEndian, &count); err != nil {
-		return nil, codec.WrapError(codec.KindTruncated, "failed to read frequency table", err)
-	}
-	if count != uint32(SymbolLimit) {
-		return nil, codec.NewError(codec.KindCorrupt, fmt.Sprintf("invalid frequency table size: %d", count))
-	}
-	freq := make([]uint32, count)
-	if err := binary.Read(r, binary.LittleEndian, freq); err != nil {
-		return nil, codec.WrapError(codec.KindTruncated, "failed to read frequency table", err)
-	}
-	return freq, nil
+	return codec.ReadFrequencies(r, SymbolLimit)
 }
 
 // BuildCodes generates Huffman codes for each symbol by traversing the tree.
@@ -292,6 +274,32 @@ func Decode(r io.Reader, w io.Writer) error {
 		return codec.NewError(codec.KindTruncated, "input data corrupted or truncated")
 	}
 	return bw.Flush()
+}
+
+// NewStreamingEncoder creates a new streaming Huffman encoder.
+// It uses a buffered encoder that collects all input and encodes in one pass
+// during Finish(), since Huffman encoding requires complete input for frequency analysis.
+func NewStreamingEncoder() codec.Encoder {
+	return codec.NewBufferedEncoder(func(input []byte) ([]byte, error) {
+		var outBuf bytes.Buffer
+		if err := Encode(bytes.NewReader(input), &outBuf); err != nil {
+			return nil, err
+		}
+		return outBuf.Bytes(), nil
+	})
+}
+
+// NewStreamingDecoder creates a new streaming Huffman decoder.
+// It uses a buffered decoder that collects all input and decodes in one pass
+// during Finish().
+func NewStreamingDecoder() codec.Decoder {
+	return codec.NewBufferedDecoder(func(input []byte) ([]byte, error) {
+		var outBuf bytes.Buffer
+		if err := Decode(bytes.NewReader(input), &outBuf); err != nil {
+			return nil, err
+		}
+		return outBuf.Bytes(), nil
+	})
 }
 
 // EncodeFile is a convenience function for file-based encoding.

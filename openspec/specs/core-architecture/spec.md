@@ -142,6 +142,42 @@ The project SHALL maintain development tool configurations.
 
 All algorithm implementations SHALL expose a streaming interface with a defined lifecycle.
 
+#### State Machine Definition
+
+The streaming layer uses a 5-state lifecycle:
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                         State Transition Table                    │
+├─────────────┬──────────────────────────────────────────────────────┤
+│ State       │ Valid Operations                                    │
+├─────────────┼──────────────────────────────────────────────────────┤
+│ READY       │ process() → STREAMING                               │
+│             │ flush()    → READY (no-op)                          │
+│             │ finish()   → FINISHED (empty input)                 │
+│             │ reset()    → READY                                  │
+├─────────────┼──────────────────────────────────────────────────────┤
+│ STREAMING   │ process() → STREAMING                               │
+│             │ flush()    → FLUSHING                               │
+│             │ finish()   → FINISHED                               │
+│             │ reset()    → READY                                  │
+├─────────────┼──────────────────────────────────────────────────────┤
+│ FLUSHING    │ process() → STREAMING                               │
+│             │ flush()    → FLUSHING (idempotent)                  │
+│             │ finish()   → FINISHED                               │
+│             │ reset()    → READY                                  │
+├─────────────┼──────────────────────────────────────────────────────┤
+│ FINISHED    │ reset()    → READY                                  │
+│             │ (any other) → ERROR                                 │
+├─────────────┼──────────────────────────────────────────────────────┤
+│ ERROR       │ reset()    → READY                                  │
+│             │ (any other) → ERROR (return ERR_INVALID_STATE)      │
+└─────────────┴──────────────────────────────────────────────────────┘
+```
+
+**Error Transitions**: Any operation that returns an error transitions to ERROR state,
+except `BUF_TOO_SMALL` which is transactional (state unchanged).
+
 #### Scenario: Streaming encoder lifecycle
 - **GIVEN** a freshly constructed encoder
 - **WHEN** caller calls `process(chunk)` one or more times, then `finish()`

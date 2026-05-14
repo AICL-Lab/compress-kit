@@ -56,7 +56,7 @@ func TestWriteReadFrequencies_RoundTrip(t *testing.T) {
 		t.Fatalf("WriteFrequencies failed: %v", err)
 	}
 
-	got, err := ReadFrequencies(&buf)
+	got, err := ReadFrequencies(&buf, 0)
 	if err != nil {
 		t.Fatalf("ReadFrequencies failed: %v", err)
 	}
@@ -75,7 +75,7 @@ func TestReadFrequencies_Truncated(t *testing.T) {
 	// Only write count, not the actual frequencies
 	buf := bytes.NewBuffer([]byte{3, 0, 0, 0}) // count = 3
 
-	_, err := ReadFrequencies(buf)
+	_, err := ReadFrequencies(buf, 0)
 	if err == nil {
 		t.Error("expected error for truncated frequency table")
 	}
@@ -85,9 +85,19 @@ func TestReadFrequencies_InvalidCount(t *testing.T) {
 	// count = 0
 	buf := bytes.NewBuffer([]byte{0, 0, 0, 0})
 
-	_, err := ReadFrequencies(buf)
+	_, err := ReadFrequencies(buf, 0)
 	if err == nil {
 		t.Error("expected error for count = 0")
+	}
+}
+
+func TestReadFrequencies_ExpectedCountMismatch(t *testing.T) {
+	// Write count = 5
+	buf := bytes.NewBuffer([]byte{5, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 4, 0, 0, 0, 5, 0, 0, 0})
+
+	_, err := ReadFrequencies(buf, 3) // expect 3, but got 5
+	if err == nil {
+		t.Error("expected error for count mismatch")
 	}
 }
 

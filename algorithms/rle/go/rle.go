@@ -3,6 +3,7 @@ package rle
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
@@ -139,6 +140,46 @@ func Decode(r io.Reader, w io.Writer) error {
 	}
 
 	return bw.Flush()
+}
+
+// countRun counts consecutive identical bytes starting at pos.
+// Returns the count and the byte value.
+func countRun(data []byte, pos int) (count int, value byte) {
+	if pos >= len(data) {
+		return 0, 0
+	}
+	value = data[pos]
+	count = 1
+	for pos+count < len(data) && data[pos+count] == value && count < int(^uint32(0)) {
+		count++
+	}
+	return count, value
+}
+
+// NewStreamingEncoder creates a new streaming RLE encoder.
+// It uses a buffered encoder that collects all input and encodes in one pass
+// during Finish().
+func NewStreamingEncoder() codec.Encoder {
+	return codec.NewBufferedEncoder(func(input []byte) ([]byte, error) {
+		var outBuf bytes.Buffer
+		if err := Encode(bytes.NewReader(input), &outBuf); err != nil {
+			return nil, err
+		}
+		return outBuf.Bytes(), nil
+	})
+}
+
+// NewStreamingDecoder creates a new streaming RLE decoder.
+// It uses a buffered decoder that collects all input and decodes in one pass
+// during Finish().
+func NewStreamingDecoder() codec.Decoder {
+	return codec.NewBufferedDecoder(func(input []byte) ([]byte, error) {
+		var outBuf bytes.Buffer
+		if err := Decode(bytes.NewReader(input), &outBuf); err != nil {
+			return nil, err
+		}
+		return outBuf.Bytes(), nil
+	})
 }
 
 // EncodeFile is a convenience function for file-based encoding.

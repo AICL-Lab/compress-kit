@@ -14,14 +14,15 @@ const EOFSymbol = SymbolLimit - 1
 
 // WriteFrequencies serializes a frequency table to the writer.
 // The format is: count (uint32 LE) followed by count frequency values (uint32 LE each).
+// This is the standard format shared by all entropy-based algorithms (Huffman, Arithmetic, Range).
 func WriteFrequencies(w io.Writer, freq []uint32) error {
 	count := uint32(len(freq))
 	if err := binary.Write(w, binary.LittleEndian, count); err != nil {
-		return err
+		return WrapError(KindIO, "failed to write frequency count", err)
 	}
-	for _, v := range freq {
+	for i, v := range freq {
 		if err := binary.Write(w, binary.LittleEndian, v); err != nil {
-			return err
+			return WrapError(KindIO, fmt.Sprintf("failed to write frequency[%d]", i), err)
 		}
 	}
 	return nil
@@ -29,7 +30,9 @@ func WriteFrequencies(w io.Writer, freq []uint32) error {
 
 // ReadFrequencies deserializes a frequency table from the reader.
 // Expects the format written by WriteFrequencies.
-func ReadFrequencies(r io.Reader) ([]uint32, error) {
+// Returns an error if the count is 0, exceeds 1024, or doesn't match expectedCount.
+// Pass 0 for expectedCount to skip the count validation.
+func ReadFrequencies(r io.Reader, expectedCount uint32) ([]uint32, error) {
 	var count uint32
 	if err := binary.Read(r, binary.LittleEndian, &count); err != nil {
 		return nil, WrapError(KindTruncated, "failed to read frequency table", err)
@@ -37,9 +40,12 @@ func ReadFrequencies(r io.Reader) ([]uint32, error) {
 	if count == 0 || count > 1024 {
 		return nil, NewError(KindCorrupt, fmt.Sprintf("invalid frequency table size: %d", count))
 	}
+	if expectedCount > 0 && count != expectedCount {
+		return nil, NewError(KindCorrupt, fmt.Sprintf("unexpected frequency table size: got %d, want %d", count, expectedCount))
+	}
 	freq := make([]uint32, count)
 	if err := binary.Read(r, binary.LittleEndian, freq); err != nil {
-		return nil, WrapError(KindTruncated, "failed to read frequency table", err)
+		return nil, WrapError(KindTruncated, "failed to read frequency table values", err)
 	}
 	return freq, nil
 }
@@ -108,4 +114,61 @@ func BuildFrequencies(data []byte) []uint32 {
 	}
 	freq[EOFSymbol] = 1
 	return freq
+}
+
+// WriteU32LE appends a uint32 in little-endian format to a byte slice.
+func WriteU32LE(out *[]byte, v uint32) {
+	*out = append(*out,
+		byte(v&0xFF),
+		byte((v>>8)&0xFF),
+		byte((v>>16)&0xFF),
+		byte((v>>24)&0xFF),
+	)
+}
+
+// ReadU32LE reads a uint32 in little-endian format from a byte slice at the given position.
+// Returns the value and true if successful, or 0 and false if out of bounds.
+func ReadU32LE(in []byte, pos *int) (uint32, bool) {
+	if *pos+4 > len(in) {
+		return 0, false
+	}
+	v := uint32(in[*pos]) |
+		uint32(in[*pos+1])<<8 |
+		uint32(in[*pos+2])<<16 |
+		uint32(in[*pos+3])<<24
+	*pos += 4
+	return v, true
+}
+
+// WriteFrequenciesToBytes appends a frequency table to a byte slice.
+// This is useful for algorithms that work with byte slices directly.
+func WriteFrequenciesToBytes(out *[]byte, freq []uint32) {
+	WriteU32LE(out, uint32(len(freq)))
+	for _, v := range freq {
+		WriteU32LE(out, v)
+	}
+}
+
+// ReadFrequenciesFromBytes reads a frequency table from a byte slice at the given position.
+// Returns the frequencies and the number of bytes read.
+func ReadFrequenciesFromBytes(in []byte, pos *int, expectedCount uint32) ([]uint32, error) {
+	count, ok := ReadU32LE(in, pos)
+	if !ok {
+		return nil, NewError(KindTruncated, "failed to read frequency count")
+	}
+	if count == 0 || count > 1024 {
+		return nil, NewError(KindCorrupt, fmt.Sprintf("invalid frequency table size: %d", count))
+	}
+	if expectedCount > 0 && count != expectedCount {
+		return nil, NewError(KindCorrupt, fmt.Sprintf("unexpected frequency table size: got %d, want %d", count, expectedCount))
+	}
+	freq := make([]uint32, count)
+	for i := uint32(0); i < count; i++ {
+		v, ok := ReadU32LE(in, pos)
+		if !ok {
+			return nil, NewError(KindTruncated, "failed to read frequency values")
+		}
+		freq[i] = v
+	}
+	return freq, nil
 }

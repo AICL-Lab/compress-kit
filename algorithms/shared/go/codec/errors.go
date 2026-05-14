@@ -24,6 +24,8 @@ const (
 	KindVersionUnsupported
 	// KindUnknownAlgo indicates unknown algorithm ID in frame header.
 	KindUnknownAlgo
+	// KindIO indicates an I/O error (read/write failure).
+	KindIO
 )
 
 // CodecError is a structured error with a semantic kind and optional cause.

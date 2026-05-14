@@ -3,7 +3,7 @@ package arithmetic
 
 import (
 	"bufio"
-	"encoding/binary"
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -179,44 +179,31 @@ func (d *ArithmeticDecoder) DecodeSymbol(cumulative []uint32) uint32 {
 }
 
 // ScaleFrequencies normalizes frequencies to fit within MaxTotal.
+// This is an alias for codec.ScaleFrequencies for backward compatibility.
 func ScaleFrequencies(freq []uint32) {
-	var total uint64
-	for _, f := range freq {
-		total += uint64(f)
-	}
-	if total == 0 {
-		for i := range freq {
-			freq[i] = 1
-		}
-		return
-	}
-	if total <= uint64(MaxTotal) {
-		return
-	}
-	var newTotal uint64
-	for i, f := range freq {
-		if f == 0 {
-			continue
-		}
-		scaled := uint64(f) * uint64(MaxTotal) / total
-		if scaled == 0 {
-			scaled = 1
-		}
-		freq[i] = uint32(scaled)
-		newTotal += scaled
-	}
-	if newTotal == 0 {
-		base := MaxTotal / uint32(len(freq))
-		if base == 0 {
-			base = 1
-		}
-		for i := range freq {
-			freq[i] = base
-		}
-	}
+	codec.ScaleFrequencies(freq, MaxTotal)
+}
+
+// BuildCumulative builds a cumulative frequency table from frequencies.
+// This is an alias for codec.BuildCumulative for backward compatibility.
+func BuildCumulative(freq []uint32) []uint32 {
+	return codec.BuildCumulative(freq)
+}
+
+// WriteFrequencies serializes a frequency table to the writer.
+// This is an alias for codec.WriteFrequencies for backward compatibility.
+func WriteFrequencies(w io.Writer, freq []uint32) error {
+	return codec.WriteFrequencies(w, freq)
+}
+
+// ReadFrequencies deserializes a frequency table from the reader.
+// This is an alias for codec.ReadFrequencies for backward compatibility.
+func ReadFrequencies(r io.Reader) ([]uint32, error) {
+	return codec.ReadFrequencies(r, SymbolLimit)
 }
 
 // BuildFrequenciesFromFile reads a file and counts byte frequencies.
+// The frequencies are scaled to fit within MaxTotal.
 func BuildFrequenciesFromFile(path string) ([]uint32, error) {
 	freq := make([]uint32, SymbolLimit)
 	f, err := os.Open(path)
@@ -243,50 +230,6 @@ func BuildFrequenciesFromFile(path string) ([]uint32, error) {
 	}
 	freq[EOFSymbol] = 1
 	ScaleFrequencies(freq)
-	return freq, nil
-}
-
-// BuildCumulative builds a cumulative frequency table from frequencies.
-func BuildCumulative(freq []uint32) []uint32 {
-	cum := make([]uint32, len(freq)+1)
-	for i, f := range freq {
-		cum[i+1] = cum[i] + f
-	}
-	if cum[len(cum)-1] == 0 {
-		for i := range freq {
-			cum[i+1] = uint32(i + 1)
-		}
-	}
-	return cum
-}
-
-// WriteFrequencies serializes a frequency table to the writer.
-func WriteFrequencies(w io.Writer, freq []uint32) error {
-	count := uint32(len(freq))
-	if err := binary.Write(w, binary.LittleEndian, count); err != nil {
-		return err
-	}
-	for _, v := range freq {
-		if err := binary.Write(w, binary.LittleEndian, v); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// ReadFrequencies deserializes a frequency table from the reader.
-func ReadFrequencies(r io.Reader) ([]uint32, error) {
-	var count uint32
-	if err := binary.Read(r, binary.LittleEndian, &count); err != nil {
-		return nil, codec.WrapError(codec.KindTruncated, "failed to read frequency table", err)
-	}
-	if count != uint32(SymbolLimit) {
-		return nil, codec.NewError(codec.KindCorrupt, fmt.Sprintf("invalid frequency table size: %d", count))
-	}
-	freq := make([]uint32, count)
-	if err := binary.Read(r, binary.LittleEndian, freq); err != nil {
-		return nil, codec.WrapError(codec.KindTruncated, "failed to read frequency table", err)
-	}
 	return freq, nil
 }
 
@@ -364,6 +307,32 @@ func Decode(r io.Reader, w io.Writer) error {
 	}
 
 	return bw.Flush()
+}
+
+// NewStreamingEncoder creates a new streaming Arithmetic encoder.
+// It uses a buffered encoder that collects all input and encodes in one pass
+// during Finish(), since Arithmetic encoding requires complete input for frequency analysis.
+func NewStreamingEncoder() codec.Encoder {
+	return codec.NewBufferedEncoder(func(input []byte) ([]byte, error) {
+		var outBuf bytes.Buffer
+		if err := Encode(bytes.NewReader(input), &outBuf); err != nil {
+			return nil, err
+		}
+		return outBuf.Bytes(), nil
+	})
+}
+
+// NewStreamingDecoder creates a new streaming Arithmetic decoder.
+// It uses a buffered decoder that collects all input and decodes in one pass
+// during Finish().
+func NewStreamingDecoder() codec.Decoder {
+	return codec.NewBufferedDecoder(func(input []byte) ([]byte, error) {
+		var outBuf bytes.Buffer
+		if err := Decode(bytes.NewReader(input), &outBuf); err != nil {
+			return nil, err
+		}
+		return outBuf.Bytes(), nil
+	})
 }
 
 // EncodeFile is a convenience function for file-based encoding.

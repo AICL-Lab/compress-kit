@@ -6,6 +6,7 @@ pub mod codec {
     pub mod buffered;
     pub mod encoder;
     pub mod error;
+    pub mod streaming;
     pub mod write;
 
     pub use bits::{BitReader, BitWriter};
@@ -15,5 +16,6 @@ pub mod codec {
     pub use error::{
         io_error_to_codec_error, map_io_error, CodecError, State, MAX_INPUT_SIZE, MAX_OUTPUT_SIZE,
     };
+    pub use streaming::{streaming_decoder, streaming_encoder};
     pub use write::WriteEncoder;
 }

@@ -291,7 +291,6 @@ pub fn decode(encoded: &[u8]) -> Result<Vec<u8>, RangeError> {
 }
 
 // Streaming adapters
-use compresskit_codec::codec::{BufferedDecoder, BufferedEncoder, CodecError, Decoder, Encoder};
 
 impl From<RangeError> for CodecError {
     fn from(e: RangeError) -> Self {
@@ -307,14 +306,18 @@ impl From<RangeError> for CodecError {
     }
 }
 
+use compresskit_codec::codec::{
+    streaming_decoder, streaming_encoder, CodecError, Decoder, Encoder,
+};
+
 /// Creates a new streaming Range encoder.
 pub fn new_encoder() -> impl Encoder {
-    BufferedEncoder::new(range_encode)
+    streaming_encoder(range_encode)
 }
 
 /// Creates a new streaming Range decoder.
 pub fn new_decoder() -> impl Decoder {
-    BufferedDecoder::new(range_decode)
+    streaming_decoder(range_decode)
 }
 
 fn range_encode(input: &[u8]) -> Result<Vec<u8>, CodecError> {

@@ -228,17 +228,17 @@ pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
 
 // Streaming adapters
 use compresskit_codec::codec::{
-    io_error_to_codec_error, BufferedDecoder, BufferedEncoder, CodecError, Decoder, Encoder,
+    io_error_to_codec_error, streaming_decoder, streaming_encoder, CodecError, Decoder, Encoder,
 };
 
 /// Creates a new streaming Huffman encoder.
 pub fn new_encoder() -> impl Encoder {
-    BufferedEncoder::new(huffman_encode)
+    streaming_encoder(huffman_encode)
 }
 
 /// Creates a new streaming Huffman decoder.
 pub fn new_decoder() -> impl Decoder {
-    BufferedDecoder::new(huffman_decode)
+    streaming_decoder(huffman_decode)
 }
 
 fn huffman_encode(input: &[u8]) -> Result<Vec<u8>, CodecError> {

@@ -269,17 +269,17 @@ pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
 
 // Streaming adapters
 use compresskit_codec::codec::{
-    io_error_to_codec_error, BufferedDecoder, BufferedEncoder, CodecError, Decoder, Encoder,
+    io_error_to_codec_error, streaming_decoder, streaming_encoder, CodecError, Decoder, Encoder,
 };
 
 /// Creates a new streaming Arithmetic encoder.
 pub fn new_encoder() -> impl Encoder {
-    BufferedEncoder::new(arithmetic_encode)
+    streaming_encoder(arithmetic_encode)
 }
 
 /// Creates a new streaming Arithmetic decoder.
 pub fn new_decoder() -> impl Decoder {
-    BufferedDecoder::new(arithmetic_decode)
+    streaming_decoder(arithmetic_decode)
 }
 
 fn arithmetic_encode(input: &[u8]) -> Result<Vec<u8>, CodecError> {

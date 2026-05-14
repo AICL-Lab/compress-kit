@@ -242,6 +242,52 @@ func TestDecodeBuffer_ReturnsSizeLimitWhenGrowthStops(t *testing.T) {
 	}
 }
 
+func TestResizingBuffer_PreservesWrittenBytesAcrossRetry(t *testing.T) {
+	runner := newResizingBuffer(3, 12)
+	calls := 0
+
+	err := runner.run(func(out []byte) (int, error) {
+		calls++
+		if calls == 1 {
+			copy(out, []byte("abc"))
+			return 3, ErrBufTooSmall
+		}
+		copy(out, []byte("def"))
+		return 3, nil
+	})
+	if err != nil {
+		t.Fatalf("run() error = %v", err)
+	}
+	if got := string(runner.bytes()); got != "abcdef" {
+		t.Fatalf("bytes() = %q, want %q", got, "abcdef")
+	}
+}
+
+func TestNewResizingBuffer_ClampsInitialSizeToLimit(t *testing.T) {
+	runner := newResizingBuffer(8, 3)
+	if got := cap(runner.buf); got != 3 {
+		t.Fatalf("cap(buf) = %d, want 3", got)
+	}
+}
+
+func TestEncodeBufferWithLimit_UsesResizingBufferOutput(t *testing.T) {
+	stub := &scriptedEncoder{
+		process: []scriptedCall{{written: 0, err: nil}},
+		finish: []scriptedCall{
+			{written: 3, err: ErrBufTooSmall, payload: []byte("abc")},
+			{written: 3, err: nil, payload: []byte("def")},
+		},
+	}
+
+	out, err := encodeBufferWithLimit(stub, []byte("ignored"), 3, 12)
+	if err != nil {
+		t.Fatalf("encodeBufferWithLimit() error = %v", err)
+	}
+	if string(out) != "abcdef" {
+		t.Fatalf("encodeBufferWithLimit() = %q, want %q", out, "abcdef")
+	}
+}
+
 func TestDecodeBufferWithLimit_ClampsInitialSizeToLimit(t *testing.T) {
 	stub := &captureBufferDecoder{}
 

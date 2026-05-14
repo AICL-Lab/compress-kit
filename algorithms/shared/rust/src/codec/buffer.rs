@@ -1,67 +1,12 @@
+use crate::codec::buffer_policy::ResizingBuffer;
 use crate::codec::encoder::{Decoder, Encoder};
 use crate::codec::error::{CodecError, MAX_INPUT_SIZE, MAX_OUTPUT_SIZE};
-
-fn grow_buffer(current_len: usize, limit: usize) -> usize {
-    if current_len == 0 {
-        if limit < 1024 {
-            return limit;
-        }
-        return 1024;
-    }
-    let next = current_len.saturating_mul(2);
-    if next < current_len {
-        return limit;
-    }
-    if next > limit {
-        return limit;
-    }
-    next
-}
 
 fn encode_buffer_limit(input_len: usize) -> Result<usize, CodecError> {
     input_len
         .checked_mul(8)
         .and_then(|len| len.checked_add(2048))
         .ok_or(CodecError::SizeLimit)
-}
-
-type BufferStep<'a> = dyn FnMut(&mut [u8]) -> Result<usize, CodecError> + 'a;
-
-/// Runs one streaming step (`process` or `finish`), retrying with a larger
-/// buffer when the codec reports `BufTooSmall`.
-fn run_buffer_step(
-    out_buf: &mut Vec<u8>,
-    total_written: usize,
-    limit: usize,
-    step: &mut BufferStep<'_>,
-) -> Result<usize, CodecError> {
-    let mut total_written = total_written;
-
-    loop {
-        match step(&mut out_buf[total_written..]) {
-            Ok(n) => {
-                total_written = total_written.checked_add(n).ok_or(CodecError::SizeLimit)?;
-                if total_written > limit {
-                    return Err(CodecError::SizeLimit);
-                }
-                return Ok(total_written);
-            }
-            Err(CodecError::BufTooSmall) => {
-                debug_assert!(total_written <= limit);
-                if out_buf.len() >= limit {
-                    return Err(CodecError::SizeLimit);
-                }
-
-                let new_size = grow_buffer(out_buf.len(), limit);
-                if new_size <= out_buf.len() {
-                    return Err(CodecError::SizeLimit);
-                }
-
-                out_buf.resize(new_size, 0);
-            }
-            Err(err) => return Err(err),
-        }
-    }
 }
 
 /// EncodeBuffer is a convenience function that encodes input using the streaming API.
@@ -74,23 +19,14 @@ pub fn encode_buffer(encoder: &mut dyn Encoder, input: &[u8]) -> Result<Vec<u8>,
     }
 
     let encode_limit = encode_buffer_limit(input.len())?;
+    let mut runner = ResizingBuffer::new(
+        input.len().saturating_mul(2).saturating_add(2048),
+        encode_limit,
+    );
 
-    // Allocate output buffer using a conservative estimate.
-    // Use 2x input size + 2KB overhead as a reasonable initial allocation.
-    let initial_size = input
-        .len()
-        .saturating_mul(2)
-        .saturating_add(2048)
-        .min(encode_limit);
-    let mut out_buf = vec![0u8; initial_size];
-    let mut process = |output: &mut [u8]| encoder.process(input, output);
-    let mut total_written = run_buffer_step(&mut out_buf, 0, encode_limit, &mut process)?;
-
-    let mut finish = |output: &mut [u8]| encoder.finish(output);
-    total_written = run_buffer_step(&mut out_buf, total_written, encode_limit, &mut finish)?;
-
-    out_buf.truncate(total_written);
-    Ok(out_buf)
+    runner.run(&mut |output| encoder.process(input, output))?;
+    runner.run(&mut |output| encoder.finish(output))?;
+    Ok(runner.into_vec())
 }
 
 pub(crate) fn decode_buffer_with_limit(
@@ -102,18 +38,10 @@ pub(crate) fn decode_buffer_with_limit(
         return Err(CodecError::SizeLimit);
     }
 
-    // Allocate output buffer.
-    // Decode typically expands, so start with input size and grow as needed.
-    let initial_size = input.len().saturating_add(1024);
-    let mut out_buf = vec![0u8; initial_size];
-    let mut process = |output: &mut [u8]| decoder.process(input, output);
-    let mut total_written = run_buffer_step(&mut out_buf, 0, limit, &mut process)?;
-
-    let mut finish = |output: &mut [u8]| decoder.finish(output);
-    total_written = run_buffer_step(&mut out_buf, total_written, limit, &mut finish)?;
-
-    out_buf.truncate(total_written);
-    Ok(out_buf)
+    let mut runner = ResizingBuffer::new(input.len().saturating_add(1024), limit);
+    runner.run(&mut |output| decoder.process(input, output))?;
+    runner.run(&mut |output| decoder.finish(output))?;
+    Ok(runner.into_vec())
 }
 
 /// DecodeBuffer is a convenience function that decodes input using the streaming API.
@@ -126,8 +54,9 @@ pub fn decode_buffer(decoder: &mut dyn Decoder, input: &[u8]) -> Result<Vec<u8>,
 
 #[cfg(test)]
 mod tests {
+    use super::encode_buffer;
     use super::decode_buffer_with_limit;
-    use crate::codec::encoder::Decoder;
+    use crate::codec::encoder::{Decoder, Encoder};
     use crate::codec::error::{CodecError, State};
 
     struct LimitHitProcessDecoder {
@@ -169,5 +98,41 @@ mod tests {
         assert_eq!(err, CodecError::SizeLimit);
         assert_eq!(decoder.process_calls, 1);
         assert_eq!(decoder.finish_calls, 0);
+    }
+
+    #[test]
+    fn encode_buffer_retries_finish_after_buffer_growth() {
+        struct RetryEncoder {
+            calls: usize,
+        }
+
+        impl Encoder for RetryEncoder {
+            fn process(&mut self, _: &[u8], _: &mut [u8]) -> Result<usize, CodecError> {
+                Ok(0)
+            }
+
+            fn flush(&mut self, _: &mut [u8]) -> Result<usize, CodecError> {
+                Ok(0)
+            }
+
+            fn finish(&mut self, out: &mut [u8]) -> Result<usize, CodecError> {
+                self.calls += 1;
+                if self.calls == 1 {
+                    return Err(CodecError::BufTooSmall);
+                }
+                out[..6].copy_from_slice(b"abcdef");
+                Ok(6)
+            }
+
+            fn reset(&mut self) {}
+
+            fn state(&self) -> State {
+                State::Streaming
+            }
+        }
+
+        let mut encoder = RetryEncoder { calls: 0 };
+        let out = encode_buffer(&mut encoder, b"ignored").unwrap();
+        assert_eq!(out, b"abcdef");
     }
 }

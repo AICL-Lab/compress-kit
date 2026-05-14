@@ -2,7 +2,7 @@ pub mod cli;
 pub mod codec {
     pub mod bits;
     pub mod buffer;
-    pub mod buffer_policy;
+    mod buffer_policy;
     pub mod buffered;
     pub mod encoder;
     pub mod error;

@@ -161,7 +161,10 @@ func Encode(input io.Reader, w io.Writer) error {
 		return fmt.Errorf("input too large (max %d bytes)", MaxInputSize)
 	}
 
-	freq := codec.BuildFrequencies(data)
+	freq, err := codec.BuildFrequenciesChecked(data)
+	if err != nil {
+		return fmt.Errorf("failed to count input frequencies: %w", err)
+	}
 
 	root := BuildTree(freq)
 	codes := make([]string, SymbolLimit)

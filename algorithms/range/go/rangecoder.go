@@ -14,8 +14,8 @@ func scaleFrequencies(freq []uint32) {
 	codec.ScaleFrequencies(freq, maxTotal)
 }
 
-func buildFrequencies(data []byte) []uint32 {
-	return codec.BuildScaledFrequencies(data, maxTotal)
+func buildFrequencies(data []byte) ([]uint32, error) {
+	return codec.BuildScaledFrequenciesChecked(data, maxTotal)
 }
 
 func buildCumulative(freq []uint32) []uint32 {
@@ -143,7 +143,10 @@ func (d *decoder) decodeSymbol(cumulative []uint32) uint32 {
 }
 
 func Encode(input []byte) ([]byte, error) {
-	freq := buildFrequencies(input)
+	freq, err := buildFrequencies(input)
+	if err != nil {
+		return nil, err
+	}
 	cum := buildCumulative(freq)
 
 	out := make([]byte, 0, len(input))

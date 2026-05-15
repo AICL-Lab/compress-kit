@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"math"
 	"testing"
 )
 
@@ -73,6 +74,22 @@ func TestBuildFrequencies_Empty(t *testing.T) {
 	}
 }
 
+func TestAccumulateFrequencies_RejectsSymbolOverflow(t *testing.T) {
+	freq := make([]uint32, SymbolLimit)
+	freq['a'] = math.MaxUint32
+
+	err := accumulateFrequencies(freq, []byte{'a'})
+	if err == nil {
+		t.Fatal("expected overflow error")
+	}
+	if !errors.Is(err, ErrSizeLimit) {
+		t.Fatalf("expected size limit error, got %v", err)
+	}
+	if freq['a'] != math.MaxUint32 {
+		t.Fatalf("freq['a'] = %d, want %d", freq['a'], uint32(math.MaxUint32))
+	}
+}
+
 func TestBuildScaledFrequencies_ClampsTotalAndPreservesEOF(t *testing.T) {
 	data := append(bytes.Repeat([]byte{'a'}, 12), bytes.Repeat([]byte{'b'}, 6)...)
 
@@ -105,6 +122,23 @@ func TestBuildScaledFrequencies_MatchesScaleFrequenciesSemantics(t *testing.T) {
 		if got[i] != want[i] {
 			t.Fatalf("got[%d] = %d, want %d", i, got[i], want[i])
 		}
+	}
+}
+
+func TestScaleFrequencies_PreservesObservedSymbolsWhenBudgetIsTooSmall(t *testing.T) {
+	freq := []uint32{4, 3, 2}
+
+	ScaleFrequencies(freq, 2)
+
+	var total uint32
+	for i, f := range freq {
+		if f == 0 {
+			t.Fatalf("freq[%d] = 0, want observed symbol preserved", i)
+		}
+		total += f
+	}
+	if total <= 2 {
+		t.Fatalf("total = %d, want > 2 when preserving all observed symbols", total)
 	}
 }
 

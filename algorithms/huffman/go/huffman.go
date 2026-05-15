@@ -115,11 +115,11 @@ func BuildFrequenciesFromFile(path string) ([]uint32, error) {
 		return nil, fmt.Errorf("input file too large (max %d bytes)", MaxInputSize)
 	}
 
-	data, err := io.ReadAll(bufio.NewReader(f))
+	freq, err := codec.BuildFrequenciesFromReader(bufio.NewReader(f))
 	if err != nil {
 		return nil, fmt.Errorf("cannot read input file: %s: %w", path, err)
 	}
-	return codec.BuildFrequencies(data), nil
+	return freq, nil
 }
 
 // WriteFrequencies serializes a frequency table to the writer.

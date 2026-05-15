@@ -271,7 +271,10 @@ func Decode(r io.Reader, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	cumulative := codec.BuildCumulative(freq)
+	cumulative, err := codec.BuildCumulativeStrict(freq, "invalid frequency table")
+	if err != nil {
+		return err
+	}
 
 	bw := bufio.NewWriter(w)
 	bitReader := codec.NewBitReader(br)

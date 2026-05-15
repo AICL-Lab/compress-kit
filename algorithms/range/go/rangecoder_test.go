@@ -118,3 +118,19 @@ func TestDecodeRejectsAllZeroFrequencyTableWithNoPayload(t *testing.T) {
 		t.Fatalf("err = %q, want %q", err.Error(), "range: invalid frequency table")
 	}
 }
+
+func TestDecodeRejectsCompleteUnexpectedSymbolCountHeader(t *testing.T) {
+	encoded := []byte{'R', 'C', 'N', 'C'}
+	codec.AppendFrequencies(&encoded, make([]uint32, 256))
+
+	_, err := Decode(encoded)
+	if err == nil {
+		t.Fatal("expected error for unexpected symbol count")
+	}
+	if !errors.Is(err, codec.ErrCorrupt) {
+		t.Fatalf("expected corrupt error, got %v", err)
+	}
+	if err.Error() != "range: unexpected symbol count" {
+		t.Fatalf("err = %q, want %q", err.Error(), "range: unexpected symbol count")
+	}
+}

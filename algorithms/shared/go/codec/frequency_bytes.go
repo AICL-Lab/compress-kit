@@ -31,6 +31,27 @@ func AppendFrequencies(out *[]byte, freq []uint32) {
 	}
 }
 
+// ReadFrequenciesFromBytes reads a bounded frequency table from a byte slice.
+func ReadFrequenciesFromBytes(in []byte, pos *int) ([]uint32, error) {
+	count, ok := readU32LE(in, pos)
+	if !ok {
+		return nil, NewError(KindTruncated, "failed to read frequency table")
+	}
+	if count == 0 || count > 1024 {
+		return nil, NewError(KindCorrupt, fmt.Sprintf("invalid frequency table size: %d", count))
+	}
+
+	freq := make([]uint32, count)
+	for i := range freq {
+		value, ok := readU32LE(in, pos)
+		if !ok {
+			return nil, NewError(KindTruncated, "failed to read frequency table")
+		}
+		freq[i] = value
+	}
+	return freq, nil
+}
+
 // ReadFrequenciesFromBytesExact reads a frequency table from a byte slice and
 // rejects any table whose count does not match expectedCount.
 func ReadFrequenciesFromBytesExact(in []byte, pos *int, expectedCount int) ([]uint32, error) {

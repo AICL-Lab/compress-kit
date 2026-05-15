@@ -39,7 +39,7 @@ func readHeader(in []byte, pos *int) ([]uint32, error) {
 		return nil, codec.NewError(codec.KindCorrupt, "range: bad magic")
 	}
 	*pos = 4
-	freq, err := codec.ReadFrequenciesFromBytesExact(in, pos, codec.SymbolLimit)
+	freq, err := codec.ReadFrequenciesFromBytes(in, pos)
 	if err != nil {
 		if codecErr, ok := err.(*codec.CodecError); ok && codecErr.Kind == codec.KindTruncated {
 			return nil, codec.NewError(codec.KindTruncated, "range: truncated header")

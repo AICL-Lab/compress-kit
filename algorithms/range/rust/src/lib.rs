@@ -219,6 +219,7 @@ impl From<RangeError> for CodecError {
             CodecError::Truncated
         } else if e.0.contains("bad")
             || e.0.contains("corrupt")
+            || e.0.contains("invalid frequency table")
             || e.0.contains("unexpected symbol count")
         {
             CodecError::Corrupt
@@ -314,6 +315,36 @@ mod tests {
         let err = decode(&encoded).unwrap_err();
 
         assert_eq!(err.to_string(), "range: invalid frequency table");
+    }
+
+    #[test]
+    fn range_decode_maps_invalid_frequency_table_to_corrupt_without_changing_other_mappings() {
+        let mut invalid_table = Vec::new();
+        invalid_table.extend_from_slice(b"RCNC");
+        invalid_table.extend_from_slice(&(SYMBOL_LIMIT as u32).to_le_bytes());
+        for _ in 0..SYMBOL_LIMIT {
+            invalid_table.extend_from_slice(&0u32.to_le_bytes());
+        }
+
+        let err = range_decode(&invalid_table).unwrap_err();
+        assert_eq!(err, CodecError::Corrupt);
+
+        assert_eq!(
+            CodecError::from(RangeError("range: truncated header")),
+            CodecError::Truncated
+        );
+        assert_eq!(
+            CodecError::from(RangeError("range: bad magic")),
+            CodecError::Corrupt
+        );
+        assert_eq!(
+            CodecError::from(RangeError("range: unexpected symbol count")),
+            CodecError::Corrupt
+        );
+        assert_eq!(
+            CodecError::from(RangeError("range: output size limit exceeded")),
+            CodecError::SizeLimit
+        );
     }
 
     #[test]

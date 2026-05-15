@@ -93,16 +93,18 @@ pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
 }
 
 // Streaming adapters
-use compresskit_codec::codec::{BufferedDecoder, BufferedEncoder, CodecError, Decoder, Encoder};
+use compresskit_codec::codec::{
+    streaming_decoder, streaming_encoder, CodecError, Decoder, Encoder,
+};
 
 /// Creates a new streaming RLE encoder.
 pub fn new_encoder() -> impl Encoder {
-    BufferedEncoder::new(rle_encode)
+    streaming_encoder(rle_encode)
 }
 
 /// Creates a new streaming RLE decoder.
 pub fn new_decoder() -> impl Decoder {
-    BufferedDecoder::new(rle_decode)
+    streaming_decoder(rle_decode)
 }
 
 fn rle_encode(input: &[u8]) -> Result<Vec<u8>, CodecError> {

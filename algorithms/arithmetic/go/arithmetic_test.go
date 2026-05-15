@@ -2,9 +2,13 @@ package arithmetic
 
 import (
 	"bytes"
+	"encoding/binary"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/LessUp/compress-kit/algorithms/shared/go/codec"
 )
 
 func TestCompressDecompressRoundTrip(t *testing.T) {
@@ -112,5 +116,32 @@ func TestCompressDecompressAllBytes(t *testing.T) {
 	}
 	if !bytes.Equal(decoded, data) {
 		t.Fatalf("round-trip mismatch")
+	}
+}
+
+func TestDecodeRejectsAllZeroFrequencyTable(t *testing.T) {
+	var encoded bytes.Buffer
+	if _, err := encoded.Write([]byte("AENC")); err != nil {
+		t.Fatalf("write magic: %v", err)
+	}
+	if err := binary.Write(&encoded, binary.LittleEndian, uint32(codec.SymbolLimit)); err != nil {
+		t.Fatalf("write count: %v", err)
+	}
+	for i := 0; i < codec.SymbolLimit; i++ {
+		if err := binary.Write(&encoded, binary.LittleEndian, uint32(0)); err != nil {
+			t.Fatalf("write freq[%d]: %v", i, err)
+		}
+	}
+	if _, err := encoded.Write([]byte{0xFF, 0xFF, 0xFF, 0xFF}); err != nil {
+		t.Fatalf("write trailer: %v", err)
+	}
+
+	var decoded bytes.Buffer
+	err := Decode(bytes.NewReader(encoded.Bytes()), &decoded)
+	if err == nil {
+		t.Fatal("expected decode to reject all-zero frequency table")
+	}
+	if !errors.Is(err, codec.ErrCorrupt) {
+		t.Fatalf("expected corrupt error, got %v", err)
 	}
 }

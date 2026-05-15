@@ -2,8 +2,34 @@ package codec
 
 import (
 	"bytes"
+	"errors"
+	"io"
+	"math"
 	"testing"
 )
+
+type chunkedReader struct {
+	data      []byte
+	chunkSize int
+	offset    int
+}
+
+func (r *chunkedReader) Read(p []byte) (int, error) {
+	if r.offset >= len(r.data) {
+		return 0, io.EOF
+	}
+	n := r.chunkSize
+	if n > len(p) {
+		n = len(p)
+	}
+	remaining := len(r.data) - r.offset
+	if n > remaining {
+		n = remaining
+	}
+	copy(p, r.data[r.offset:r.offset+n])
+	r.offset += n
+	return n, nil
+}
 
 func TestSymbolLimit(t *testing.T) {
 	// SymbolLimit should be 257 (256 bytes + 1 EOF)
@@ -45,6 +71,128 @@ func TestBuildFrequencies_Empty(t *testing.T) {
 	// EOF should always be 1
 	if freq[EOFSymbol] != 1 {
 		t.Errorf("freq[EOF] = %d, want 1", freq[EOFSymbol])
+	}
+}
+
+func TestAccumulateFrequencies_RejectsSymbolOverflow(t *testing.T) {
+	freq := make([]uint32, SymbolLimit)
+	freq['a'] = math.MaxUint32
+
+	err := accumulateFrequencies(freq, []byte{'a'})
+	if err == nil {
+		t.Fatal("expected overflow error")
+	}
+	if !errors.Is(err, ErrSizeLimit) {
+		t.Fatalf("expected size limit error, got %v", err)
+	}
+	if freq['a'] != math.MaxUint32 {
+		t.Fatalf("freq['a'] = %d, want %d", freq['a'], uint32(math.MaxUint32))
+	}
+}
+
+func TestBuildScaledFrequencies_ClampsTotalAndPreservesEOF(t *testing.T) {
+	data := append(bytes.Repeat([]byte{'a'}, 12), bytes.Repeat([]byte{'b'}, 6)...)
+
+	freq := BuildScaledFrequencies(data, 8)
+
+	var total uint32
+	for _, f := range freq {
+		total += f
+	}
+	if total > 8 {
+		t.Fatalf("total = %d, want <= 8", total)
+	}
+	if freq[EOFSymbol] != 1 {
+		t.Fatalf("freq[EOF] = %d, want 1", freq[EOFSymbol])
+	}
+	if freq['a'] <= freq['b'] {
+		t.Fatalf("expected scaled frequencies to preserve ordering, got a=%d b=%d", freq['a'], freq['b'])
+	}
+}
+
+func TestBuildScaledFrequencies_MatchesScaleFrequenciesSemantics(t *testing.T) {
+	data := []byte{'a', 'b', 'c', 'd'}
+
+	want := BuildFrequencies(data)
+	ScaleFrequencies(want, 4)
+
+	got := BuildScaledFrequencies(data, 4)
+
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("got[%d] = %d, want %d", i, got[i], want[i])
+		}
+	}
+}
+
+func TestScaleFrequencies_PreservesObservedSymbolsWhenBudgetIsTooSmall(t *testing.T) {
+	freq := []uint32{4, 3, 2}
+
+	ScaleFrequencies(freq, 2)
+
+	var total uint32
+	for i, f := range freq {
+		if f == 0 {
+			t.Fatalf("freq[%d] = 0, want observed symbol preserved", i)
+		}
+		total += f
+	}
+	if total <= 2 {
+		t.Fatalf("total = %d, want > 2 when preserving all observed symbols", total)
+	}
+}
+
+func TestScaleFrequencies_ClampsOvershootWhenReductionIsFeasible(t *testing.T) {
+	freq := []uint32{100, 1, 1, 1}
+
+	ScaleFrequencies(freq, 5)
+
+	var total uint32
+	for i, f := range freq {
+		if f == 0 {
+			t.Fatalf("freq[%d] = 0, want observed symbol preserved", i)
+		}
+		total += f
+	}
+	if total > 5 {
+		t.Fatalf("total = %d, want <= 5 after feasible reduction", total)
+	}
+	if freq[0] <= 1 {
+		t.Fatalf("freq[0] = %d, want dominant symbol to remain > 1", freq[0])
+	}
+}
+
+func TestBuildFrequenciesFromReader_MatchesSliceHelper(t *testing.T) {
+	data := append(bytes.Repeat([]byte{'a'}, 7), bytes.Repeat([]byte{'b'}, 3)...)
+	reader := &chunkedReader{data: data, chunkSize: 2}
+
+	got, err := BuildFrequenciesFromReader(reader)
+	if err != nil {
+		t.Fatalf("BuildFrequenciesFromReader failed: %v", err)
+	}
+
+	want := BuildFrequencies(data)
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("got[%d] = %d, want %d", i, got[i], want[i])
+		}
+	}
+}
+
+func TestBuildScaledFrequenciesFromReader_MatchesSliceHelper(t *testing.T) {
+	data := []byte{'a', 'b', 'c', 'd'}
+	reader := &chunkedReader{data: data, chunkSize: 1}
+
+	got, err := BuildScaledFrequenciesFromReader(reader, 4)
+	if err != nil {
+		t.Fatalf("BuildScaledFrequenciesFromReader failed: %v", err)
+	}
+
+	want := BuildScaledFrequencies(data, 4)
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("got[%d] = %d, want %d", i, got[i], want[i])
+		}
 	}
 }
 
@@ -98,6 +246,21 @@ func TestReadFrequencies_ExpectedCountMismatch(t *testing.T) {
 	_, err := ReadFrequencies(buf, 3) // expect 3, but got 5
 	if err == nil {
 		t.Error("expected error for count mismatch")
+	}
+}
+
+func TestReadFrequenciesExact_RejectsWrongCounts(t *testing.T) {
+	var buf bytes.Buffer
+	if err := WriteFrequencies(&buf, []uint32{10, 20, 30}); err != nil {
+		t.Fatalf("WriteFrequencies failed: %v", err)
+	}
+
+	_, err := ReadFrequenciesExact(&buf, 4)
+	if err == nil {
+		t.Fatal("expected error for wrong frequency count")
+	}
+	if !errors.Is(err, ErrCorrupt) {
+		t.Fatalf("expected corrupt error, got %v", err)
 	}
 }
 
@@ -185,6 +348,32 @@ func TestBuildCumulative_Empty(t *testing.T) {
 	for i := range expected {
 		if cum[i] != expected[i] {
 			t.Errorf("cum[%d] = %d, want %d", i, cum[i], expected[i])
+		}
+	}
+}
+
+func TestBuildCumulativeStrict_RejectsAllZeroTable(t *testing.T) {
+	_, err := BuildCumulativeStrict([]uint32{0, 0, 0}, "invalid table")
+	if err == nil {
+		t.Fatal("expected error for all-zero table")
+	}
+	if !errors.Is(err, ErrCorrupt) {
+		t.Fatalf("expected corrupt error, got %v", err)
+	}
+	if err.Error() != "invalid table" {
+		t.Fatalf("err = %q, want %q", err.Error(), "invalid table")
+	}
+}
+
+func TestBuildCumulativeStrict_PreservesFallbackBehaviorForNonZeroTable(t *testing.T) {
+	got, err := BuildCumulativeStrict([]uint32{0, 2, 0}, "invalid table")
+	if err != nil {
+		t.Fatalf("BuildCumulativeStrict failed: %v", err)
+	}
+	want := []uint32{0, 0, 2, 2}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("got[%d] = %d, want %d", i, got[i], want[i])
 		}
 	}
 }

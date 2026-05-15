@@ -197,15 +197,14 @@ func WriteFrequencies(w io.Writer, freq []uint32) error {
 }
 
 // ReadFrequencies deserializes a frequency table from the reader.
-// This is an alias for codec.ReadFrequencies for backward compatibility.
+// This is an alias for codec.ReadFrequenciesExact for backward compatibility.
 func ReadFrequencies(r io.Reader) ([]uint32, error) {
-	return codec.ReadFrequencies(r, SymbolLimit)
+	return codec.ReadFrequenciesExact(r, SymbolLimit)
 }
 
 // BuildFrequenciesFromFile reads a file and counts byte frequencies.
 // The frequencies are scaled to fit within MaxTotal.
 func BuildFrequenciesFromFile(path string) ([]uint32, error) {
-	freq := make([]uint32, SymbolLimit)
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open input file for reading: %s: %w", path, err)
@@ -220,16 +219,10 @@ func BuildFrequenciesFromFile(path string) ([]uint32, error) {
 		return nil, fmt.Errorf("input file too large (max %d bytes)", MaxInputSize)
 	}
 
-	r := bufio.NewReader(f)
-	for {
-		b, err := r.ReadByte()
-		if err != nil {
-			break
-		}
-		freq[int(b)]++
+	freq, err := codec.BuildScaledFrequenciesFromReader(bufio.NewReader(f), MaxTotal)
+	if err != nil {
+		return nil, fmt.Errorf("cannot read input file: %s: %w", path, err)
 	}
-	freq[EOFSymbol] = 1
-	ScaleFrequencies(freq)
 	return freq, nil
 }
 
@@ -243,13 +236,11 @@ func Encode(input io.Reader, w io.Writer) error {
 		return fmt.Errorf("input too large (max %d bytes)", MaxInputSize)
 	}
 
-	freq := make([]uint32, SymbolLimit)
-	for _, b := range data {
-		freq[int(b)]++
+	freq, err := codec.BuildScaledFrequenciesChecked(data, MaxTotal)
+	if err != nil {
+		return fmt.Errorf("failed to count input frequencies: %w", err)
 	}
-	freq[EOFSymbol] = 1
-	ScaleFrequencies(freq)
-	cumulative := BuildCumulative(freq)
+	cumulative := codec.BuildCumulative(freq)
 
 	if _, err := w.Write([]byte{'A', 'E', 'N', 'C'}); err != nil {
 		return err
@@ -285,7 +276,10 @@ func Decode(r io.Reader, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	cumulative := BuildCumulative(freq)
+	cumulative, err := codec.BuildCumulativeStrict(freq, "invalid frequency table")
+	if err != nil {
+		return err
+	}
 
 	bw := bufio.NewWriter(w)
 	bitReader := codec.NewBitReader(br)

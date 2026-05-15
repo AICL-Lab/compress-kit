@@ -20,18 +20,16 @@ func scaleFrequencies(freq []uint32) {
 	codec.ScaleFrequencies(freq, maxTotal)
 }
 
-func buildFrequencies(data []byte) []uint32 {
-	freq := make([]uint32, codec.SymbolLimit)
-	for _, b := range data {
-		freq[int(b)]++
-	}
-	freq[codec.EOFSymbol] = 1
-	scaleFrequencies(freq)
-	return freq
+func buildFrequencies(data []byte) ([]uint32, error) {
+	return codec.BuildScaledFrequenciesChecked(data, maxTotal)
 }
 
 func buildCumulative(freq []uint32) []uint32 {
 	return codec.BuildCumulative(freq)
+}
+
+func buildCumulativeStrict(freq []uint32) ([]uint32, error) {
+	return codec.BuildCumulativeStrict(freq, "range: invalid frequency table")
 }
 
 func writeHeader(out *[]byte, freq []uint32) {
@@ -47,7 +45,14 @@ func readHeader(in []byte, pos *int) ([]uint32, error) {
 		return nil, codec.NewError(codec.KindCorrupt, "range: bad magic")
 	}
 	*pos = 4
-	return codec.ReadFrequenciesFromBytes(in, pos, 0)
+	freq, err := codec.ReadFrequenciesFromBytes(in, pos, 0)
+	if err != nil {
+		if codecErr, ok := err.(*codec.CodecError); ok && codecErr.Kind == codec.KindTruncated {
+			return nil, codec.NewError(codec.KindTruncated, "range: truncated header")
+		}
+		return nil, codec.NewError(codec.KindCorrupt, "range: bad header")
+	}
+	return freq, nil
 }
 
 type encoder struct {
@@ -148,7 +153,10 @@ func (d *decoder) decodeSymbol(cumulative []uint32) uint32 {
 }
 
 func Encode(input []byte) ([]byte, error) {
-	freq := buildFrequencies(input)
+	freq, err := buildFrequencies(input)
+	if err != nil {
+		return nil, err
+	}
 	cum := buildCumulative(freq)
 
 	out := make([]byte, 0, len(input))
@@ -173,7 +181,10 @@ func Decode(encoded []byte) ([]byte, error) {
 	if len(freq) != codec.SymbolLimit {
 		return nil, codec.NewError(codec.KindCorrupt, "range: unexpected symbol count")
 	}
-	cum := buildCumulative(freq)
+	cum, err := buildCumulativeStrict(freq)
+	if err != nil {
+		return nil, err
+	}
 	if pos >= len(encoded) {
 		return []byte{}, nil
 	}

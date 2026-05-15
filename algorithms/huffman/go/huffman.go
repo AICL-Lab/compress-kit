@@ -102,7 +102,6 @@ func BuildTree(freq []uint32) *Node {
 
 // BuildFrequenciesFromFile reads the file and counts byte frequencies.
 func BuildFrequenciesFromFile(path string) ([]uint32, error) {
-	freq := make([]uint32, SymbolLimit)
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open input file: %s: %w", path, err)
@@ -117,15 +116,10 @@ func BuildFrequenciesFromFile(path string) ([]uint32, error) {
 		return nil, fmt.Errorf("input file too large (max %d bytes)", MaxInputSize)
 	}
 
-	r := bufio.NewReader(f)
-	for {
-		b, err := r.ReadByte()
-		if err != nil {
-			break
-		}
-		freq[int(b)]++
+	freq, err := codec.BuildFrequenciesFromReader(bufio.NewReader(f))
+	if err != nil {
+		return nil, fmt.Errorf("cannot read input file: %s: %w", path, err)
 	}
-	freq[EOFSymbol] = 1
 	return freq, nil
 }
 
@@ -136,9 +130,9 @@ func WriteFrequencies(w io.Writer, freq []uint32) error {
 }
 
 // ReadFrequencies deserializes a frequency table from the reader.
-// This is an alias for codec.ReadFrequencies for backward compatibility.
+// This is an alias for codec.ReadFrequenciesExact for backward compatibility.
 func ReadFrequencies(r io.Reader) ([]uint32, error) {
-	return codec.ReadFrequencies(r, SymbolLimit)
+	return codec.ReadFrequenciesExact(r, SymbolLimit)
 }
 
 // BuildCodes generates Huffman codes for each symbol by traversing the tree.
@@ -170,11 +164,10 @@ func Encode(input io.Reader, w io.Writer) error {
 		return fmt.Errorf("input too large (max %d bytes)", MaxInputSize)
 	}
 
-	freq := make([]uint32, SymbolLimit)
-	for _, b := range data {
-		freq[int(b)]++
+	freq, err := codec.BuildFrequenciesChecked(data)
+	if err != nil {
+		return fmt.Errorf("failed to count input frequencies: %w", err)
 	}
-	freq[EOFSymbol] = 1
 
 	root := BuildTree(freq)
 	codes := make([]string, SymbolLimit)

@@ -48,33 +48,21 @@ func EncodeBuffer(encoder Encoder, input []byte) ([]byte, error) {
 }
 
 func encodeBufferWithLimit(encoder Encoder, input []byte, initialSize int, limit int) ([]byte, error) {
-	if initialSize > limit {
-		initialSize = limit
-	}
+	runner := newResizingBuffer(initialSize, limit)
 
-	outBuf := make([]byte, initialSize)
-	totalWritten := 0
-
-	var err error
-	outBuf, totalWritten, err = runBufferStep(outBuf, totalWritten, limit, func(out []byte) (int, error) {
+	if err := runner.run(func(out []byte) (int, error) {
 		return encoder.Process(input, out)
-	})
-	if err != nil {
+	}); err != nil {
 		return nil, err
 	}
 
-	outBuf, totalWritten, err = runBufferStep(outBuf, totalWritten, limit, func(out []byte) (int, error) {
+	if err := runner.run(func(out []byte) (int, error) {
 		return encoder.Finish(out)
-	})
-	if err != nil {
+	}); err != nil {
 		return nil, err
 	}
 
-	if totalWritten > limit {
-		return nil, ErrSizeLimit
-	}
-
-	return outBuf[:totalWritten], nil
+	return runner.bytes(), nil
 }
 
 // DecodeBuffer is a convenience function that decodes input using the streaming API.
@@ -90,31 +78,19 @@ func DecodeBuffer(decoder Decoder, input []byte) ([]byte, error) {
 }
 
 func decodeBufferWithLimit(decoder Decoder, input []byte, initialSize int, limit int) ([]byte, error) {
-	if initialSize > limit {
-		initialSize = limit
-	}
+	runner := newResizingBuffer(initialSize, limit)
 
-	outBuf := make([]byte, initialSize)
-	totalWritten := 0
-
-	var err error
-	outBuf, totalWritten, err = runBufferStep(outBuf, totalWritten, limit, func(out []byte) (int, error) {
+	if err := runner.run(func(out []byte) (int, error) {
 		return decoder.Process(input, out)
-	})
-	if err != nil {
+	}); err != nil {
 		return nil, err
 	}
 
-	outBuf, totalWritten, err = runBufferStep(outBuf, totalWritten, limit, func(out []byte) (int, error) {
+	if err := runner.run(func(out []byte) (int, error) {
 		return decoder.Finish(out)
-	})
-	if err != nil {
+	}); err != nil {
 		return nil, err
 	}
 
-	if totalWritten > limit {
-		return nil, ErrSizeLimit
-	}
-
-	return outBuf[:totalWritten], nil
+	return runner.bytes(), nil
 }

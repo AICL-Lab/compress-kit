@@ -2,9 +2,12 @@ package rangecoder
 
 import (
 	"bytes"
+	"errors"
 	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/LessUp/compress-kit/algorithms/shared/go/codec"
 )
 
 func makeTestData(n int) []byte {
@@ -95,5 +98,39 @@ func TestDeterministic(t *testing.T) {
 	}
 	if !bytes.Equal(enc1, enc2) {
 		t.Fatalf("encodings not deterministic")
+	}
+}
+
+func TestDecodeRejectsAllZeroFrequencyTableWithNoPayload(t *testing.T) {
+	encoded := make([]byte, 0, 4+4+codec.SymbolLimit*4)
+	encoded = append(encoded, 'R', 'C', 'N', 'C')
+	encoded = append(encoded, 1, 1, 0, 0)
+	encoded = append(encoded, make([]byte, codec.SymbolLimit*4)...)
+
+	_, err := Decode(encoded)
+	if err == nil {
+		t.Fatal("expected error for all-zero frequency table")
+	}
+	if !errors.Is(err, codec.ErrCorrupt) {
+		t.Fatalf("expected corrupt error, got %v", err)
+	}
+	if err.Error() != "range: invalid frequency table" {
+		t.Fatalf("err = %q, want %q", err.Error(), "range: invalid frequency table")
+	}
+}
+
+func TestDecodeRejectsCompleteUnexpectedSymbolCountHeader(t *testing.T) {
+	encoded := []byte{'R', 'C', 'N', 'C'}
+	codec.AppendFrequencies(&encoded, make([]uint32, 256))
+
+	_, err := Decode(encoded)
+	if err == nil {
+		t.Fatal("expected error for unexpected symbol count")
+	}
+	if !errors.Is(err, codec.ErrCorrupt) {
+		t.Fatalf("expected corrupt error, got %v", err)
+	}
+	if err.Error() != "range: unexpected symbol count" {
+		t.Fatalf("err = %q, want %q", err.Error(), "range: unexpected symbol count")
 	}
 }

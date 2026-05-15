@@ -9,6 +9,7 @@ const MAX_READ_FREQUENCY_COUNT: usize = 1024;
 pub enum FrequencyErrorKind {
     Truncated,
     Corrupt,
+    Overflow,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -31,6 +32,13 @@ impl FrequencyError {
             message,
         }
     }
+
+    fn overflow(message: &'static str) -> Self {
+        Self {
+            kind: FrequencyErrorKind::Overflow,
+            message,
+        }
+    }
 }
 
 impl fmt::Display for FrequencyError {
@@ -41,39 +49,84 @@ impl fmt::Display for FrequencyError {
 
 impl Error for FrequencyError {}
 
-pub fn build_frequencies(data: &[u8]) -> Vec<u32> {
-    let mut freq = vec![0u32; SYMBOL_LIMIT];
-    for &byte in data {
-        freq[byte as usize] += 1;
-    }
-    freq[EOF_SYMBOL as usize] = 1;
-    freq
+pub fn build_frequencies(data: &[u8]) -> Result<Vec<u32>, FrequencyError> {
+    let counts = count_frequencies(data);
+    finalize_exact_frequencies(&counts, "symbol frequency exceeds u32::MAX")
 }
 
 pub fn build_scaled_frequencies(data: &[u8], max_total: u32) -> Vec<u32> {
-    let mut freq = build_frequencies(data);
-    scale_frequencies(&mut freq, max_total);
+    let counts = count_frequencies(data);
+    finalize_scaled_frequencies(&counts, max_total)
+}
+
+fn count_frequencies(data: &[u8]) -> Vec<u64> {
+    let mut freq = vec![0u64; SYMBOL_LIMIT];
+    for &byte in data {
+        freq[byte as usize] += 1;
+    }
     freq
 }
 
+fn finalize_exact_frequencies(
+    counts: &[u64],
+    overflow_message: &'static str,
+) -> Result<Vec<u32>, FrequencyError> {
+    let mut freq = Vec::with_capacity(counts.len());
+    for (index, &count) in counts.iter().enumerate() {
+        let final_count = if index == EOF_SYMBOL as usize {
+            count
+                .checked_add(1)
+                .ok_or_else(|| FrequencyError::overflow(overflow_message))?
+        } else {
+            count
+        };
+        if final_count > u32::MAX as u64 {
+            return Err(FrequencyError::overflow(overflow_message));
+        }
+        freq.push(final_count as u32);
+    }
+    Ok(freq)
+}
+
+fn finalize_scaled_frequencies(counts: &[u64], max_total: u32) -> Vec<u32> {
+    let mut freq = counts.to_vec();
+    freq[EOF_SYMBOL as usize] += 1;
+    scale_counts(&freq, max_total)
+}
+
 pub fn scale_frequencies(freq: &mut [u32], max_total: u32) {
-    let total: u64 = freq.iter().map(|&value| value as u64).sum();
+    let scaled = scale_counts(
+        &freq
+            .iter()
+            .map(|&value| value as u64)
+            .collect::<Vec<u64>>(),
+        max_total,
+    );
+    freq.copy_from_slice(&scaled);
+}
+
+fn scale_counts(counts: &[u64], max_total: u32) -> Vec<u32> {
+    let total: u64 = counts.iter().sum();
+    let mut scaled_freq = vec![0u32; counts.len()];
     if total == 0 {
-        for value in freq.iter_mut() {
+        for value in scaled_freq.iter_mut() {
             *value = 1;
         }
-        return;
+        return scaled_freq;
     }
     if total <= max_total as u64 {
-        return;
+        for (value, &count) in scaled_freq.iter_mut().zip(counts.iter()) {
+            *value = count as u32;
+        }
+        return scaled_freq;
     }
 
     let mut new_total = 0u64;
-    for value in freq.iter_mut() {
-        if *value == 0 {
+    for (value, &count) in scaled_freq.iter_mut().zip(counts.iter()) {
+        if count == 0 {
             continue;
         }
-        let mut scaled = (*value as u64 * max_total as u64) / total;
+        let mut scaled = (count * max_total as u64) / total;
         if scaled == 0 {
             scaled = 1;
         }
@@ -82,14 +135,33 @@ pub fn scale_frequencies(freq: &mut [u32], max_total: u32) {
     }
 
     if new_total == 0 {
-        let mut base = max_total / freq.len() as u32;
+        let mut base = max_total / scaled_freq.len() as u32;
         if base == 0 {
             base = 1;
         }
-        for value in freq.iter_mut() {
+        for value in scaled_freq.iter_mut() {
             *value = base;
         }
+    } else {
+        while new_total > max_total as u64 {
+            let mut adjusted = false;
+            for value in scaled_freq.iter_mut() {
+                if *value > 1 {
+                    *value -= 1;
+                    new_total -= 1;
+                    adjusted = true;
+                    if new_total <= max_total as u64 {
+                        break;
+                    }
+                }
+            }
+            if !adjusted {
+                break;
+            }
+        }
     }
+
+    scaled_freq
 }
 
 pub fn build_cumulative(freq: &[u32]) -> Vec<u32> {
@@ -186,7 +258,8 @@ fn read_u32_le(input: &[u8], pos: &mut usize) -> Option<u32> {
 #[cfg(test)]
 mod tests {
     use super::{
-        build_cumulative, build_cumulative_strict, build_scaled_frequencies, read_frequencies,
+        build_cumulative, build_cumulative_strict, build_scaled_frequencies,
+        finalize_exact_frequencies, finalize_scaled_frequencies, read_frequencies,
         read_frequencies_exact, FrequencyErrorKind, EOF_SYMBOL,
     };
 
@@ -196,6 +269,31 @@ mod tests {
         data.extend_from_slice(&[b'b'; 6]);
 
         let freq = build_scaled_frequencies(&data, 8);
+        let total: u32 = freq.iter().sum();
+
+        assert!(total <= 8, "total = {total}, want <= 8");
+        assert_eq!(freq[EOF_SYMBOL as usize], 1);
+        assert!(freq[b'a' as usize] > freq[b'b' as usize]);
+    }
+
+    #[test]
+    fn finalize_exact_frequencies_rejects_symbol_count_above_u32_max() {
+        let mut counts = vec![0u64; super::SYMBOL_LIMIT];
+        counts[b'a' as usize] = u32::MAX as u64 + 1;
+
+        let err = finalize_exact_frequencies(&counts, "symbol count exceeds u32::MAX").unwrap_err();
+
+        assert_eq!(err.kind, FrequencyErrorKind::Overflow);
+        assert_eq!(err.message, "symbol count exceeds u32::MAX");
+    }
+
+    #[test]
+    fn finalize_scaled_frequencies_accepts_u64_counts_above_u32_max() {
+        let mut counts = vec![0u64; super::SYMBOL_LIMIT];
+        counts[b'a' as usize] = u32::MAX as u64 + 1;
+        counts[b'b' as usize] = 4;
+
+        let freq = finalize_scaled_frequencies(&counts, 8);
         let total: u32 = freq.iter().sum();
 
         assert!(total <= 8, "total = {total}, want <= 8");

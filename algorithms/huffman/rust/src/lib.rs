@@ -128,7 +128,8 @@ fn build_codes_bitvec(node: &Node, codes: &mut [Vec<bool>], prefix: &mut Vec<boo
 }
 
 pub fn encode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
-    let freq = build_frequencies(input);
+    let freq = build_frequencies(input)
+        .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err.message))?;
 
     let root = build_tree(&freq);
     let mut codes = vec![Vec::new(); SYMBOL_LIMIT];

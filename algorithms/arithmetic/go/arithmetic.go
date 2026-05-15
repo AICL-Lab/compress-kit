@@ -198,11 +198,11 @@ func BuildFrequenciesFromFile(path string) ([]uint32, error) {
 		return nil, fmt.Errorf("input file too large (max %d bytes)", MaxInputSize)
 	}
 
-	data, err := io.ReadAll(bufio.NewReader(f))
+	freq, err := codec.BuildScaledFrequenciesFromReader(bufio.NewReader(f), MaxTotal)
 	if err != nil {
 		return nil, fmt.Errorf("cannot read input file: %s: %w", path, err)
 	}
-	return codec.BuildScaledFrequencies(data, MaxTotal), nil
+	return freq, nil
 }
 
 // BuildCumulative builds a cumulative frequency table from frequencies.

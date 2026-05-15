@@ -3,8 +3,32 @@ package codec
 import (
 	"bytes"
 	"errors"
+	"io"
 	"testing"
 )
+
+type chunkedReader struct {
+	data      []byte
+	chunkSize int
+	offset    int
+}
+
+func (r *chunkedReader) Read(p []byte) (int, error) {
+	if r.offset >= len(r.data) {
+		return 0, io.EOF
+	}
+	n := r.chunkSize
+	if n > len(p) {
+		n = len(p)
+	}
+	remaining := len(r.data) - r.offset
+	if n > remaining {
+		n = remaining
+	}
+	copy(p, r.data[r.offset:r.offset+n])
+	r.offset += n
+	return n, nil
+}
 
 func TestSymbolLimit(t *testing.T) {
 	// SymbolLimit should be 257 (256 bytes + 1 EOF)
@@ -66,6 +90,55 @@ func TestBuildScaledFrequencies_ClampsTotalAndPreservesEOF(t *testing.T) {
 	}
 	if freq['a'] <= freq['b'] {
 		t.Fatalf("expected scaled frequencies to preserve ordering, got a=%d b=%d", freq['a'], freq['b'])
+	}
+}
+
+func TestBuildScaledFrequencies_MatchesScaleFrequenciesSemantics(t *testing.T) {
+	data := []byte{'a', 'b', 'c', 'd'}
+
+	want := BuildFrequencies(data)
+	ScaleFrequencies(want, 4)
+
+	got := BuildScaledFrequencies(data, 4)
+
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("got[%d] = %d, want %d", i, got[i], want[i])
+		}
+	}
+}
+
+func TestBuildFrequenciesFromReader_MatchesSliceHelper(t *testing.T) {
+	data := append(bytes.Repeat([]byte{'a'}, 7), bytes.Repeat([]byte{'b'}, 3)...)
+	reader := &chunkedReader{data: data, chunkSize: 2}
+
+	got, err := BuildFrequenciesFromReader(reader)
+	if err != nil {
+		t.Fatalf("BuildFrequenciesFromReader failed: %v", err)
+	}
+
+	want := BuildFrequencies(data)
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("got[%d] = %d, want %d", i, got[i], want[i])
+		}
+	}
+}
+
+func TestBuildScaledFrequenciesFromReader_MatchesSliceHelper(t *testing.T) {
+	data := []byte{'a', 'b', 'c', 'd'}
+	reader := &chunkedReader{data: data, chunkSize: 1}
+
+	got, err := BuildScaledFrequenciesFromReader(reader, 4)
+	if err != nil {
+		t.Fatalf("BuildScaledFrequenciesFromReader failed: %v", err)
+	}
+
+	want := BuildScaledFrequencies(data, 4)
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("got[%d] = %d, want %d", i, got[i], want[i])
+		}
 	}
 }
 

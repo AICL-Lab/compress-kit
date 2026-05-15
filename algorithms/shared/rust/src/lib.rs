@@ -6,6 +6,7 @@ pub mod codec {
     pub mod buffered;
     pub mod encoder;
     pub mod error;
+    pub mod frequency;
     pub mod streaming;
     pub mod write;
 
@@ -15,6 +16,11 @@ pub mod codec {
     pub use encoder::{Decoder, Encoder};
     pub use error::{
         io_error_to_codec_error, map_io_error, CodecError, State, MAX_INPUT_SIZE, MAX_OUTPUT_SIZE,
+    };
+    pub use frequency::{
+        build_cumulative, build_frequencies, build_scaled_frequencies, read_frequencies_exact,
+        scale_frequencies, write_frequencies, FrequencyError, FrequencyErrorKind, EOF_SYMBOL,
+        SYMBOL_LIMIT,
     };
     pub use streaming::{streaming_decoder, streaming_encoder};
     pub use write::WriteEncoder;

@@ -1,8 +1,12 @@
 use std::error::Error;
 use std::fmt;
 
-const SYMBOL_LIMIT: usize = 257;
-const EOF_SYMBOL: usize = SYMBOL_LIMIT - 1;
+use compresskit_codec::codec::{
+    build_cumulative, build_scaled_frequencies, read_frequencies_exact, write_frequencies,
+    CodecError, Decoder, Encoder, FrequencyError, EOF_SYMBOL, SYMBOL_LIMIT, streaming_decoder,
+    streaming_encoder,
+};
+
 const MAX_TOTAL: u32 = 1 << 24;
 const RENORM_THRESHOLD: u32 = 1 << 24;
 const MAX_OUTPUT_SIZE: usize = 1024 * 1024 * 1024;
@@ -18,90 +22,9 @@ impl fmt::Display for RangeError {
 
 impl Error for RangeError {}
 
-fn scale_frequencies(freq: &mut [u32]) {
-    let total: u64 = freq.iter().map(|&f| f as u64).sum();
-    if total == 0 {
-        for f in freq.iter_mut() {
-            *f = 1;
-        }
-        return;
-    }
-    if total <= MAX_TOTAL as u64 {
-        return;
-    }
-    let mut new_total: u64 = 0;
-    for f in freq.iter_mut() {
-        if *f == 0 {
-            continue;
-        }
-        let mut scaled = (*f as u64 * MAX_TOTAL as u64) / total;
-        if scaled == 0 {
-            scaled = 1;
-        }
-        *f = scaled as u32;
-        new_total += scaled;
-    }
-    if new_total == 0 {
-        let mut base = MAX_TOTAL / freq.len() as u32;
-        if base == 0 {
-            base = 1;
-        }
-        for f in freq.iter_mut() {
-            *f = base;
-        }
-    }
-}
-
-fn build_frequencies(data: &[u8]) -> Vec<u32> {
-    let mut freq = vec![0u32; SYMBOL_LIMIT];
-    for &b in data {
-        freq[b as usize] += 1;
-    }
-    freq[EOF_SYMBOL] = 1;
-    scale_frequencies(&mut freq);
-    freq
-}
-
-fn build_cumulative(freq: &[u32]) -> Vec<u32> {
-    let mut cumulative = vec![0u32; freq.len() + 1];
-    for (i, &f) in freq.iter().enumerate() {
-        cumulative[i + 1] = cumulative[i] + f;
-    }
-    if let Some(&last) = cumulative.last() {
-        if last == 0 {
-            for i in 0..freq.len() {
-                cumulative[i + 1] = (i + 1) as u32;
-            }
-        }
-    }
-    cumulative
-}
-
-fn write_u32_le(out: &mut Vec<u8>, v: u32) {
-    out.push((v & 0xFF) as u8);
-    out.push(((v >> 8) & 0xFF) as u8);
-    out.push(((v >> 16) & 0xFF) as u8);
-    out.push(((v >> 24) & 0xFF) as u8);
-}
-
-fn read_u32_le(input: &[u8], pos: &mut usize) -> Option<u32> {
-    if *pos + 4 > input.len() {
-        return None;
-    }
-    let v = (input[*pos] as u32)
-        | ((input[*pos + 1] as u32) << 8)
-        | ((input[*pos + 2] as u32) << 16)
-        | ((input[*pos + 3] as u32) << 24);
-    *pos += 4;
-    Some(v)
-}
-
 fn write_header(out: &mut Vec<u8>, freq: &[u32]) {
     out.extend_from_slice(b"RCNC");
-    write_u32_le(out, freq.len() as u32);
-    for &v in freq {
-        write_u32_le(out, v);
-    }
+    write_frequencies(out, freq);
 }
 
 fn read_header(input: &[u8], pos: &mut usize) -> Result<Vec<u32>, RangeError> {
@@ -112,16 +35,14 @@ fn read_header(input: &[u8], pos: &mut usize) -> Result<Vec<u32>, RangeError> {
         return Err(RangeError("range: bad magic"));
     }
     *pos = 4;
-    let count = read_u32_le(input, pos).ok_or(RangeError("range: truncated header"))?;
-    if count == 0 || count > 1024 {
-        return Err(RangeError("range: bad symbol count"));
-    }
-    let mut freq = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        let v = read_u32_le(input, pos).ok_or(RangeError("range: truncated frequencies"))?;
-        freq.push(v);
-    }
-    Ok(freq)
+    read_frequencies_exact(
+        input,
+        pos,
+        SYMBOL_LIMIT,
+        "range: truncated header",
+        "range: bad symbol count",
+    )
+    .map_err(map_frequency_error)
 }
 
 struct RangeEncoder<'a> {
@@ -244,7 +165,7 @@ impl<'a> RangeDecoder<'a> {
 }
 
 pub fn encode(input: &[u8]) -> Result<Vec<u8>, RangeError> {
-    let freq = build_frequencies(input);
+    let freq = build_scaled_frequencies(input, MAX_TOTAL);
     let cumulative = build_cumulative(&freq);
 
     let mut out = Vec::with_capacity(input.len());
@@ -265,9 +186,6 @@ pub fn encode(input: &[u8]) -> Result<Vec<u8>, RangeError> {
 pub fn decode(encoded: &[u8]) -> Result<Vec<u8>, RangeError> {
     let mut pos: usize = 0;
     let freq = read_header(encoded, &mut pos)?;
-    if freq.len() != SYMBOL_LIMIT {
-        return Err(RangeError("range: unexpected symbol count"));
-    }
     let cumulative = build_cumulative(&freq);
 
     if pos >= encoded.len() {
@@ -278,7 +196,7 @@ pub fn decode(encoded: &[u8]) -> Result<Vec<u8>, RangeError> {
     let mut out = Vec::with_capacity(encoded.len());
     loop {
         let sym = dec.decode_symbol(&cumulative)?;
-        if sym as usize == EOF_SYMBOL {
+        if sym == EOF_SYMBOL {
             break;
         }
         if out.len() >= MAX_OUTPUT_SIZE {
@@ -289,8 +207,6 @@ pub fn decode(encoded: &[u8]) -> Result<Vec<u8>, RangeError> {
 
     Ok(out)
 }
-
-// Streaming adapters
 
 impl From<RangeError> for CodecError {
     fn from(e: RangeError) -> Self {
@@ -306,9 +222,9 @@ impl From<RangeError> for CodecError {
     }
 }
 
-use compresskit_codec::codec::{
-    streaming_decoder, streaming_encoder, CodecError, Decoder, Encoder,
-};
+fn map_frequency_error(err: FrequencyError) -> RangeError {
+    RangeError(err.message)
+}
 
 /// Creates a new streaming Range encoder.
 pub fn new_encoder() -> impl Encoder {

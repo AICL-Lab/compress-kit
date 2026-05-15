@@ -5,10 +5,10 @@ use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 use std::io;
 
-use compresskit_codec::codec::BitWriter;
-
-const SYMBOL_LIMIT: usize = 257;
-const EOF_SYMBOL: u32 = (SYMBOL_LIMIT - 1) as u32;
+use compresskit_codec::codec::{
+    build_frequencies, read_frequencies_exact, write_frequencies, BitWriter, EOF_SYMBOL,
+    SYMBOL_LIMIT,
+};
 const MAX_OUTPUT_SIZE: usize = 1024 * 1024 * 1024; // 1 GiB
 
 struct Node {
@@ -128,11 +128,7 @@ fn build_codes_bitvec(node: &Node, codes: &mut [Vec<bool>], prefix: &mut Vec<boo
 }
 
 pub fn encode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
-    let mut freq = vec![0u32; SYMBOL_LIMIT];
-    for &b in input {
-        freq[b as usize] += 1;
-    }
-    freq[EOF_SYMBOL as usize] = 1;
+    let freq = build_frequencies(input);
 
     let root = build_tree(&freq);
     let mut codes = vec![Vec::new(); SYMBOL_LIMIT];
@@ -141,10 +137,7 @@ pub fn encode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
 
     let mut output = Vec::new();
     output.extend_from_slice(b"HFMN");
-    output.extend_from_slice(&(SYMBOL_LIMIT as u32).to_le_bytes());
-    for &f in &freq {
-        output.extend_from_slice(&f.to_le_bytes());
-    }
+    write_frequencies(&mut output, &freq);
 
     // Use BitWriter for efficient bit packing
     let mut writer = BitWriter::new();
@@ -173,26 +166,15 @@ pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
         return Err(io::Error::new(io::ErrorKind::InvalidData, "invalid magic"));
     }
 
-    let count = u32::from_le_bytes([input[4], input[5], input[6], input[7]]) as usize;
-    if count != SYMBOL_LIMIT {
-        return Err(io::Error::new(
-            io::ErrorKind::InvalidData,
-            "invalid freq count",
-        ));
-    }
-
-    let mut pos = 8;
-    let mut freq = vec![0u32; count];
-    for f in freq.iter_mut() {
-        if pos + 4 > input.len() {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidData,
-                "truncated freq table",
-            ));
-        }
-        *f = u32::from_le_bytes([input[pos], input[pos + 1], input[pos + 2], input[pos + 3]]);
-        pos += 4;
-    }
+    let mut pos = 4;
+    let freq = read_frequencies_exact(
+        input,
+        &mut pos,
+        SYMBOL_LIMIT,
+        "truncated freq table",
+        "invalid freq count",
+    )
+    .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err.message))?;
 
     let root = build_tree(&freq);
     let mut output = Vec::new();

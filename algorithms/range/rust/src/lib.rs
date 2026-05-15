@@ -2,9 +2,9 @@ use std::error::Error;
 use std::fmt;
 
 use compresskit_codec::codec::{
-    build_cumulative, build_scaled_frequencies, read_frequencies, streaming_decoder,
-    streaming_encoder, write_frequencies, CodecError, Decoder, Encoder, FrequencyError, EOF_SYMBOL,
-    SYMBOL_LIMIT,
+    build_cumulative, build_cumulative_strict, build_scaled_frequencies, read_frequencies,
+    streaming_decoder, streaming_encoder, write_frequencies, CodecError, Decoder, Encoder,
+    FrequencyError, EOF_SYMBOL, SYMBOL_LIMIT,
 };
 
 const MAX_TOTAL: u32 = 1 << 24;
@@ -190,7 +190,8 @@ pub fn encode(input: &[u8]) -> Result<Vec<u8>, RangeError> {
 pub fn decode(encoded: &[u8]) -> Result<Vec<u8>, RangeError> {
     let mut pos: usize = 0;
     let freq = read_header(encoded, &mut pos)?;
-    let cumulative = build_cumulative(&freq);
+    let cumulative = build_cumulative_strict(&freq, "range: invalid frequency table")
+        .map_err(map_frequency_error)?;
 
     if pos >= encoded.len() {
         return Ok(Vec::new());
@@ -216,7 +217,10 @@ impl From<RangeError> for CodecError {
     fn from(e: RangeError) -> Self {
         if e.0.contains("truncated") || e.0.contains("too short") {
             CodecError::Truncated
-        } else if e.0.contains("bad") || e.0.contains("corrupt") {
+        } else if e.0.contains("bad")
+            || e.0.contains("corrupt")
+            || e.0.contains("unexpected symbol count")
+        {
             CodecError::Corrupt
         } else if e.0.contains("limit") {
             CodecError::SizeLimit
@@ -296,5 +300,26 @@ mod tests {
         let err = decode(&encoded).unwrap_err();
 
         assert_eq!(err.to_string(), "range: unexpected symbol count");
+    }
+
+    #[test]
+    fn decode_rejects_all_zero_frequency_table_without_payload() {
+        let mut encoded = Vec::new();
+        encoded.extend_from_slice(b"RCNC");
+        encoded.extend_from_slice(&(SYMBOL_LIMIT as u32).to_le_bytes());
+        for _ in 0..SYMBOL_LIMIT {
+            encoded.extend_from_slice(&0u32.to_le_bytes());
+        }
+
+        let err = decode(&encoded).unwrap_err();
+
+        assert_eq!(err.to_string(), "range: invalid frequency table");
+    }
+
+    #[test]
+    fn codec_error_maps_unexpected_symbol_count_to_corrupt() {
+        let err = CodecError::from(RangeError("range: unexpected symbol count"));
+
+        assert_eq!(err, CodecError::Corrupt);
     }
 }

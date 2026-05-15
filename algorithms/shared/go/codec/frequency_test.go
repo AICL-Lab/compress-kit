@@ -322,6 +322,32 @@ func TestBuildCumulative_Empty(t *testing.T) {
 	}
 }
 
+func TestBuildCumulativeStrict_RejectsAllZeroTable(t *testing.T) {
+	_, err := BuildCumulativeStrict([]uint32{0, 0, 0}, "invalid table")
+	if err == nil {
+		t.Fatal("expected error for all-zero table")
+	}
+	if !errors.Is(err, ErrCorrupt) {
+		t.Fatalf("expected corrupt error, got %v", err)
+	}
+	if err.Error() != "invalid table" {
+		t.Fatalf("err = %q, want %q", err.Error(), "invalid table")
+	}
+}
+
+func TestBuildCumulativeStrict_PreservesFallbackBehaviorForNonZeroTable(t *testing.T) {
+	got, err := BuildCumulativeStrict([]uint32{0, 2, 0}, "invalid table")
+	if err != nil {
+		t.Fatalf("BuildCumulativeStrict failed: %v", err)
+	}
+	want := []uint32{0, 0, 2, 2}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("got[%d] = %d, want %d", i, got[i], want[i])
+		}
+	}
+}
+
 func TestBuildCumulative_SingleElement(t *testing.T) {
 	freq := []uint32{42}
 	cum := BuildCumulative(freq)

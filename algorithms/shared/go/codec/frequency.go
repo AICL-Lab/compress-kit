@@ -139,6 +139,17 @@ func BuildCumulative(freq []uint32) []uint32 {
 	return cum
 }
 
+// BuildCumulativeStrict builds a cumulative frequency table and rejects an
+// all-zero input table instead of applying the sequential fallback.
+func BuildCumulativeStrict(freq []uint32, zeroTableMessage string) ([]uint32, error) {
+	for _, value := range freq {
+		if value != 0 {
+			return BuildCumulative(freq), nil
+		}
+	}
+	return nil, NewError(KindCorrupt, zeroTableMessage)
+}
+
 // BuildFrequencies counts byte frequencies in the input data.
 // The EOF symbol is always set to 1. It panics if a symbol count would exceed
 // math.MaxUint32; use BuildFrequenciesChecked to handle that error explicitly.

@@ -101,6 +101,25 @@ func ScaleFrequencies(freq []uint32, maxTotal uint32) {
 		for i := range freq {
 			freq[i] = base
 		}
+		return
+	}
+
+	for newTotal > uint64(maxTotal) {
+		adjusted := false
+		for i, value := range freq {
+			if value <= 1 {
+				continue
+			}
+			freq[i]--
+			newTotal--
+			adjusted = true
+			if newTotal <= uint64(maxTotal) {
+				return
+			}
+		}
+		if !adjusted {
+			return
+		}
 	}
 }
 

@@ -142,6 +142,26 @@ func TestScaleFrequencies_PreservesObservedSymbolsWhenBudgetIsTooSmall(t *testin
 	}
 }
 
+func TestScaleFrequencies_ClampsOvershootWhenReductionIsFeasible(t *testing.T) {
+	freq := []uint32{100, 1, 1, 1}
+
+	ScaleFrequencies(freq, 5)
+
+	var total uint32
+	for i, f := range freq {
+		if f == 0 {
+			t.Fatalf("freq[%d] = 0, want observed symbol preserved", i)
+		}
+		total += f
+	}
+	if total > 5 {
+		t.Fatalf("total = %d, want <= 5 after feasible reduction", total)
+	}
+	if freq[0] <= 1 {
+		t.Fatalf("freq[0] = %d, want dominant symbol to remain > 1", freq[0])
+	}
+}
+
 func TestBuildFrequenciesFromReader_MatchesSliceHelper(t *testing.T) {
 	data := append(bytes.Repeat([]byte{'a'}, 7), bytes.Repeat([]byte{'b'}, 3)...)
 	reader := &chunkedReader{data: data, chunkSize: 2}

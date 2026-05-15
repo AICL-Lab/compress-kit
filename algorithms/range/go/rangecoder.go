@@ -22,6 +22,10 @@ func buildCumulative(freq []uint32) []uint32 {
 	return codec.BuildCumulative(freq)
 }
 
+func buildCumulativeStrict(freq []uint32) ([]uint32, error) {
+	return codec.BuildCumulativeStrict(freq, "range: invalid frequency table")
+}
+
 func writeHeader(out *[]byte, freq []uint32) {
 	*out = append(*out, 'R', 'C', 'N', 'C')
 	codec.AppendFrequencies(out, freq)
@@ -171,7 +175,10 @@ func Decode(encoded []byte) ([]byte, error) {
 	if len(freq) != codec.SymbolLimit {
 		return nil, codec.NewError(codec.KindCorrupt, "range: unexpected symbol count")
 	}
-	cum := buildCumulative(freq)
+	cum, err := buildCumulativeStrict(freq)
+	if err != nil {
+		return nil, err
+	}
 	if pos >= len(encoded) {
 		return []byte{}, nil
 	}

@@ -4,7 +4,6 @@ package huffman
 import (
 	"bufio"
 	"container/heap"
-	"encoding/binary"
 	"fmt"
 	"io"
 	"os"
@@ -102,7 +101,6 @@ func BuildTree(freq []uint32) *Node {
 
 // BuildFrequenciesFromFile reads the file and counts byte frequencies.
 func BuildFrequenciesFromFile(path string) ([]uint32, error) {
-	freq := make([]uint32, SymbolLimit)
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open input file: %s: %w", path, err)
@@ -117,46 +115,21 @@ func BuildFrequenciesFromFile(path string) ([]uint32, error) {
 		return nil, fmt.Errorf("input file too large (max %d bytes)", MaxInputSize)
 	}
 
-	r := bufio.NewReader(f)
-	for {
-		b, err := r.ReadByte()
-		if err != nil {
-			break
-		}
-		freq[int(b)]++
+	data, err := io.ReadAll(bufio.NewReader(f))
+	if err != nil {
+		return nil, fmt.Errorf("cannot read input file: %s: %w", path, err)
 	}
-	freq[EOFSymbol] = 1
-	return freq, nil
+	return codec.BuildFrequencies(data), nil
 }
 
 // WriteFrequencies serializes a frequency table to the writer.
 func WriteFrequencies(w io.Writer, freq []uint32) error {
-	count := uint32(len(freq))
-	if err := binary.Write(w, binary.LittleEndian, count); err != nil {
-		return err
-	}
-	for _, v := range freq {
-		if err := binary.Write(w, binary.LittleEndian, v); err != nil {
-			return err
-		}
-	}
-	return nil
+	return codec.WriteFrequencies(w, freq)
 }
 
 // ReadFrequencies deserializes a frequency table from the reader.
 func ReadFrequencies(r io.Reader) ([]uint32, error) {
-	var count uint32
-	if err := binary.Read(r, binary.LittleEndian, &count); err != nil {
-		return nil, codec.WrapError(codec.KindTruncated, "failed to read frequency table", err)
-	}
-	if count != uint32(SymbolLimit) {
-		return nil, codec.NewError(codec.KindCorrupt, fmt.Sprintf("invalid frequency table size: %d", count))
-	}
-	freq := make([]uint32, count)
-	if err := binary.Read(r, binary.LittleEndian, freq); err != nil {
-		return nil, codec.WrapError(codec.KindTruncated, "failed to read frequency table", err)
-	}
-	return freq, nil
+	return codec.ReadFrequenciesExact(r, SymbolLimit)
 }
 
 // BuildCodes generates Huffman codes for each symbol by traversing the tree.
@@ -188,11 +161,7 @@ func Encode(input io.Reader, w io.Writer) error {
 		return fmt.Errorf("input too large (max %d bytes)", MaxInputSize)
 	}
 
-	freq := make([]uint32, SymbolLimit)
-	for _, b := range data {
-		freq[int(b)]++
-	}
-	freq[EOFSymbol] = 1
+	freq := codec.BuildFrequencies(data)
 
 	root := BuildTree(freq)
 	codes := make([]string, SymbolLimit)

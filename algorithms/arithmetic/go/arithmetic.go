@@ -3,7 +3,6 @@ package arithmetic
 
 import (
 	"bufio"
-	"encoding/binary"
 	"fmt"
 	"io"
 	"os"
@@ -180,45 +179,11 @@ func (d *ArithmeticDecoder) DecodeSymbol(cumulative []uint32) uint32 {
 
 // ScaleFrequencies normalizes frequencies to fit within MaxTotal.
 func ScaleFrequencies(freq []uint32) {
-	var total uint64
-	for _, f := range freq {
-		total += uint64(f)
-	}
-	if total == 0 {
-		for i := range freq {
-			freq[i] = 1
-		}
-		return
-	}
-	if total <= uint64(MaxTotal) {
-		return
-	}
-	var newTotal uint64
-	for i, f := range freq {
-		if f == 0 {
-			continue
-		}
-		scaled := uint64(f) * uint64(MaxTotal) / total
-		if scaled == 0 {
-			scaled = 1
-		}
-		freq[i] = uint32(scaled)
-		newTotal += scaled
-	}
-	if newTotal == 0 {
-		base := MaxTotal / uint32(len(freq))
-		if base == 0 {
-			base = 1
-		}
-		for i := range freq {
-			freq[i] = base
-		}
-	}
+	codec.ScaleFrequencies(freq, MaxTotal)
 }
 
 // BuildFrequenciesFromFile reads a file and counts byte frequencies.
 func BuildFrequenciesFromFile(path string) ([]uint32, error) {
-	freq := make([]uint32, SymbolLimit)
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open input file for reading: %s: %w", path, err)
@@ -233,61 +198,26 @@ func BuildFrequenciesFromFile(path string) ([]uint32, error) {
 		return nil, fmt.Errorf("input file too large (max %d bytes)", MaxInputSize)
 	}
 
-	r := bufio.NewReader(f)
-	for {
-		b, err := r.ReadByte()
-		if err != nil {
-			break
-		}
-		freq[int(b)]++
+	data, err := io.ReadAll(bufio.NewReader(f))
+	if err != nil {
+		return nil, fmt.Errorf("cannot read input file: %s: %w", path, err)
 	}
-	freq[EOFSymbol] = 1
-	ScaleFrequencies(freq)
-	return freq, nil
+	return codec.BuildScaledFrequencies(data, MaxTotal), nil
 }
 
 // BuildCumulative builds a cumulative frequency table from frequencies.
 func BuildCumulative(freq []uint32) []uint32 {
-	cum := make([]uint32, len(freq)+1)
-	for i, f := range freq {
-		cum[i+1] = cum[i] + f
-	}
-	if cum[len(cum)-1] == 0 {
-		for i := range freq {
-			cum[i+1] = uint32(i + 1)
-		}
-	}
-	return cum
+	return codec.BuildCumulative(freq)
 }
 
 // WriteFrequencies serializes a frequency table to the writer.
 func WriteFrequencies(w io.Writer, freq []uint32) error {
-	count := uint32(len(freq))
-	if err := binary.Write(w, binary.LittleEndian, count); err != nil {
-		return err
-	}
-	for _, v := range freq {
-		if err := binary.Write(w, binary.LittleEndian, v); err != nil {
-			return err
-		}
-	}
-	return nil
+	return codec.WriteFrequencies(w, freq)
 }
 
 // ReadFrequencies deserializes a frequency table from the reader.
 func ReadFrequencies(r io.Reader) ([]uint32, error) {
-	var count uint32
-	if err := binary.Read(r, binary.LittleEndian, &count); err != nil {
-		return nil, codec.WrapError(codec.KindTruncated, "failed to read frequency table", err)
-	}
-	if count != uint32(SymbolLimit) {
-		return nil, codec.NewError(codec.KindCorrupt, fmt.Sprintf("invalid frequency table size: %d", count))
-	}
-	freq := make([]uint32, count)
-	if err := binary.Read(r, binary.LittleEndian, freq); err != nil {
-		return nil, codec.WrapError(codec.KindTruncated, "failed to read frequency table", err)
-	}
-	return freq, nil
+	return codec.ReadFrequenciesExact(r, SymbolLimit)
 }
 
 // Encode reads from input and writes the arithmetic encoded output to w.
@@ -300,13 +230,8 @@ func Encode(input io.Reader, w io.Writer) error {
 		return fmt.Errorf("input too large (max %d bytes)", MaxInputSize)
 	}
 
-	freq := make([]uint32, SymbolLimit)
-	for _, b := range data {
-		freq[int(b)]++
-	}
-	freq[EOFSymbol] = 1
-	ScaleFrequencies(freq)
-	cumulative := BuildCumulative(freq)
+	freq := codec.BuildScaledFrequencies(data, MaxTotal)
+	cumulative := codec.BuildCumulative(freq)
 
 	if _, err := w.Write([]byte{'A', 'E', 'N', 'C'}); err != nil {
 		return err
@@ -342,7 +267,7 @@ func Decode(r io.Reader, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	cumulative := BuildCumulative(freq)
+	cumulative := codec.BuildCumulative(freq)
 
 	bw := bufio.NewWriter(w)
 	bitReader := codec.NewBitReader(br)

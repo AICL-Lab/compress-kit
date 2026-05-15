@@ -11,92 +11,20 @@ const (
 )
 
 func scaleFrequencies(freq []uint32) {
-	var total uint64
-	for _, f := range freq {
-		total += uint64(f)
-	}
-	if total == 0 {
-		for i := range freq {
-			freq[i] = 1
-		}
-		return
-	}
-	if total <= uint64(maxTotal) {
-		return
-	}
-	var newTotal uint64
-	for i, f := range freq {
-		if f == 0 {
-			continue
-		}
-		scaled := uint64(f) * uint64(maxTotal) / total
-		if scaled == 0 {
-			scaled = 1
-		}
-		freq[i] = uint32(scaled)
-		newTotal += scaled
-	}
-	if newTotal == 0 {
-		base := maxTotal / uint32(len(freq))
-		if base == 0 {
-			base = 1
-		}
-		for i := range freq {
-			freq[i] = base
-		}
-	}
+	codec.ScaleFrequencies(freq, maxTotal)
 }
 
 func buildFrequencies(data []byte) []uint32 {
-	freq := make([]uint32, codec.SymbolLimit)
-	for _, b := range data {
-		freq[int(b)]++
-	}
-	freq[codec.EOFSymbol] = 1
-	scaleFrequencies(freq)
-	return freq
+	return codec.BuildScaledFrequencies(data, maxTotal)
 }
 
 func buildCumulative(freq []uint32) []uint32 {
-	cum := make([]uint32, len(freq)+1)
-	for i, f := range freq {
-		cum[i+1] = cum[i] + f
-	}
-	if cum[len(cum)-1] == 0 {
-		for i := range freq {
-			cum[i+1] = uint32(i + 1)
-		}
-	}
-	return cum
-}
-
-func writeU32LE(out *[]byte, v uint32) {
-	*out = append(*out,
-		byte(v&0xFF),
-		byte((v>>8)&0xFF),
-		byte((v>>16)&0xFF),
-		byte((v>>24)&0xFF),
-	)
-}
-
-func readU32LE(in []byte, pos *int) (uint32, bool) {
-	if *pos+4 > len(in) {
-		return 0, false
-	}
-	v := uint32(in[*pos]) |
-		uint32(in[*pos+1])<<8 |
-		uint32(in[*pos+2])<<16 |
-		uint32(in[*pos+3])<<24
-	*pos += 4
-	return v, true
+	return codec.BuildCumulative(freq)
 }
 
 func writeHeader(out *[]byte, freq []uint32) {
 	*out = append(*out, 'R', 'C', 'N', 'C')
-	writeU32LE(out, uint32(len(freq)))
-	for _, v := range freq {
-		writeU32LE(out, v)
-	}
+	codec.AppendFrequencies(out, freq)
 }
 
 func readHeader(in []byte, pos *int) ([]uint32, error) {
@@ -107,17 +35,12 @@ func readHeader(in []byte, pos *int) ([]uint32, error) {
 		return nil, codec.NewError(codec.KindCorrupt, "range: bad magic")
 	}
 	*pos = 4
-	count, ok := readU32LE(in, pos)
-	if !ok || count == 0 || count > 1024 {
-		return nil, codec.NewError(codec.KindCorrupt, "range: bad header")
-	}
-	freq := make([]uint32, count)
-	for i := uint32(0); i < count; i++ {
-		v, ok := readU32LE(in, pos)
-		if !ok {
+	freq, err := codec.ReadFrequenciesFromBytesExact(in, pos, codec.SymbolLimit)
+	if err != nil {
+		if codecErr, ok := err.(*codec.CodecError); ok && codecErr.Kind == codec.KindTruncated {
 			return nil, codec.NewError(codec.KindTruncated, "range: truncated header")
 		}
-		freq[i] = v
+		return nil, codec.NewError(codec.KindCorrupt, "range: bad header")
 	}
 	return freq, nil
 }

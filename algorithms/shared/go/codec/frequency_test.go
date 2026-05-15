@@ -2,6 +2,7 @@ package codec
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 )
 
@@ -48,6 +49,26 @@ func TestBuildFrequencies_Empty(t *testing.T) {
 	}
 }
 
+func TestBuildScaledFrequencies_ClampsTotalAndPreservesEOF(t *testing.T) {
+	data := append(bytes.Repeat([]byte{'a'}, 12), bytes.Repeat([]byte{'b'}, 6)...)
+
+	freq := BuildScaledFrequencies(data, 8)
+
+	var total uint32
+	for _, f := range freq {
+		total += f
+	}
+	if total > 8 {
+		t.Fatalf("total = %d, want <= 8", total)
+	}
+	if freq[EOFSymbol] != 1 {
+		t.Fatalf("freq[EOF] = %d, want 1", freq[EOFSymbol])
+	}
+	if freq['a'] <= freq['b'] {
+		t.Fatalf("expected scaled frequencies to preserve ordering, got a=%d b=%d", freq['a'], freq['b'])
+	}
+}
+
 func TestWriteReadFrequencies_RoundTrip(t *testing.T) {
 	freq := []uint32{10, 20, 30, 40, 50}
 
@@ -88,6 +109,21 @@ func TestReadFrequencies_InvalidCount(t *testing.T) {
 	_, err := ReadFrequencies(buf)
 	if err == nil {
 		t.Error("expected error for count = 0")
+	}
+}
+
+func TestReadFrequenciesExact_RejectsWrongCounts(t *testing.T) {
+	var buf bytes.Buffer
+	if err := WriteFrequencies(&buf, []uint32{10, 20, 30}); err != nil {
+		t.Fatalf("WriteFrequencies failed: %v", err)
+	}
+
+	_, err := ReadFrequenciesExact(&buf, 4)
+	if err == nil {
+		t.Fatal("expected error for wrong frequency count")
+	}
+	if !errors.Is(err, ErrCorrupt) {
+		t.Fatalf("expected corrupt error, got %v", err)
 	}
 }
 

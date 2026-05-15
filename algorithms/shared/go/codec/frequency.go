@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"sort"
 )
 
 // SymbolLimit is the number of possible symbols (256 bytes + 1 EOF symbol).
@@ -35,6 +36,23 @@ func ReadFrequencies(r io.Reader) ([]uint32, error) {
 		return nil, WrapError(KindTruncated, "failed to read frequency table", err)
 	}
 	if count == 0 || count > 1024 {
+		return nil, NewError(KindCorrupt, fmt.Sprintf("invalid frequency table size: %d", count))
+	}
+	freq := make([]uint32, count)
+	if err := binary.Read(r, binary.LittleEndian, freq); err != nil {
+		return nil, WrapError(KindTruncated, "failed to read frequency table", err)
+	}
+	return freq, nil
+}
+
+// ReadFrequenciesExact deserializes a frequency table from the reader and
+// rejects any table whose count does not match expectedCount.
+func ReadFrequenciesExact(r io.Reader, expectedCount uint32) ([]uint32, error) {
+	var count uint32
+	if err := binary.Read(r, binary.LittleEndian, &count); err != nil {
+		return nil, WrapError(KindTruncated, "failed to read frequency table", err)
+	}
+	if count != expectedCount {
 		return nil, NewError(KindCorrupt, fmt.Sprintf("invalid frequency table size: %d", count))
 	}
 	freq := make([]uint32, count)
@@ -108,4 +126,83 @@ func BuildFrequencies(data []byte) []uint32 {
 	}
 	freq[EOFSymbol] = 1
 	return freq
+}
+
+// BuildScaledFrequencies counts byte frequencies, preserves an EOF symbol
+// frequency of 1, and scales the remaining frequencies to fit within maxTotal.
+func BuildScaledFrequencies(data []byte, maxTotal uint32) []uint32 {
+	freq := BuildFrequencies(data)
+	if maxTotal == 0 {
+		return make([]uint32, SymbolLimit)
+	}
+	if maxTotal == 1 {
+		for i := 0; i < EOFSymbol; i++ {
+			freq[i] = 0
+		}
+		freq[EOFSymbol] = 1
+		return freq
+	}
+
+	var total uint64
+	var dataTotal uint64
+	nonZero := make([]int, 0, EOFSymbol)
+	for i, f := range freq {
+		total += uint64(f)
+		if i < EOFSymbol && f > 0 {
+			dataTotal += uint64(f)
+			nonZero = append(nonZero, i)
+		}
+	}
+	if total <= uint64(maxTotal) || dataTotal == 0 {
+		return freq
+	}
+
+	remaining := int(maxTotal - 1)
+	if len(nonZero) > remaining {
+		sort.Slice(nonZero, func(i, j int) bool {
+			left := nonZero[i]
+			right := nonZero[j]
+			if freq[left] == freq[right] {
+				return left < right
+			}
+			return freq[left] > freq[right]
+		})
+		scaled := make([]uint32, SymbolLimit)
+		for _, idx := range nonZero[:remaining] {
+			scaled[idx] = 1
+		}
+		scaled[EOFSymbol] = 1
+		return scaled
+	}
+
+	scaled := make([]uint32, SymbolLimit)
+	scaled[EOFSymbol] = 1
+
+	var scaledTotal uint64
+	for _, idx := range nonZero {
+		value := uint64(freq[idx]) * uint64(maxTotal-1) / dataTotal
+		if value == 0 {
+			value = 1
+		}
+		scaled[idx] = uint32(value)
+		scaledTotal += value
+	}
+	for scaledTotal > uint64(maxTotal-1) {
+		candidate := -1
+		for _, idx := range nonZero {
+			if scaled[idx] <= 1 {
+				continue
+			}
+			if candidate == -1 || scaled[idx] > scaled[candidate] || (scaled[idx] == scaled[candidate] && idx < candidate) {
+				candidate = idx
+			}
+		}
+		if candidate == -1 {
+			break
+		}
+		scaled[candidate]--
+		scaledTotal--
+	}
+
+	return scaled
 }

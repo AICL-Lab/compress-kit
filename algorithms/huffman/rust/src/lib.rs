@@ -172,6 +172,7 @@ pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
         &mut pos,
         SYMBOL_LIMIT,
         "truncated freq table",
+        "truncated freq table",
         "invalid freq count",
     )
     .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err.message))?;

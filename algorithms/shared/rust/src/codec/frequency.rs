@@ -104,6 +104,16 @@ pub fn build_cumulative(freq: &[u32]) -> Vec<u32> {
     cumulative
 }
 
+pub fn build_cumulative_strict(
+    freq: &[u32],
+    zero_table_message: &'static str,
+) -> Result<Vec<u32>, FrequencyError> {
+    if freq.iter().all(|&value| value == 0) {
+        return Err(FrequencyError::corrupt(zero_table_message));
+    }
+    Ok(build_cumulative(freq))
+}
+
 pub fn write_frequencies(out: &mut Vec<u8>, freq: &[u32]) {
     out.extend_from_slice(&(freq.len() as u32).to_le_bytes());
     for &value in freq {
@@ -115,11 +125,12 @@ pub fn read_frequencies_exact(
     input: &[u8],
     pos: &mut usize,
     expected_count: usize,
-    truncated_message: &'static str,
+    truncated_count_message: &'static str,
+    truncated_entries_message: &'static str,
     invalid_count_message: &'static str,
 ) -> Result<Vec<u32>, FrequencyError> {
     let count = read_u32_le(input, pos)
-        .ok_or_else(|| FrequencyError::truncated(truncated_message))? as usize;
+        .ok_or_else(|| FrequencyError::truncated(truncated_count_message))? as usize;
     if count != expected_count {
         return Err(FrequencyError::corrupt(invalid_count_message));
     }
@@ -127,7 +138,7 @@ pub fn read_frequencies_exact(
     let mut freq = vec![0u32; expected_count];
     for value in freq.iter_mut() {
         *value = read_u32_le(input, pos)
-            .ok_or_else(|| FrequencyError::truncated(truncated_message))?;
+            .ok_or_else(|| FrequencyError::truncated(truncated_entries_message))?;
     }
     Ok(freq)
 }
@@ -145,8 +156,8 @@ fn read_u32_le(input: &[u8], pos: &mut usize) -> Option<u32> {
 #[cfg(test)]
 mod tests {
     use super::{
-        build_cumulative, build_scaled_frequencies, read_frequencies_exact, EOF_SYMBOL,
-        FrequencyErrorKind,
+        build_cumulative, build_cumulative_strict, build_scaled_frequencies, read_frequencies_exact,
+        EOF_SYMBOL, FrequencyErrorKind,
     };
 
     #[test]
@@ -174,6 +185,7 @@ mod tests {
             &mut pos,
             4,
             "truncated table",
+            "truncated entries",
             "wrong symbol count",
         )
         .unwrap_err();
@@ -183,8 +195,37 @@ mod tests {
     }
 
     #[test]
+    fn read_frequencies_exact_uses_entry_message_for_truncated_entries() {
+        let input = [
+            2, 0, 0, 0, // count
+            1, 0, 0, 0, // first entry only
+        ];
+        let mut pos = 0;
+        let err = read_frequencies_exact(
+            &input,
+            &mut pos,
+            2,
+            "truncated count",
+            "truncated entries",
+            "wrong symbol count",
+        )
+        .unwrap_err();
+
+        assert_eq!(err.kind, FrequencyErrorKind::Truncated);
+        assert_eq!(err.message, "truncated entries");
+    }
+
+    #[test]
     fn build_cumulative_uses_sequential_fallback_for_all_zero_table() {
         let cumulative = build_cumulative(&[0, 0, 0]);
         assert_eq!(cumulative, vec![0, 1, 2, 3]);
+    }
+
+    #[test]
+    fn build_cumulative_strict_rejects_all_zero_table() {
+        let err = build_cumulative_strict(&[0, 0, 0], "invalid table").unwrap_err();
+
+        assert_eq!(err.kind, FrequencyErrorKind::Corrupt);
+        assert_eq!(err.message, "invalid table");
     }
 }

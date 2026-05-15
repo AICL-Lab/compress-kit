@@ -40,6 +40,7 @@ fn read_header(input: &[u8], pos: &mut usize) -> Result<Vec<u32>, RangeError> {
         pos,
         SYMBOL_LIMIT,
         "range: truncated header",
+        "range: truncated frequencies",
         "range: bad symbol count",
     )
     .map_err(map_frequency_error)
@@ -266,5 +267,17 @@ mod tests {
         let enc = encode(&data).unwrap();
         let dec = decode(&enc).unwrap();
         assert_eq!(dec, data);
+    }
+
+    #[test]
+    fn decode_reports_truncated_frequencies_after_valid_count() {
+        let mut encoded = Vec::new();
+        encoded.extend_from_slice(b"RCNC");
+        encoded.extend_from_slice(&(SYMBOL_LIMIT as u32).to_le_bytes());
+        encoded.extend_from_slice(&1u32.to_le_bytes());
+
+        let err = decode(&encoded).unwrap_err();
+
+        assert_eq!(err.to_string(), "range: truncated frequencies");
     }
 }

@@ -4,8 +4,8 @@
 use std::io;
 
 use compresskit_codec::codec::{
-    build_cumulative, build_scaled_frequencies, read_frequencies_exact, write_frequencies,
-    BitWriter, EOF_SYMBOL, SYMBOL_LIMIT,
+    build_cumulative, build_cumulative_strict, build_scaled_frequencies, read_frequencies_exact,
+    write_frequencies, BitWriter, EOF_SYMBOL, SYMBOL_LIMIT,
 };
 const MAX_TOTAL: u32 = 1 << 24;
 const MAX_OUTPUT_SIZE: usize = 1024 * 1024 * 1024; // 1 GiB
@@ -119,11 +119,13 @@ pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
         &mut pos,
         SYMBOL_LIMIT,
         "truncated freq table",
+        "truncated freq table",
         "invalid symbol count",
     )
     .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err.message))?;
 
-    let cumulative = build_cumulative(&freq);
+    let cumulative = build_cumulative_strict(&freq, "invalid frequency table")
+        .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err.message))?;
     let total = cumulative[cumulative.len() - 1] as u64;
 
     let mut low = 0u64;
@@ -242,5 +244,21 @@ mod tests {
         let decoded = decode(&encoded).unwrap();
 
         assert_eq!(decoded, vec![0x00]);
+    }
+
+    #[test]
+    fn decode_rejects_all_zero_frequency_table() {
+        let mut encoded = Vec::new();
+        encoded.extend_from_slice(b"AENC");
+        encoded.extend_from_slice(&(257u32).to_le_bytes());
+        for _ in 0..257 {
+            encoded.extend_from_slice(&0u32.to_le_bytes());
+        }
+        encoded.extend_from_slice(&[0xFF; 4]);
+
+        let err = decode(&encoded).unwrap_err();
+
+        assert_eq!(err.kind(), std::io::ErrorKind::InvalidData);
+        assert_eq!(err.to_string(), "invalid frequency table");
     }
 }

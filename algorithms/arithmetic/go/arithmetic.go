@@ -177,7 +177,8 @@ func (d *ArithmeticDecoder) DecodeSymbol(cumulative []uint32) uint32 {
 	return symbol
 }
 
-// ScaleFrequencies normalizes frequencies to fit within MaxTotal.
+// ScaleFrequencies normalizes frequencies toward MaxTotal while preserving
+// every observed symbol.
 func ScaleFrequencies(freq []uint32) {
 	codec.ScaleFrequencies(freq, MaxTotal)
 }
@@ -230,7 +231,10 @@ func Encode(input io.Reader, w io.Writer) error {
 		return fmt.Errorf("input too large (max %d bytes)", MaxInputSize)
 	}
 
-	freq := codec.BuildScaledFrequencies(data, MaxTotal)
+	freq, err := codec.BuildScaledFrequenciesChecked(data, MaxTotal)
+	if err != nil {
+		return fmt.Errorf("failed to count input frequencies: %w", err)
+	}
 	cumulative := codec.BuildCumulative(freq)
 
 	if _, err := w.Write([]byte{'A', 'E', 'N', 'C'}); err != nil {

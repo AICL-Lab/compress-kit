@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"math"
 )
 
 // SymbolLimit is the number of possible symbols (256 bytes + 1 EOF symbol).
@@ -61,8 +62,11 @@ func ReadFrequenciesExact(r io.Reader, expectedCount uint32) ([]uint32, error) {
 	return freq, nil
 }
 
-// ScaleFrequencies normalizes frequencies to fit within maxTotal.
-// This is needed for Arithmetic and Range coders where precision is limited.
+// ScaleFrequencies normalizes frequencies toward maxTotal while preserving every
+// nonzero symbol. When the number of observed symbols exceeds maxTotal, the
+// scaled total can still exceed maxTotal because each observed symbol keeps at
+// least frequency 1. This is needed for Arithmetic and Range coders where
+// precision is limited.
 func ScaleFrequencies(freq []uint32, maxTotal uint32) {
 	var total uint64
 	for _, f := range freq {
@@ -100,6 +104,25 @@ func ScaleFrequencies(freq []uint32, maxTotal uint32) {
 	}
 }
 
+func accumulateFrequencies(freq []uint32, data []byte) error {
+	for _, b := range data {
+		if freq[int(b)] == math.MaxUint32 {
+			return NewError(KindSizeLimit, fmt.Sprintf("frequency overflow for symbol %d", b))
+		}
+		freq[int(b)]++
+	}
+	return nil
+}
+
+func buildFrequencies(data []byte) ([]uint32, error) {
+	freq := make([]uint32, SymbolLimit)
+	if err := accumulateFrequencies(freq, data); err != nil {
+		return nil, err
+	}
+	freq[EOFSymbol] = 1
+	return freq, nil
+}
+
 // BuildCumulative builds a cumulative frequency table from frequencies.
 // The result has len(freq)+1 elements, where cum[i+1] = cum[i] + freq[i].
 func BuildCumulative(freq []uint32) []uint32 {
@@ -117,14 +140,21 @@ func BuildCumulative(freq []uint32) []uint32 {
 }
 
 // BuildFrequencies counts byte frequencies in the input data.
-// The EOF symbol is always set to 1.
+// The EOF symbol is always set to 1. It panics if a symbol count would exceed
+// math.MaxUint32; use BuildFrequenciesChecked to handle that error explicitly.
 func BuildFrequencies(data []byte) []uint32 {
-	freq := make([]uint32, SymbolLimit)
-	for _, b := range data {
-		freq[int(b)]++
+	freq, err := BuildFrequenciesChecked(data)
+	if err != nil {
+		panic(err)
 	}
-	freq[EOFSymbol] = 1
 	return freq
+}
+
+// BuildFrequenciesChecked counts byte frequencies in the input data and
+// returns an error instead of overflowing if any symbol count would exceed
+// math.MaxUint32. The EOF symbol is always set to 1.
+func BuildFrequenciesChecked(data []byte) ([]uint32, error) {
+	return buildFrequencies(data)
 }
 
 // BuildFrequenciesFromReader streams bytes from r and counts symbol frequencies.
@@ -133,8 +163,8 @@ func BuildFrequenciesFromReader(r io.Reader) ([]uint32, error) {
 	buf := make([]byte, 32*1024)
 	for {
 		n, err := r.Read(buf)
-		for _, b := range buf[:n] {
-			freq[int(b)]++
+		if countErr := accumulateFrequencies(freq, buf[:n]); countErr != nil {
+			return nil, countErr
 		}
 		if err == io.EOF {
 			break
@@ -148,11 +178,26 @@ func BuildFrequenciesFromReader(r io.Reader) ([]uint32, error) {
 }
 
 // BuildScaledFrequencies counts byte frequencies and scales them with the same
-// semantics as BuildFrequencies followed by ScaleFrequencies.
+// semantics as BuildFrequencies followed by ScaleFrequencies. It panics if a
+// symbol count would exceed math.MaxUint32; use BuildScaledFrequenciesChecked
+// to handle that error explicitly.
 func BuildScaledFrequencies(data []byte, maxTotal uint32) []uint32 {
-	freq := BuildFrequencies(data)
-	ScaleFrequencies(freq, maxTotal)
+	freq, err := BuildScaledFrequenciesChecked(data, maxTotal)
+	if err != nil {
+		panic(err)
+	}
 	return freq
+}
+
+// BuildScaledFrequenciesChecked counts byte frequencies and scales them with
+// the same semantics as BuildFrequenciesChecked followed by ScaleFrequencies.
+func BuildScaledFrequenciesChecked(data []byte, maxTotal uint32) ([]uint32, error) {
+	freq, err := BuildFrequenciesChecked(data)
+	if err != nil {
+		return nil, err
+	}
+	ScaleFrequencies(freq, maxTotal)
+	return freq, nil
 }
 
 // BuildScaledFrequenciesFromReader streams bytes from r, counts symbol

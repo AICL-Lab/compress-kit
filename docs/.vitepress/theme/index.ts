@@ -1,31 +1,53 @@
 import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
-import { h } from 'vue'
+import { h, onMounted, watch, nextTick } from 'vue'
+import { useData } from 'vitepress'
 import './styles/vars.css'
-import './styles/animations.css'
-import './styles/components.css'
-import './styles/custom.css'
 
-// Import custom components
-import StatsBar from './components/StatsBar.vue'
+// Import custom components (保留核心组件)
 import AlgorithmGrid from './components/AlgorithmGrid.vue'
 import BenchmarkChart from './components/BenchmarkChart.vue'
 import CodeComparison from './components/CodeComparison.vue'
-import CustomFooter from './components/CustomFooter.vue'
 import LanguageDetector from './components/LanguageDetector.vue'
 
 export default {
   extends: DefaultTheme,
   Layout: () => {
     return h(DefaultTheme.Layout, null, {
-      'layout-bottom': () => h('div', [h(LanguageDetector), h(CustomFooter)]),
+      'layout-bottom': () => h(LanguageDetector),
     })
   },
   enhanceApp({ app }) {
     // Register custom components globally
-    app.component('StatsBar', StatsBar)
     app.component('AlgorithmGrid', AlgorithmGrid)
     app.component('BenchmarkChart', BenchmarkChart)
     app.component('CodeComparison', CodeComparison)
   },
+  setup() {
+    // Mermaid 深色主题动态切换
+    const { isDark } = useData()
+
+    const updateMermaidTheme = async () => {
+      await nextTick()
+      const mermaid = (window as any).mermaid
+      if (mermaid) {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: isDark.value ? 'dark' : 'default',
+          themeVariables: {
+            primaryColor: isDark.value ? '#60a5fa' : '#2563eb',
+            primaryTextColor: isDark.value ? '#f1f5f9' : '#1e293b',
+            primaryBorderColor: isDark.value ? '#334155' : '#e2e8f0',
+            lineColor: isDark.value ? '#64748b' : '#94a3b8',
+            secondaryColor: isDark.value ? '#1e293b' : '#f8fafc',
+            tertiaryColor: isDark.value ? '#0f172a' : '#f1f5f9'
+          }
+        })
+        mermaid.run()
+      }
+    }
+
+    onMounted(updateMermaidTheme)
+    watch(isDark, updateMermaidTheme)
+  }
 } satisfies Theme

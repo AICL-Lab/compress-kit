@@ -1,6 +1,8 @@
 import { defineConfig } from 'vitepress'
 import { withMermaid } from 'vitepress-plugin-mermaid'
 import llmstxt from 'vitepress-plugin-llms'
+import footnote from 'markdown-it-footnote'
+import mark from 'markdown-it-mark'
 
 const rawBase = process.env.VITEPRESS_BASE
 const base = rawBase
@@ -19,6 +21,13 @@ const sharedSidebar = {
         { text: 'Quick Start', link: '/en/guide/getting-started' },
         { text: 'Architecture', link: '/en/guide/architecture' },
         { text: 'Project Structure', link: '/en/guide/project-structure' },
+      ],
+    },
+    {
+      text: 'Academy',
+      items: [
+        { text: 'Algorithm Academy', link: '/en/academy/' },
+        { text: 'Huffman Coding', link: '/en/academy/huffman' },
       ],
     },
     {
@@ -51,6 +60,8 @@ const sharedSidebar = {
     {
       text: 'Reference',
       items: [
+        { text: 'Architecture Design', link: '/en/architecture/' },
+        { text: 'Bibliography', link: '/en/reference/bibliography' },
         { text: 'OpenSpec Specs', link: 'https://github.com/LessUp/compress-kit/tree/master/openspec/specs' },
         { text: 'Contributing', link: '/en/guide/contributing' },
         { text: 'Changelog', link: '/en/release-notes/changelog' },
@@ -65,6 +76,14 @@ const sharedSidebar = {
         { text: '快速开始', link: '/zh/guide/getting-started' },
         { text: '架构设计', link: '/zh/guide/architecture' },
         { text: '项目结构', link: '/zh/guide/project-structure' },
+      ],
+    },
+    {
+      text: '学院',
+      items: [
+        { text: '算法学院', link: '/zh/academy/' },
+        { text: '霍夫曼编码深度解析', link: '/zh/academy/huffman' },
+        { text: '状态机设计哲学', link: '/zh/academy/state-machine' },
       ],
     },
     {
@@ -97,6 +116,8 @@ const sharedSidebar = {
     {
       text: '参考',
       items: [
+        { text: '系统架构设计', link: '/zh/architecture/' },
+        { text: '参考文献', link: '/zh/reference/bibliography' },
         { text: 'OpenSpec 规范', link: 'https://github.com/LessUp/compress-kit/tree/master/openspec/specs' },
         { text: '参与贡献', link: '/zh/guide/contributing' },
         { text: '更新日志', link: '/zh/release-notes/changelog' },
@@ -266,6 +287,10 @@ export default withMermaid(defineConfig({
     languageAlias: {
       cuda: 'cpp',
     },
+    config: (md) => {
+      md.use(footnote)
+      md.use(mark)
+    }
   },
 
   head: [

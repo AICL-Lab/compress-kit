@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-import os
+import subprocess
 import sys
 import time
-import subprocess
 from pathlib import Path
 
 # Huffman 跨语言 benchmark 脚本
@@ -21,7 +20,7 @@ GO_DIR = ROOT / "go"
 RUST_DIR = ROOT / "rust"
 BENCH_DIR = ROOT / "benchmark"
 TMP_DIR = BENCH_DIR / "tmp"
-PROJECT_ROOT = ROOT.parent
+PROJECT_ROOT = ROOT.parent.parent
 TEST_DATA_DIR = PROJECT_ROOT / "tests" / "data"
 
 
@@ -41,18 +40,9 @@ def ensure_tmp():
     TMP_DIR.mkdir(parents=True, exist_ok=True)
 
 
-def generate_input(path: Path, size_bytes: int = 10 * 1024 * 1024):
-    if path.exists():
-        return
-    data = os.urandom(size_bytes)
-    path.write_bytes(data)
-
-
 def compile_all():
     times = {}
-    times["cpp_build"] = run(["g++", "-std=c++17", "-O2", "main.cpp", "-o", "huffman_cpp"], CPP_DIR)
-    times["go_build"] = run(["go", "build", "-o", "huffman_go", "."], GO_DIR)
-    times["rust_build"] = run(["rustc", "-O", "main.rs", "-o", "huffman_rust"], RUST_DIR)
+    times["build_all"] = run(["make", "build-huffman"], PROJECT_ROOT)
     return times
 
 
@@ -117,6 +107,7 @@ def main():
             sys.stderr.write(f"{name} decode output mismatch\n")
             sys.exit(1)
 
+    print(f"Dataset: {input_path.stem}")
     print(f"Original size: {original_size} bytes")
     print("Build times (s):")
     for k, v in build_times.items():

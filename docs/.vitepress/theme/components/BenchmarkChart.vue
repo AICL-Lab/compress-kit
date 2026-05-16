@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watchEffect } from 'vue'
 import benchmarkData from '../../data/benchmarks.json'
 
 interface BenchmarkResult {
@@ -18,6 +18,7 @@ const results = ref<BenchmarkResult[]>(benchmarkData.results)
 
 const algorithms = ['huffman', 'arithmetic', 'range', 'rle']
 const languages = ['cpp', 'go', 'rust']
+const datasetOrder = ['textlike_10MiB', 'repetitive_10MiB', 'small_dictionary_like']
 
 const languageColors: Record<string, string> = {
   cpp: '#667eea',
@@ -38,8 +39,31 @@ const algorithmNames: Record<string, string> = {
   rle: 'RLE'
 }
 
+const datasetNames: Record<string, string> = {
+  textlike_10MiB: 'Text-like (10 MiB)',
+  repetitive_10MiB: 'Repetitive (10 MiB)',
+  small_dictionary_like: 'Small dictionary-like sample'
+}
+
 const selectedMetric = ref<'encodeSpeed' | 'decodeSpeed' | 'compressionRatio'>('encodeSpeed')
-const selectedDataset = ref('text_10mb')
+const selectedDataset = ref('')
+
+const datasetOptions = computed(() => {
+  return [...new Set(results.value.map(result => result.dataset))].sort((a, b) => {
+    const left = datasetOrder.indexOf(a)
+    const right = datasetOrder.indexOf(b)
+    if (left === -1 && right === -1) return a.localeCompare(b)
+    if (left === -1) return 1
+    if (right === -1) return -1
+    return left - right
+  })
+})
+
+watchEffect(() => {
+  if (!datasetOptions.value.includes(selectedDataset.value)) {
+    selectedDataset.value = datasetOptions.value[0] ?? ''
+  }
+})
 
 const filteredResults = computed(() => {
   return results.value.filter(
@@ -83,8 +107,9 @@ const getBarHeight = (value: number): number => {
         <div class="control-group">
           <label>Dataset:</label>
           <select v-model="selectedDataset">
-            <option value="text_10mb">Text (10 MB)</option>
-            <option value="repetitive_10mb">Repetitive (10 MB)</option>
+            <option v-for="dataset in datasetOptions" :key="dataset" :value="dataset">
+              {{ datasetNames[dataset] || dataset }}
+            </option>
           </select>
         </div>
         <div class="control-group">

@@ -47,6 +47,14 @@ make build
 make test
 ```
 
+如需使用项目固定工具链，建议在 VS Code 或 Codespaces 中打开仓库内置的
+`.devcontainer/`。若在本地维护文档，请优先使用锁文件驱动的安装方式：
+
+```bash
+npm ci
+(cd docs && npm ci)
+```
+
 最小跨语言验证：
 
 ```bash
@@ -88,6 +96,9 @@ openspec/     # 项目规范与已归档设计变更
 已知限制：Range Coder 在大文件解码上存在已记录的性能问题；本地
 conformance 和 benchmark 路径会对 Range 大样本做限制。处理大输入前请先阅读
 Range Coder 文档。
+
+`make bench` 还会刷新 `docs/.vitepress/data/benchmarks.json`，文档中的基准图表
+直接读取该文件。当前快照的基准事实应以生成的 JSON 和图表为准。
 
 ## 许可证
 

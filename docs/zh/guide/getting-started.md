@@ -49,6 +49,29 @@ git clone https://github.com/LessUp/compress-kit.git
 cd compress-kit
 ```
 
+### 使用 Dev Container（推荐）
+
+仓库内置了 `.devcontainer/`，提供项目支持的 C++ / Go / Rust / Node
+工具链。请在 VS Code 或 Codespaces 中打开仓库后选择 **Reopen in
+Container**，即可获得与项目文档一致的基线环境。
+
+容器创建时会自动执行可复现的安装路径：
+
+```bash
+npm ci
+(cd docs && npm ci)
+```
+
+### 本地可复现的文档工具链
+
+如果您仍在宿主机上工作，请在构建文档或 OpenSpec 内容前执行同样的
+锁文件安装：
+
+```bash
+npm ci
+(cd docs && npm ci)
+```
+
 ### 构建所有实现
 
 ```bash
@@ -141,20 +164,18 @@ cd algorithms/huffman/rust && cargo test
 make bench
 ```
 
-这将生成测试数据并运行跨语言基准测试。
+这会生成测试数据、运行已验证的基准矩阵，并把原始报告写入 `reports/`，
+同时刷新交互式文档图表使用的 `docs/.vitepress/data/benchmarks.json`。
 
-### 基准测试输出
+### 基准测试产物
 
-报告保存到 `reports/` 目录。示例输出：
+| 产物 | 用途 |
+|------|------|
+| `reports/*.txt` | 每次运行的原始基准日志 |
+| `docs/.vitepress/data/benchmarks.json` | 文档基准图表读取的生成快照 |
+| `/zh/benchmarks/results` | 面向读者的生成 JSON 视图 |
 
-```
-Algorithm: Huffman
-Language: C++
-Input: 10 MiB random data
-Encode: 245 ms (40.8 MiB/s)
-Decode: 198 ms (50.5 MiB/s)
-Compression ratio: 1.23
-```
+当前仓库快照中的基准事实应以生成的 JSON 文件和图表为准。
 
 ## Makefile 命令参考
 
@@ -206,15 +227,17 @@ rustc --version  # 应为 1.70+
 
 ### Range Coder 性能
 
-Range Coder 解码器对大于 500KB 的文件存在已知性能问题。请使用较小的测试文件：
+Range Coder 解码器对大于 500 KiB 的文件存在已知性能问题，因此基准测试
+会为 Range 结果使用较小的 `small_dictionary_like` 数据集。手动检查时也请
+保持在类似的小样本范围内：
 
 ```bash
-# 创建较小的测试文件 (100KB)
-dd if=tests/data/random_10MiB.bin of=/tmp/small.bin bs=1024 count=100
+# 创建较小的测试文件 (100 KiB)
+dd if=tests/data/random_10MiB.bin of=small.bin bs=1024 count=100
 
 # 使用较小文件测试
-./algorithms/range/cpp/rangecoder_cpp encode /tmp/small.bin /tmp/small.enc
-./algorithms/range/cpp/rangecoder_cpp decode /tmp/small.enc /tmp/small.dec
+./algorithms/range/cpp/rangecoder_cpp encode small.bin small.enc
+./algorithms/range/cpp/rangecoder_cpp decode small.enc small.dec
 ```
 
 ## 下一步

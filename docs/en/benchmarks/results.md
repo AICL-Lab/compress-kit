@@ -1,112 +1,59 @@
 # Benchmark Results
 
-This page shows the performance characteristics of each algorithm across C++17, Go, and Rust implementations.
+This page is a viewer for the generated benchmark snapshot committed with the
+docs.
 
-::: tip Note
-Benchmark results depend on hardware and OS. Run `make bench` locally for your system's numbers.
+::: tip Local numbers win
+The interactive chart reads `docs/.vitepress/data/benchmarks.json`, which is
+rewritten by `make bench`. Treat that generated JSON file and the chart below as
+the source of truth for the current repository snapshot.
 :::
 
 ## Interactive Performance Chart
 
 <BenchmarkChart />
 
-## Test Data
+## Generated Data Model
 
-| Dataset | Size | Description |
-|---------|------|-------------|
-| Random | 1 MiB, 10 MiB | `os.urandom()` — worst case for compression |
-| Repetitive | 1 MiB, 10 MiB | Repeated 256-byte pattern — best case for RLE |
-| Text-like | 1 MiB, 10 MiB | Weighted English letters — realistic workload |
+| JSON location | Fields | Meaning |
+|---------------|--------|---------|
+| top level | `generated` | Date of the benchmark snapshot used by the docs |
+| each `results[]` row | `algorithm`, `language`, `dataset` | Benchmark coordinate shown in the chart |
+| each `results[]` row | `encodeTime`, `decodeTime` | Wall-clock milliseconds |
+| each `results[]` row | `encodeSpeed`, `decodeSpeed` | Throughput in MiB/s |
+| each `results[]` row | `compressionRatio`, `throughput` | Size ratio plus the coarse throughput label used by the UI |
 
-## Huffman Coding
+## Current Dataset Coverage
 
-| Language | Input | Encode (ms) | Decode (ms) | Encode (MiB/s) | Decode (MiB/s) | Ratio |
-|----------|-------|-------------|-------------|-----------------|-----------------|-------|
-| C++ | 10 MiB random | ~250 | ~200 | ~40 | ~50 | ~1.2× |
-| Go | 10 MiB random | ~300 | ~250 | ~33 | ~40 | ~1.2× |
-| Rust | 10 MiB random | ~220 | ~180 | ~45 | ~55 | ~1.2× |
-| C++ | 10 MiB text-like | ~200 | ~160 | ~50 | ~62 | ~1.8× |
-| Go | 10 MiB text-like | ~250 | ~200 | ~40 | ~50 | ~1.8× |
-| Rust | 10 MiB text-like | ~180 | ~140 | ~55 | ~71 | ~1.8× |
+| Dataset key | Chart label | Why it appears |
+|-------------|-------------|----------------|
+| `textlike_10MiB` | Text-like (10 MiB) | Main comparison input for Huffman and Arithmetic |
+| `repetitive_10MiB` | Repetitive (10 MiB) | High-repeat input where RLE is meaningful |
+| `small_dictionary_like` | Small dictionary-like sample | Reduced Range workload kept below the known large-file decode limitation |
 
-**Key observations:**
-- Huffman performs best on text-like data (uneven frequency distribution)
-- Rust is consistently fastest, C++ and Go are comparable
-- Compression ratio on random data ≈ 1.2× (near optimal for entropy-limited data)
+Because the chart reads the generated JSON directly, local reruns replace the
+snapshot without any manual table editing on this page.
 
-## Arithmetic Coding
+## Reading the Snapshot Safely
 
-| Language | Input | Encode (ms) | Decode (ms) | Ratio |
-|----------|-------|-------------|-------------|-------|
-| C++ | 10 MiB random | ~350 | ~300 | ~1.2× |
-| Go | 10 MiB random | ~400 | ~350 | ~1.2× |
-| Rust | 10 MiB random | ~320 | ~280 | ~1.2× |
-| C++ | 10 MiB text-like | ~300 | ~250 | ~1.8× |
+- Compare implementations on the **same dataset** before drawing language
+  conclusions.
+- Range results are intentionally shown on a smaller input; do not read them as
+  apples-to-apples throughput versus the 10 MiB datasets.
+- RLE is most meaningful on repetitive inputs and may expand other data.
 
-**Key observations:**
-- Arithmetic coding is ~40% slower than Huffman but achieves better compression
-- Go implementation has the most overhead due to bounds checking
-- Fractional bit encoding gives ~5-10% better ratios than Huffman
-
-## Range Coder
-
-| Language | Input | Encode (ms) | Decode (ms) | Ratio |
-|----------|-------|-------------|-------------|-------|
-| C++ | 10 MiB random | ~200 | ~180 | ~1.2× |
-| Go | 10 MiB random | ~250 | ~220 | ~1.2× |
-| Rust | 10 MiB random | ~180 | ~150 | ~1.2× |
-
-**Key observations:**
-- Range coder is ~30% faster than arithmetic coding (byte-level I/O vs bit-level)
-- Same compression ratio as arithmetic coding
-- ⚠️ Known issue: decode hangs on files >500KB in CI; use smaller test files
-
-## RLE
-
-| Language | Input | Encode (ms) | Decode (ms) | Ratio |
-|----------|-------|-------------|-------------|-------|
-| C++ | 10 MiB repetitive | ~50 | ~40 | ~25× |
-| Go | 10 MiB repetitive | ~80 | ~60 | ~25× |
-| Rust | 10 MiB repetitive | ~45 | ~35 | ~25× |
-| C++ | 10 MiB random | ~120 | ~200 | ~0.2× (expands) |
-
-**Key observations:**
-- RLE is the fastest algorithm on repetitive data
-- Random data expands ~5× with RLE (each byte becomes 5 bytes: 4 count + 1 value)
-- Best used as preprocessing for BWT or other transforms
-
-## Cross-Language Comparison
-
-### Speed Ranking (fastest → slowest)
-
-| Algorithm | Encode | Decode |
-|-----------|--------|--------|
-| Huffman | Rust > C++ > Go | Rust > C++ > Go |
-| Arithmetic | Rust > C++ > Go | Rust > C++ > Go |
-| Range Coder | Rust > C++ > Go | Rust > C++ > Go |
-| RLE | Rust > C++ > Go | Rust > C++ > Go |
-
-### Compression Ratio
-
-| Algorithm | Random | Repetitive | Text-like |
-|-----------|--------|------------|-----------|
-| Huffman | 1.2× | 1.0× | 1.8× |
-| Arithmetic | 1.2× | 1.0× | 1.9× |
-| Range Coder | 1.2× | 1.0× | 1.9× |
-| RLE | 0.2× (expands) | 25× | 1.1× |
-
-## How to Reproduce
+## Refresh the Source of Truth
 
 ```bash
-# Generate test data
-make test-data
-
-# Run all benchmarks
 make bench
-
-# Results saved to reports/ directory
-ls reports/
+npm run docs:build
 ```
+
+- `make bench` rewrites `reports/` and `docs/.vitepress/data/benchmarks.json`
+- `npm run docs:build` verifies that the docs portal renders the refreshed
+  dataset
+- If you commit benchmark updates, commit the generated JSON file rather than
+  hand-editing narrative numbers on this page
 
 ## See Also
 

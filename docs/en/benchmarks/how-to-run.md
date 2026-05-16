@@ -18,9 +18,9 @@ make bench
 
 This runs the `scripts/run_all_bench.py` script, which:
 1. Generates test data (if `tests/data/` is empty)
-2. Runs encode/decode for each algorithm × language × dataset
+2. Runs the validated algorithm × language × dataset matrix
 3. Measures timing and compression ratio
-4. Saves results to `reports/` directory
+4. Saves reports to `reports/` and refreshes `docs/.vitepress/data/benchmarks.json`
 
 ### Individual Algorithm Benchmarks
 
@@ -46,10 +46,9 @@ python3 bench.py
 |------|-------------------|------|
 | `tests/data/random_1MiB.bin` | `os.urandom(1024*1024)` | 1 MiB |
 | `tests/data/random_10MiB.bin` | `os.urandom(10*1024*1024)` | 10 MiB |
-| `tests/data/repetitive_1MiB.bin` | Repeated 256-byte pattern | 1 MiB |
 | `tests/data/repetitive_10MiB.bin` | Repeated 256-byte pattern | 10 MiB |
-| `tests/data/textli_1MiB.bin` | Weighted English letters | 1 MiB |
-| `tests/data/textli_10MiB.bin` | Weighted English letters | 10 MiB |
+| `tests/data/textlike_10MiB.bin` | Weighted English letters | 10 MiB |
+| `tests/data/small_dictionary_like.bin` | Small repeated dictionary-style sample | ~8 KiB |
 
 To regenerate:
 
@@ -71,15 +70,18 @@ python3 tests/gen_testdata.py
 
 ### Output Format
 
-Results are saved to `reports/` directory:
+Results are saved to `reports/`, and the docs snapshot is written to
+`docs/.vitepress/data/benchmarks.json`:
 
-```
+```text
 reports/
-├── huffman_cpp_report.txt
-├── huffman_go_report.txt
-├── huffman_rust_report.txt
-├── arithmetic_cpp_report.txt
-├── ...
+├── huffman_report_<timestamp>.txt
+├── arithmetic_report_<timestamp>.txt
+├── range_report_<timestamp>.txt
+└── rle_report_<timestamp>.txt
+
+docs/.vitepress/data/
+└── benchmarks.json
 ```
 
 Each report contains:
@@ -100,7 +102,7 @@ To add a new test dataset:
 1. Edit `tests/gen_testdata.py`
 2. Add generation code to `generate_random_file()` or create new generator
 3. Run `make test-data`
-4. Edit the relevant `benchmark/bench.py` to include the new file
+4. Update `scripts/run_all_bench.py` so the generated docs snapshot stays aligned
 
 ## Troubleshooting
 
@@ -119,10 +121,12 @@ make test-data  # Generate test files
 ### Slow benchmark on Range Coder
 
 ::: warning
-The Range Coder decoder has a known performance issue for files >500KB. Use smaller test files.
+The Range Coder decoder has a known performance issue for files above 500 KiB.
+The checked-in benchmark flow therefore uses `small_dictionary_like.bin` for
+Range results.
 :::
 
 ```bash
 # Create smaller test file
-dd if=tests/data/random_10MiB.bin of=/tmp/small.bin bs=1024 count=100
+dd if=tests/data/random_10MiB.bin of=small.bin bs=1024 count=100
 ```

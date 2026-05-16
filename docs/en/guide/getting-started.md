@@ -49,6 +49,29 @@ git clone https://github.com/LessUp/compress-kit.git
 cd compress-kit
 ```
 
+### Use the Dev Container (Recommended)
+
+The repository includes a checked-in `.devcontainer/` for the supported
+C++/Go/Rust/Node toolchain. Open the folder in VS Code or Codespaces and choose
+**Reopen in Container** to get the same baseline used by the project docs.
+
+The container runs the reproducible install path on creation:
+
+```bash
+npm ci
+(cd docs && npm ci)
+```
+
+### Reproducible Local Docs Tooling
+
+If you are staying on your host machine, run the same lockfile-backed installs
+before building the docs or OpenSpec content:
+
+```bash
+npm ci
+(cd docs && npm ci)
+```
+
 ### Build All Implementations
 
 ```bash
@@ -141,20 +164,20 @@ cd algorithms/huffman/rust && cargo test
 make bench
 ```
 
-This generates test data and runs cross-language benchmarks.
+This generates test data, runs the verified benchmark matrix, writes raw reports
+to `reports/`, and refreshes `docs/.vitepress/data/benchmarks.json` for the
+interactive docs chart.
 
-### Benchmark Output
+### Benchmark Artifacts
 
-Reports are saved to the `reports/` directory. Example output:
+| Artifact | Purpose |
+|----------|---------|
+| `reports/*.txt` | Raw per-run benchmark logs |
+| `docs/.vitepress/data/benchmarks.json` | Generated snapshot consumed by the docs benchmark chart |
+| `/en/benchmarks/results` | Reader-friendly view of the generated JSON snapshot |
 
-```
-Algorithm: Huffman
-Language: C++
-Input: 10 MiB random data
-Encode: 245 ms (40.8 MiB/s)
-Decode: 198 ms (50.5 MiB/s)
-Compression ratio: 1.23
-```
+Treat the generated JSON file and chart as the source of truth for benchmark
+numbers in this repository snapshot.
 
 ## Makefile Command Reference
 
@@ -206,15 +229,17 @@ rustc --version  # Should be 1.70+
 
 ### Range Coder Performance
 
-The Range Coder decoder has a known performance issue for files larger than 500KB. Use smaller test files:
+The Range Coder decoder has a known performance issue for files larger than
+500 KiB. Benchmarks therefore use the smaller `small_dictionary_like` dataset
+for Range results. For manual checks, stay on similarly small samples:
 
 ```bash
-# Create smaller test file (100KB)
-dd if=tests/data/random_10MiB.bin of=/tmp/small.bin bs=1024 count=100
+# Create a smaller test file (100 KiB)
+dd if=tests/data/random_10MiB.bin of=small.bin bs=1024 count=100
 
 # Test with smaller file
-./algorithms/range/cpp/rangecoder_cpp encode /tmp/small.bin /tmp/small.enc
-./algorithms/range/cpp/rangecoder_cpp decode /tmp/small.enc /tmp/small.dec
+./algorithms/range/cpp/rangecoder_cpp encode small.bin small.enc
+./algorithms/range/cpp/rangecoder_cpp decode small.enc small.dec
 ```
 
 ## Next Steps

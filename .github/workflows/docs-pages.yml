@@ -31,14 +31,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-
-      - name: Cache docs node_modules
-        uses: actions/cache@v4
-        with:
-          path: docs/node_modules
-          key: ${{ runner.os }}-docs-node-modules-${{ hashFiles('docs/package.json') }}
-          restore-keys: |
-            ${{ runner.os }}-docs-node-modules-
+          cache: "npm"
+          cache-dependency-path: docs/package-lock.json
 
       - name: Configure GitHub Pages
         id: pages
@@ -59,7 +53,7 @@ jobs:
 
       - name: Install docs dependencies
         working-directory: docs
-        run: npm install --no-package-lock
+        run: npm ci
 
       - name: Build docs
         working-directory: docs

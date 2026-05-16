@@ -48,6 +48,14 @@ make build
 make test
 ```
 
+For a pinned toolchain, open the checked-in `.devcontainer/` in VS Code or
+Codespaces. For local docs work, prefer the lockfile-backed installs:
+
+```bash
+npm ci
+(cd docs && npm ci)
+```
+
 Minimal cross-language check:
 
 ```bash
@@ -89,6 +97,10 @@ openspec/     # project specifications and archived design changes
 Known limitation: the Range Coder has documented decode performance issues on
 large files; local conformance and benchmark paths cap Range-heavy sweeps
 accordingly. See the Range Coder docs before using it for large inputs.
+
+`make bench` also refreshes `docs/.vitepress/data/benchmarks.json`, which feeds
+the benchmark chart in the docs. Treat the generated chart/data pair as the
+benchmark source of truth for the current snapshot.
 
 ## License
 

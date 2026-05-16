@@ -79,13 +79,24 @@ def run_checked(command: list[str]) -> None:
 
 def assert_usage(binary: Path) -> None:
     proc = run([str(binary)])
+    assert_usage_error(binary, proc, "without args")
+
+
+def assert_usage_error(
+    binary: Path, proc: subprocess.CompletedProcess[str], scenario: str
+) -> None:
     combined = proc.stdout + proc.stderr
     if proc.returncode == 0:
-        raise RuntimeError(f"{binary} unexpectedly succeeded without args")
+        raise RuntimeError(f"{binary} unexpectedly succeeded {scenario}")
     if "Usage:" not in combined:
-        raise RuntimeError(f"{binary} did not print usage")
+        raise RuntimeError(f"{binary} did not print usage {scenario}")
     if USAGE_FRAGMENT not in combined:
-        raise RuntimeError(f"{binary} did not advertise the unified CLI contract")
+        raise RuntimeError(f"{binary} did not advertise the unified CLI contract {scenario}")
+
+
+def assert_wrong_arity(binary: Path, args: list[str], scenario: str) -> None:
+    proc = run([str(binary), *args])
+    assert_usage_error(binary, proc, scenario)
 
 
 def assert_invalid_mode(binary: Path, source: Path, output: Path) -> None:
@@ -123,6 +134,21 @@ def main() -> int:
         tmpdir = Path(tmp)
         for algorithm, algorithm_binaries in ALGORITHMS.items():
             for binary in algorithm_binaries:
+                assert_wrong_arity(
+                    binary,
+                    ["encode", str(CORPUS[0])],
+                    "with too few args",
+                )
+                checks += 1
+                print(f"PASS wrong-arity-too-few {algorithm} {binary.name}", flush=True)
+                extra_output = tmpdir / f"{algorithm}-{binary.name}.extra"
+                assert_wrong_arity(
+                    binary,
+                    ["encode", str(CORPUS[0]), str(extra_output), "extra"],
+                    "with too many args",
+                )
+                checks += 1
+                print(f"PASS wrong-arity-too-many {algorithm} {binary.name}", flush=True)
                 invalid_output = tmpdir / f"{algorithm}-{binary.name}.invalid"
                 assert_invalid_mode(binary, CORPUS[0], invalid_output)
                 checks += 1

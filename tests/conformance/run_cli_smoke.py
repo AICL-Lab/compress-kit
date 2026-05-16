@@ -11,6 +11,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 USAGE_FRAGMENT = "encode|decode input output"
+INVALID_MODE = "invalid"
 TIMEOUT_SECONDS = 10.0
 
 ALGORITHMS = {
@@ -87,6 +88,18 @@ def assert_usage(binary: Path) -> None:
         raise RuntimeError(f"{binary} did not advertise the unified CLI contract")
 
 
+def assert_invalid_mode(binary: Path, source: Path, output: Path) -> None:
+    proc = run([str(binary), INVALID_MODE, str(source), str(output)])
+    combined = proc.stdout + proc.stderr
+    lowered = combined.lower()
+    if proc.returncode == 0:
+        raise RuntimeError(f"{binary} unexpectedly accepted invalid mode {INVALID_MODE!r}")
+    if "mode" not in lowered:
+        raise RuntimeError(f"{binary} did not explain invalid mode handling")
+    if "encode" not in lowered or "decode" not in lowered:
+        raise RuntimeError(f"{binary} did not advertise supported modes on invalid mode")
+
+
 def assert_round_trip(binary: Path, source: Path, encoded: Path, decoded: Path) -> None:
     run_checked([str(binary), "encode", str(source), str(encoded)])
     run_checked([str(binary), "decode", str(encoded), str(decoded)])
@@ -110,6 +123,10 @@ def main() -> int:
         tmpdir = Path(tmp)
         for algorithm, algorithm_binaries in ALGORITHMS.items():
             for binary in algorithm_binaries:
+                invalid_output = tmpdir / f"{algorithm}-{binary.name}.invalid"
+                assert_invalid_mode(binary, CORPUS[0], invalid_output)
+                checks += 1
+                print(f"PASS invalid-mode {algorithm} {binary.name}", flush=True)
                 for source in CORPUS:
                     encoded = tmpdir / f"{algorithm}-{binary.name}-{source.name}.encoded"
                     decoded = tmpdir / f"{algorithm}-{binary.name}-{source.name}.decoded"

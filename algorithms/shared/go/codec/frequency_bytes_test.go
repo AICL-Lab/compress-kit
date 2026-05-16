@@ -9,7 +9,7 @@ func TestAppendFrequenciesReadFrequenciesFromBytes_RoundTrip(t *testing.T) {
 	AppendFrequencies(&out, want)
 
 	pos := 1
-	got, err := ReadFrequenciesFromBytes(out, &pos)
+	got, err := ReadFrequenciesFromBytes(out, &pos, 0)
 	if err != nil {
 		t.Fatalf("ReadFrequenciesFromBytes failed: %v", err)
 	}
@@ -54,7 +54,7 @@ func TestReadFrequenciesFromBytesRejectsOutOfRangeCount(t *testing.T) {
 	in := []byte{0x00, 0x00, 0x00, 0x00}
 
 	pos := 0
-	_, err := ReadFrequenciesFromBytes(in, &pos)
+	_, err := ReadFrequenciesFromBytes(in, &pos, 0)
 	if err == nil {
 		t.Fatal("expected error for out-of-range count")
 	}
@@ -70,11 +70,25 @@ func TestReadFrequenciesFromBytesRejectsTruncatedEntries(t *testing.T) {
 	}
 
 	pos := 0
-	_, err := ReadFrequenciesFromBytes(in, &pos)
+	_, err := ReadFrequenciesFromBytes(in, &pos, 0)
 	if err == nil {
 		t.Fatal("expected error for truncated entries")
 	}
-	if err.Error() != "failed to read frequency table" {
-		t.Fatalf("err = %q, want %q", err.Error(), "failed to read frequency table")
+	if err.Error() != "failed to read frequency values" {
+		t.Fatalf("err = %q, want %q", err.Error(), "failed to read frequency values")
+	}
+}
+
+func TestReadFrequenciesFromBytesExactRejectsUnexpectedCount(t *testing.T) {
+	out := []byte{}
+	AppendFrequencies(&out, []uint32{1, 2, 3})
+
+	pos := 0
+	_, err := ReadFrequenciesFromBytesExact(out, &pos, 4)
+	if err == nil {
+		t.Fatal("expected corrupt error for mismatched count")
+	}
+	if err.Error() != "invalid frequency table size: 3" {
+		t.Fatalf("err = %q, want %q", err.Error(), "invalid frequency table size: 3")
 	}
 }

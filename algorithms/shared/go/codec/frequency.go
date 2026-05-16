@@ -42,7 +42,7 @@ func ReadFrequencies(r io.Reader, expectedCount uint32) ([]uint32, error) {
 		return nil, NewError(KindCorrupt, fmt.Sprintf("invalid frequency table size: %d", count))
 	}
 	if expectedCount > 0 && count != expectedCount {
-		return nil, NewError(KindCorrupt, fmt.Sprintf("unexpected frequency table size: got %d, want %d", count, expectedCount))
+		return nil, NewError(KindCorrupt, fmt.Sprintf("invalid frequency table size: %d", count))
 	}
 	freq := make([]uint32, count)
 	if err := binary.Read(r, binary.LittleEndian, freq); err != nil {
@@ -291,7 +291,7 @@ func ReadFrequenciesFromBytes(in []byte, pos *int, expectedCount uint32) ([]uint
 		return nil, NewError(KindCorrupt, fmt.Sprintf("invalid frequency table size: %d", count))
 	}
 	if expectedCount > 0 && count != expectedCount {
-		return nil, NewError(KindCorrupt, fmt.Sprintf("unexpected frequency table size: got %d, want %d", count, expectedCount))
+		return nil, NewError(KindCorrupt, fmt.Sprintf("invalid frequency table size: %d", count))
 	}
 	freq := make([]uint32, count)
 	for i := uint32(0); i < count; i++ {

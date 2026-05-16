@@ -1,0 +1,135 @@
+#!/usr/bin/env python3
+"""Run fast CLI smoke checks for every shipped CompressKit binary."""
+
+from __future__ import annotations
+
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+USAGE_FRAGMENT = "encode|decode input output"
+TIMEOUT_SECONDS = 10.0
+
+ALGORITHMS = {
+    "huffman": [
+        ROOT / "algorithms/huffman/cpp/huffman_cpp",
+        ROOT / "algorithms/huffman/go/huffman_go",
+        ROOT / "algorithms/huffman/rust/huffman_rust",
+    ],
+    "arithmetic": [
+        ROOT / "algorithms/arithmetic/cpp/arithmetic_cpp",
+        ROOT / "algorithms/arithmetic/go/arithmetic_go",
+        ROOT / "algorithms/arithmetic/rust/arithmetic_rust",
+    ],
+    "range": [
+        ROOT / "algorithms/range/cpp/rangecoder_cpp",
+        ROOT / "algorithms/range/go/rangecoder_go",
+        ROOT / "algorithms/range/rust/target/release/rangecoder",
+    ],
+    "rle": [
+        ROOT / "algorithms/rle/cpp/rle_cpp",
+        ROOT / "algorithms/rle/go/rle_go",
+        ROOT / "algorithms/rle/rust/rle_rust",
+    ],
+}
+
+CORPUS = (
+    ROOT / "tests/data/empty.bin",
+    ROOT / "tests/data/single_byte.bin",
+    ROOT / "tests/data/alternating.bin",
+    ROOT / "tests/data/small_dictionary_like.bin",
+)
+
+
+def ensure_files_exist(paths: list[Path] | tuple[Path, ...], label: str, hint: str) -> None:
+    missing = [path for path in paths if not path.is_file()]
+    if not missing:
+        return
+    rendered = "\n".join(str(path.relative_to(ROOT)) for path in missing)
+    raise SystemExit(f"missing {label}; run `{hint}` first:\n{rendered}")
+
+
+def run(command: list[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        command,
+        cwd=ROOT,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=TIMEOUT_SECONDS,
+        check=False,
+    )
+
+
+def run_checked(command: list[str]) -> None:
+    proc = run(command)
+    if proc.returncode == 0:
+        return
+    rendered = " ".join(command)
+    raise RuntimeError(
+        f"command failed with exit code {proc.returncode}: {rendered}\n"
+        f"stdout:\n{proc.stdout}\n"
+        f"stderr:\n{proc.stderr}"
+    )
+
+
+def assert_usage(binary: Path) -> None:
+    proc = run([str(binary)])
+    combined = proc.stdout + proc.stderr
+    if proc.returncode == 0:
+        raise RuntimeError(f"{binary} unexpectedly succeeded without args")
+    if "Usage:" not in combined:
+        raise RuntimeError(f"{binary} did not print usage")
+    if USAGE_FRAGMENT not in combined:
+        raise RuntimeError(f"{binary} did not advertise the unified CLI contract")
+
+
+def assert_round_trip(binary: Path, source: Path, encoded: Path, decoded: Path) -> None:
+    run_checked([str(binary), "encode", str(source), str(encoded)])
+    run_checked([str(binary), "decode", str(encoded), str(decoded)])
+    if source.read_bytes() != decoded.read_bytes():
+        raise RuntimeError(f"{binary} round-trip mismatch for {source.name}")
+
+
+def main() -> int:
+    binaries = [binary for group in ALGORITHMS.values() for binary in group]
+    ensure_files_exist(tuple(binaries), "binary file(s)", "make build")
+    ensure_files_exist(CORPUS, "corpus file(s)", "make test-data")
+
+    checks = 0
+    for algorithm, algorithm_binaries in ALGORITHMS.items():
+        for binary in algorithm_binaries:
+            assert_usage(binary)
+            checks += 1
+            print(f"PASS usage {algorithm} {binary.name}", flush=True)
+
+    with tempfile.TemporaryDirectory(prefix=".cli-smoke-", dir=ROOT / "tests") as tmp:
+        tmpdir = Path(tmp)
+        for algorithm, algorithm_binaries in ALGORITHMS.items():
+            for binary in algorithm_binaries:
+                for source in CORPUS:
+                    encoded = tmpdir / f"{algorithm}-{binary.name}-{source.name}.encoded"
+                    decoded = tmpdir / f"{algorithm}-{binary.name}-{source.name}.decoded"
+                    assert_round_trip(binary, source, encoded, decoded)
+                    checks += 1
+                    print(
+                        f"PASS round-trip {algorithm} {binary.name} {source.name}",
+                        flush=True,
+                    )
+
+    print(f"cli smoke passed: {checks} check(s)")
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main())
+    except subprocess.TimeoutExpired as exc:
+        print(f"command timed out after {exc.timeout}s: {' '.join(exc.cmd)}", file=sys.stderr)
+        raise SystemExit(1)
+    except RuntimeError as exc:
+        print(str(exc), file=sys.stderr)
+        raise SystemExit(1)

@@ -24,12 +24,8 @@ class RangeBenchTests(unittest.TestCase):
     def setUp(self):
         if WORKSPACE.exists():
             shutil.rmtree(WORKSPACE)
-        self.data_dir = WORKSPACE / "data"
-        self.data_dir.mkdir(parents=True)
-        (self.data_dir / "small_dictionary_like.bin").write_bytes(b"compresskit-range\n" * 64)
         self.module = load_module()
-        self.module.TEST_DATA_DIR = self.data_dir
-        self.module.DEFAULT_INPUT = self.data_dir / "small_dictionary_like.bin"
+        self.expected_default = REPO_ROOT / "tests" / "data" / "small_dictionary_like.bin"
         self.module.TMP_DIR = WORKSPACE / "tmp"
         self.module.ensure_tmp = lambda: self.module.TMP_DIR.mkdir(parents=True, exist_ok=True)
         self.module.compile_all = lambda: {"build_all": 0.0}
@@ -38,6 +34,10 @@ class RangeBenchTests(unittest.TestCase):
     def tearDown(self):
         if WORKSPACE.exists():
             shutil.rmtree(WORKSPACE)
+
+    def test_default_input_points_to_shipped_small_fixture(self):
+        self.assertEqual(self.module.DEFAULT_INPUT, self.expected_default)
+        self.assertTrue(self.module.DEFAULT_INPUT.is_file())
 
     def test_main_without_args_uses_small_range_fixture(self):
         seen_inputs = []
@@ -56,8 +56,7 @@ class RangeBenchTests(unittest.TestCase):
         finally:
             sys.argv = original_argv
 
-        expected = self.data_dir / "small_dictionary_like.bin"
-        self.assertEqual(seen_inputs, [expected, expected, expected])
+        self.assertEqual(seen_inputs, [self.module.DEFAULT_INPUT] * 3)
         self.assertIn("Dataset: small_dictionary_like", stdout.getvalue())
 
 

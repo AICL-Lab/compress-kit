@@ -11,5 +11,5 @@
       }
     }
   },
-  "postCreateCommand": "npm install && (cd docs && npm ci)"
+  "postCreateCommand": "npm ci && (cd docs && npm ci)"
 }

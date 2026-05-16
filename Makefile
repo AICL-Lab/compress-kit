@@ -1,5 +1,5 @@
 .PHONY: build build-huffman build-arithmetic build-range build-rle \
-       test test-conformance test-huffman-go test-arithmetic-go test-range-go test-rle-go \
+       test test-conformance test-cli-smoke test-huffman-go test-arithmetic-go test-range-go test-rle-go \
        test-shared-cpp test-shared-go test-shared-rust \
        test-huffman-rust test-arithmetic-rust test-range-rust test-rle-rust \
        test-data bench clean format lint spec-init spec-list spec-status
@@ -37,7 +37,7 @@ test: test-data \
        test-shared-cpp test-shared-go test-shared-rust \
        test-huffman-go test-arithmetic-go test-range-go test-rle-go \
        test-huffman-rust test-arithmetic-rust test-range-rust test-rle-rust \
-       test-conformance
+       test-conformance test-cli-smoke
 
 test-shared-cpp:
 	g++ -std=c++17 -O2 -Wall -Wextra -Werror -DCOMPRESSKIT_NO_MAIN -Ialgorithms/shared/cpp/include algorithms/shared/cpp/src/buffer_api.cpp algorithms/shared/cpp/src/cli_launcher.cpp algorithms/huffman/cpp/main.cpp algorithms/arithmetic/cpp/main.cpp algorithms/range/cpp/main.cpp algorithms/rle/cpp/main.cpp algorithms/shared/cpp/tests/test_lifecycle.cpp -o algorithms/shared/cpp/tests/test_lifecycle
@@ -75,6 +75,9 @@ test-rle-rust:
 
 test-conformance: build test-data
 	python3 tests/conformance/run_decode_matrix.py
+
+test-cli-smoke: build test-data
+	python3 tests/conformance/run_cli_smoke.py
 
 # ── Data / Bench / Clean ──────────────────────────────────────────────────
 

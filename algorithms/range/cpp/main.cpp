@@ -378,8 +378,7 @@ bool rangecoder_decode_file(const std::string& input_path, const std::string& ou
 int main(int argc, char** argv) {
     try {
         if (argc < 2) {
-            std::cerr << "Usage: " << argv[0] << " encode input output\n";
-            std::cerr << "       " << argv[0] << " decode input output\n";
+            std::cerr << "Usage: " << argv[0] << " encode|decode input output\n";
             std::cerr << "       " << argv[0] << " bench [size_bytes] [iterations]\n";
             return 1;
         }

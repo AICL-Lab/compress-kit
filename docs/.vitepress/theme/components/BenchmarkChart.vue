@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watchEffect } from 'vue'
 import benchmarkData from '../../data/benchmarks.json'
+import { getBarHeight as getMetricBarHeight, isBestCompressionRatio } from './benchmarkChartMetrics.js'
 
 interface BenchmarkResult {
   algorithm: string
@@ -84,20 +85,23 @@ const maxValue = computed(() => {
   return Math.max(...filteredResults.value.map(r => r[selectedMetric.value]))
 })
 
+const compressionRatios = computed(() => filteredResults.value.map(r => r.compressionRatio))
+
 const formatMetricName = (metric: string): string => {
   const names: Record<string, string> = {
     encodeSpeed: 'Encode Speed (MiB/s)',
     decodeSpeed: 'Decode Speed (MiB/s)',
-    compressionRatio: 'Compression Ratio (lower = better)'
+    compressionRatio: 'Size Saved Relative to Input'
   }
   return names[metric] || metric
 }
 
 const getBarHeight = (value: number): number => {
-  const max = selectedMetric.value === 'compressionRatio'
-    ? Math.max(maxValue.value, 0.001)
-    : Math.max(maxValue.value, 300)
-  return Math.max((value / max) * 100, 5)
+  return getMetricBarHeight(selectedMetric.value, value, maxValue.value)
+}
+
+const isCompressionRatioLeader = (value: number): boolean => {
+  return isBestCompressionRatio(selectedMetric.value, value, compressionRatios.value)
 }
 
 const formatMetricValue = (value: number): string => {
@@ -147,14 +151,15 @@ const formatMetricValue = (value: number): string => {
             v-for="result in groupedByAlgorithm[algo]" 
             :key="result.language"
             class="bar-wrapper"
-            :title="`${languageNames[result.language]}: ${formatMetricValue(result[selectedMetric])}`"
-          >
-            <div 
-              class="bar" 
-              :style="{ 
-                height: `${getBarHeight(result[selectedMetric])}%`,
-                backgroundColor: languageColors[result.language]
-              }"
+              :title="`${languageNames[result.language]}: ${formatMetricValue(result[selectedMetric])}`"
+            >
+              <div
+                class="bar"
+                :class="{ 'bar-best': isCompressionRatioLeader(result.compressionRatio) }"
+                :style="{
+                  height: `${getBarHeight(result[selectedMetric])}%`,
+                  backgroundColor: languageColors[result.language]
+                }"
             >
               <span class="bar-value">{{ formatMetricValue(result[selectedMetric]) }}</span>
             </div>
@@ -163,6 +168,9 @@ const formatMetricValue = (value: number): string => {
       </div>
     </div>
 
+    <div v-if="selectedMetric === 'compressionRatio'" class="metric-note">
+      Bars show size saved relative to input; labels show the actual output/input ratio, and the best ratio is highlighted.
+    </div>
     <div class="metric-label">{{ formatMetricName(selectedMetric) }}</div>
   </div>
 </template>
@@ -302,6 +310,11 @@ const formatMetricValue = (value: number): string => {
   opacity: 1;
 }
 
+.bar-best {
+  box-shadow: 0 0 0 2px var(--vp-c-brand-1);
+  opacity: 1;
+}
+
 .bar-value {
   position: absolute;
   top: -20px;
@@ -311,6 +324,13 @@ const formatMetricValue = (value: number): string => {
   font-weight: 600;
   color: var(--vp-c-text-2);
   white-space: nowrap;
+}
+
+.metric-note {
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--vp-c-text-2);
+  margin-top: 1.25rem;
 }
 
 .metric-label {

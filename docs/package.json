@@ -5,6 +5,7 @@
   "scripts": {
     "sync": "node scripts/sync-changelog.mjs",
     "dev": "npm run sync && vitepress dev",
+    "test": "node --test tests/*.test.mjs",
     "build": "npm run sync && vitepress build",
     "preview": "vitepress preview"
   },

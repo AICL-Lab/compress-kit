@@ -24,6 +24,8 @@ RUN arch="$(dpkg --print-architecture)" \
     && curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${go_arch}.tar.gz" | tar -C /usr/local -xz
 ENV PATH="/usr/local/go/bin:${PATH}"
 
+ARG RUST_VERSION=1.90.0
 USER vscode
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --component clippy rustfmt
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain ${RUST_VERSION} --profile minimal --component clippy rustfmt \
+    && /home/vscode/.cargo/bin/rustup default ${RUST_VERSION}
 ENV PATH="/home/vscode/.cargo/bin:${PATH}"

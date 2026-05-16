@@ -88,14 +88,23 @@ const formatMetricName = (metric: string): string => {
   const names: Record<string, string> = {
     encodeSpeed: 'Encode Speed (MiB/s)',
     decodeSpeed: 'Decode Speed (MiB/s)',
-    compressionRatio: 'Compression Ratio'
+    compressionRatio: 'Compression Ratio (lower = better)'
   }
   return names[metric] || metric
 }
 
 const getBarHeight = (value: number): number => {
-  const max = Math.max(maxValue.value, selectedMetric.value === 'compressionRatio' ? 30 : 300)
+  const max = selectedMetric.value === 'compressionRatio'
+    ? Math.max(maxValue.value, 0.001)
+    : Math.max(maxValue.value, 300)
   return Math.max((value / max) * 100, 5)
+}
+
+const formatMetricValue = (value: number): string => {
+  if (selectedMetric.value === 'compressionRatio') {
+    return value < 0.01 ? value.toFixed(3) : value.toFixed(2)
+  }
+  return value.toFixed(value < 10 ? 1 : 0)
 }
 </script>
 
@@ -138,7 +147,7 @@ const getBarHeight = (value: number): number => {
             v-for="result in groupedByAlgorithm[algo]" 
             :key="result.language"
             class="bar-wrapper"
-            :title="`${languageNames[result.language]}: ${result[selectedMetric].toFixed(1)}`"
+            :title="`${languageNames[result.language]}: ${formatMetricValue(result[selectedMetric])}`"
           >
             <div 
               class="bar" 
@@ -147,7 +156,7 @@ const getBarHeight = (value: number): number => {
                 backgroundColor: languageColors[result.language]
               }"
             >
-              <span class="bar-value">{{ result[selectedMetric].toFixed(result[selectedMetric] < 10 ? 1 : 0) }}</span>
+              <span class="bar-value">{{ formatMetricValue(result[selectedMetric]) }}</span>
             </div>
           </div>
         </div>

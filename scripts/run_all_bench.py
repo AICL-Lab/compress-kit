@@ -134,7 +134,7 @@ def parse_benchmark_output(algorithm, dataset, output):
                 "decodeTime": round(decode_seconds * 1000, 3),
                 "encodeSpeed": round(encode_speed, 1),
                 "decodeSpeed": round(decode_speed, 1),
-                "compressionRatio": round(invert_ratio(ratio), 3),
+                "compressionRatio": round(ratio, 3),
                 "throughput": classify_throughput((encode_speed + decode_speed) / 2.0),
             }
         )
@@ -150,14 +150,6 @@ def compute_speed(size_mib, seconds):
     if seconds <= 0:
         return 0.0
     return size_mib / seconds
-
-
-def invert_ratio(ratio):
-    if ratio <= 0:
-        return 0.0
-    return 1.0 / ratio
-
-
 def classify_throughput(speed_mib_per_second):
     if speed_mib_per_second >= 200:
         return "very-high"

@@ -75,7 +75,7 @@ class RunAllBenchTests(unittest.TestCase):
         self.assertAlmostEqual(by_algorithm["huffman"]["decodeTime"], 200.0)
         self.assertAlmostEqual(by_algorithm["huffman"]["encodeSpeed"], 100.0)
         self.assertAlmostEqual(by_algorithm["huffman"]["decodeSpeed"], 50.0)
-        self.assertAlmostEqual(by_algorithm["huffman"]["compressionRatio"], 2.0)
+        self.assertAlmostEqual(by_algorithm["huffman"]["compressionRatio"], 0.5)
 
         report_paths = sorted((self.root / "reports").glob("*_report_*.txt"))
         self.assertEqual(len(report_paths), 4)

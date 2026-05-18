@@ -34,7 +34,7 @@ Welcome to the CompressKit Algorithm Academy. Here you will gain deep understand
       Encodes the entire message as a single number in [0,1) interval, approaching entropy limit.
     </div>
     <div class="feature-tags">
-      <a href="./arithmetic" class="feature-tag">Learn More</a>
+      <a href="../algorithms/arithmetic" class="feature-tag">Learn More</a>
       <span class="feature-tag">L ≈ H + ε</span>
     </div>
   </div>
@@ -45,7 +45,7 @@ Welcome to the CompressKit Algorithm Academy. Here you will gain deep understand
       Integer-based arithmetic coding variant, avoiding floating-point precision issues.
     </div>
     <div class="feature-tags">
-      <a href="./range" class="feature-tag">Learn More</a>
+      <a href="../algorithms/range" class="feature-tag">Learn More</a>
       <span class="feature-tag">Byte-level I/O</span>
     </div>
   </div>
@@ -56,7 +56,7 @@ Welcome to the CompressKit Algorithm Academy. Here you will gain deep understand
       The simplest compression method, extremely efficient for consecutive repeated data.
     </div>
     <div class="feature-tags">
-      <a href="./rle" class="feature-tag">Learn More</a>
+      <a href="../algorithms/rle" class="feature-tag">Learn More</a>
       <span class="feature-tag">O(n) Time</span>
     </div>
   </div>

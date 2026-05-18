@@ -34,7 +34,7 @@ description: 深入理解压缩算法的原理与实现
       将整个消息编码为 [0,1) 区间内的单个数值，逼近熵极限。
     </div>
     <div class="feature-tags">
-      <a href="./arithmetic" class="feature-tag">深入学习</a>
+      <a href="../algorithms/arithmetic" class="feature-tag">深入学习</a>
       <span class="feature-tag">L ≈ H + ε</span>
     </div>
   </div>
@@ -45,7 +45,7 @@ description: 深入理解压缩算法的原理与实现
       基于整数区间的算术编码变体，避免浮点精度问题。
     </div>
     <div class="feature-tags">
-      <a href="./range" class="feature-tag">深入学习</a>
+      <a href="../algorithms/range" class="feature-tag">深入学习</a>
       <span class="feature-tag">字节级 I/O</span>
     </div>
   </div>
@@ -56,7 +56,7 @@ description: 深入理解压缩算法的原理与实现
       最简单的压缩方法，对连续重复数据极其高效。
     </div>
     <div class="feature-tags">
-      <a href="./rle" class="feature-tag">深入学习</a>
+      <a href="../algorithms/rle" class="feature-tag">深入学习</a>
       <span class="feature-tag">O(n) 时间</span>
     </div>
   </div>

@@ -100,7 +100,6 @@
 
 | 特性 | Arithmetic | Range Coder |
 |------|----------|----------|
-|------|----------|----------|
 | 输出单位 | 位 | 字节 |
 | I/O 效率 | 较低 | 较高 |
 | 压缩率 | 几乎相同 | 几乎相同 |
@@ -159,7 +158,7 @@ cargo run --bin rangecoder -- decode output.rcnc restored.bin
 :::
 
 ::: warning 性能提示
-Range Coder 解码器对大于 500KB 的文件存在已知性能问题。跨语言验证时请使用较小的测试文件。
+Range Coder 解码器对大于 500 KiB 的文件存在已知性能问题。跨语言验证时请使用较小的测试文件。
 :::
 
 ---

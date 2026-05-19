@@ -158,7 +158,7 @@ cargo run --bin rangecoder -- decode output.rcnc restored.bin
 :::
 
 ::: warning Performance Note
-The Range Coder decoder has a known performance issue for files >500KB. Use smaller test files for cross-language verification.
+The Range Coder decoder has a known performance issue for files >500 KiB. Use smaller test files for cross-language verification.
 :::
 
 ---

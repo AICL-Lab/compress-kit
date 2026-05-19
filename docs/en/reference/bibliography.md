@@ -107,10 +107,10 @@ This document collects classic papers, authoritative textbooks, and related open
 If you reference CompressKit in academic work, we suggest using the following format:
 
 ```bibtex
-@misc{compresskit2024,
+@misc{compresskit2026,
   author = {CompressKit Team},
   title = {CompressKit: Cross-Language Lossless Compression Algorithms},
-  year = {2024},
+  year = {2026},
   publisher = {GitHub},
   url = {https://github.com/LessUp/compress-kit}
 }

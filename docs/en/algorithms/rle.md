@@ -92,6 +92,7 @@ pub fn encode(data: &[u8]) -> Vec<u8> {
 
 | Field | Size | Description |
 |-------|------|-------------|
+| Magic | 4 bytes | `RLE\x00` (0x52 0x4C 0x45 0x00) |
 | Count | 4 bytes | Little-endian unsigned int (run length) |
 | Value | 1 byte | The repeated byte value |
 

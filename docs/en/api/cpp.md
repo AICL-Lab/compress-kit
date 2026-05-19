@@ -93,7 +93,10 @@ g++ -std=c++17 -O2 -Wall -Wextra -o <binary> main.cpp
 
 ### File Format
 
-Repeated `(count: uint32 LE, value: byte)` pairs.
+| Offset | Size | Field |
+|--------|------|-------|
+| 0 | 4B | Magic: `RLE\x00` |
+| 4+ | Variable | Repeated `(count: uint32 LE, value: byte)` pairs |
 
 ---
 

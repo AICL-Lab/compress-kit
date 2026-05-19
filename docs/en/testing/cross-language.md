@@ -89,7 +89,7 @@ Detailed format specifications are available in the specs directory:
 
 | Algorithm | Limitation | Workaround |
 |-----------|-----------|------------|
-| Range Coder | Decode performance degrades >500KB | Use smaller chunks |
+| Range Coder | Decode performance degrades >500 KiB | Use smaller chunks |
 
 ## Reporting Issues
 

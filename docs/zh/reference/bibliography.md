@@ -107,10 +107,10 @@ description: 压缩算法相关的经典论文、教材和开源项目
 如果您在学术工作中引用 CompressKit，建议使用以下格式：
 
 ```bibtex
-@misc{compresskit2024,
+@misc{compresskit2026,
   author = {CompressKit Team},
   title = {CompressKit: Cross-Language Lossless Compression Algorithms},
-  year = {2024},
+  year = {2026},
   publisher = {GitHub},
   url = {https://github.com/LessUp/compress-kit}
 }

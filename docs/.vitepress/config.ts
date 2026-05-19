@@ -28,6 +28,7 @@ const sharedSidebar = {
       items: [
         { text: 'Algorithm Academy', link: '/en/academy/' },
         { text: 'Huffman Coding', link: '/en/academy/huffman' },
+        { text: 'State Machine Design', link: '/en/academy/state-machine' },
       ],
     },
     {

@@ -161,9 +161,9 @@ let decoded = rangecoder::decode(&encoded, &cum_freq, data.len())?;
 
 ::: warning Performance Issue with Large Files
 
-The current Range Coder implementation has a **known decode performance issue** for files larger than **500 KB**. The decode operation may become significantly slower or appear to hang.
+The current Range Coder implementation has a **known decode performance issue** for files larger than **500 KiB**. The decode operation may become significantly slower or appear to hang.
 
-**Workaround**: For testing purposes, use files smaller than 100 KB. This is reflected in the CI pipeline which uses 100 KB test files for Range Coder verification.
+**Workaround**: For testing purposes, use files smaller than 100 KiB. This is reflected in the CI pipeline which uses 100 KiB test files for Range Coder verification.
 
 **Status**: This is a known issue that is documented for future improvement. The encode operation works correctly for all file sizes.
 

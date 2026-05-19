@@ -180,6 +180,5 @@ Hidden complexity:
 
 ## Further Reading
 
-- [Streaming API](/en/api/streaming) - 5-state FSM details
-- [Streaming API](/en/api/streaming) - Complete API documentation
+- [Streaming API](/en/api/streaming) - 5-state FSM details and complete API documentation
 - [Cross-Language Testing](/en/testing/cross-language) - Conformance verification

@@ -196,7 +196,7 @@ fn encode_buffer_retries_process_transactionally() {
         finish_calls: 0,
     };
 
-    let output = encode_buffer(&mut encoder, b"x").unwrap();
+    let output = encode_buffer(&mut encoder, b"x").expect("encode_buffer should succeed");
 
     assert_eq!(encoder.process_calls, 2);
     assert_eq!(encoder.process_output_lens.len(), 2);
@@ -213,7 +213,7 @@ fn decode_buffer_retries_process_transactionally() {
         finish_calls: 0,
     };
 
-    let output = decode_buffer(&mut decoder, b"x").unwrap();
+    let output = decode_buffer(&mut decoder, b"x").expect("decode_buffer should succeed");
 
     assert_eq!(decoder.process_calls, 2);
     assert_eq!(decoder.process_output_lens.len(), 2);
@@ -229,7 +229,7 @@ fn encode_buffer_retries_finish_transactionally() {
         finish_output_lens: Vec::new(),
     };
 
-    let output = encode_buffer(&mut encoder, b"x").unwrap();
+    let output = encode_buffer(&mut encoder, b"x").expect("encode_buffer should succeed");
 
     assert_eq!(encoder.finish_calls, 2);
     assert_eq!(encoder.finish_output_lens.len(), 2);
@@ -244,7 +244,7 @@ fn decode_buffer_retries_finish_transactionally() {
         finish_output_lens: Vec::new(),
     };
 
-    let output = decode_buffer(&mut decoder, b"x").unwrap();
+    let output = decode_buffer(&mut decoder, b"x").expect("decode_buffer should succeed");
 
     assert_eq!(decoder.finish_calls, 2);
     assert_eq!(decoder.finish_output_lens.len(), 2);

@@ -240,8 +240,8 @@ mod tests {
 
     #[test]
     fn roundtrip_zero_byte_without_confusing_it_with_eof() {
-        let encoded = encode(&[0x00]).unwrap();
-        let decoded = decode(&encoded).unwrap();
+        let encoded = encode(&[0x00]).expect("encode 0x00 should succeed");
+        let decoded = decode(&encoded).expect("decode should succeed");
 
         assert_eq!(decoded, vec![0x00]);
     }

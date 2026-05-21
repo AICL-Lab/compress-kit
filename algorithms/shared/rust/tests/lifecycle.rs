@@ -62,15 +62,18 @@ fn test_lifecycle_basic() {
     assert_eq!(enc.state(), State::Ready);
 
     // Process should move to Streaming
-    enc.process(b"test", &mut []).unwrap();
+    enc.process(b"test", &mut [])
+        .expect("process should succeed in Ready state");
     assert_eq!(enc.state(), State::Streaming);
 
     // Flush should move to Flushing
-    enc.flush(&mut []).unwrap();
+    enc.flush(&mut [])
+        .expect("flush should succeed in Streaming state");
     assert_eq!(enc.state(), State::Flushing);
 
     // Finish should move to Finished
-    enc.finish(&mut []).unwrap();
+    enc.finish(&mut [])
+        .expect("finish should succeed in Flushing state");
     assert_eq!(enc.state(), State::Finished);
 
     // Post-finish calls should error and move to Error
@@ -123,13 +126,19 @@ fn test_huffman_roundtrip_via_traits() {
     let input = b"hello world";
     let mut enc = huffman::new_encoder();
     let mut output = vec![0u8; 4096];
-    enc.process(input, &mut output).unwrap();
-    let written = enc.finish(&mut output).unwrap();
+    enc.process(input, &mut output)
+        .expect("huffman process should succeed");
+    let written = enc
+        .finish(&mut output)
+        .expect("huffman finish should succeed");
 
     let mut dec = huffman::new_decoder();
     let mut decoded = vec![0u8; 4096];
-    dec.process(&output[..written], &mut decoded).unwrap();
-    let dec_written = dec.finish(&mut decoded).unwrap();
+    dec.process(&output[..written], &mut decoded)
+        .expect("huffman decode process should succeed");
+    let dec_written = dec
+        .finish(&mut decoded)
+        .expect("huffman decode finish should succeed");
 
     assert_eq!(&decoded[..dec_written], input);
 }
@@ -139,13 +148,19 @@ fn test_arithmetic_roundtrip_via_traits() {
     let input = b"test data";
     let mut enc = arithmetic::new_encoder();
     let mut output = vec![0u8; 4096];
-    enc.process(input, &mut output).unwrap();
-    let written = enc.finish(&mut output).unwrap();
+    enc.process(input, &mut output)
+        .expect("arithmetic process should succeed");
+    let written = enc
+        .finish(&mut output)
+        .expect("arithmetic finish should succeed");
 
     let mut dec = arithmetic::new_decoder();
     let mut decoded = vec![0u8; 4096];
-    dec.process(&output[..written], &mut decoded).unwrap();
-    let dec_written = dec.finish(&mut decoded).unwrap();
+    dec.process(&output[..written], &mut decoded)
+        .expect("arithmetic decode process should succeed");
+    let dec_written = dec
+        .finish(&mut decoded)
+        .expect("arithmetic decode finish should succeed");
 
     assert_eq!(&decoded[..dec_written], input);
 }
@@ -155,13 +170,19 @@ fn test_rle_roundtrip_via_traits() {
     let input = b"aaabbbccc";
     let mut enc = rle::new_encoder();
     let mut output = vec![0u8; 4096];
-    enc.process(input, &mut output).unwrap();
-    let written = enc.finish(&mut output).unwrap();
+    enc.process(input, &mut output)
+        .expect("rle process should succeed");
+    let written = enc
+        .finish(&mut output)
+        .expect("rle finish should succeed");
 
     let mut dec = rle::new_decoder();
     let mut decoded = vec![0u8; 4096];
-    dec.process(&output[..written], &mut decoded).unwrap();
-    let dec_written = dec.finish(&mut decoded).unwrap();
+    dec.process(&output[..written], &mut decoded)
+        .expect("rle decode process should succeed");
+    let dec_written = dec
+        .finish(&mut decoded)
+        .expect("rle decode finish should succeed");
 
     assert_eq!(&decoded[..dec_written], input);
 }

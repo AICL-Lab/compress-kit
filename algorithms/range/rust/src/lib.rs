@@ -260,8 +260,8 @@ mod tests {
     #[test]
     fn roundtrip_empty() {
         let data: Vec<u8> = Vec::new();
-        let enc = encode(&data).unwrap();
-        let dec = decode(&enc).unwrap();
+        let enc = encode(&data).expect("encode empty should succeed");
+        let dec = decode(&enc).expect("decode empty should succeed");
         assert_eq!(dec, data);
     }
 
@@ -272,8 +272,8 @@ mod tests {
         let mut data = vec![0u8; 10000];
         let mut rng = rand::rngs::StdRng::seed_from_u64(1);
         rng.fill_bytes(&mut data);
-        let enc = encode(&data).unwrap();
-        let dec = decode(&enc).unwrap();
+        let enc = encode(&data).expect("encode random data should succeed");
+        let dec = decode(&enc).expect("decode random data should succeed");
         assert_eq!(dec, data);
     }
 

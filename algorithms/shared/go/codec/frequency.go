@@ -175,15 +175,25 @@ func BuildCumulativeStrict(freq []uint32, zeroTableMessage string) ([]uint32, er
 	return nil, NewError(KindCorrupt, zeroTableMessage)
 }
 
-// BuildFrequencies counts byte frequencies in the input data.
+// MustBuildFrequencies counts byte frequencies in the input data.
 // The EOF symbol is always set to 1. It panics if a symbol count would exceed
 // math.MaxUint32; use BuildFrequenciesChecked to handle that error explicitly.
-func BuildFrequencies(data []byte) []uint32 {
+//
+// This is a convenience function for use in tests and initialization code where
+// the input is known to be safe. For production code, prefer BuildFrequenciesChecked.
+func MustBuildFrequencies(data []byte) []uint32 {
 	freq, err := BuildFrequenciesChecked(data)
 	if err != nil {
 		panic(err)
 	}
 	return freq
+}
+
+// BuildFrequencies counts byte frequencies in the input data.
+// Deprecated: Use BuildFrequenciesChecked for proper error handling, or MustBuildFrequencies
+// if panic behavior is explicitly desired.
+func BuildFrequencies(data []byte) []uint32 {
+	return MustBuildFrequencies(data)
 }
 
 // BuildFrequenciesChecked counts byte frequencies in the input data and
@@ -213,16 +223,27 @@ func BuildFrequenciesFromReader(r io.Reader) ([]uint32, error) {
 	return freq, nil
 }
 
-// BuildScaledFrequencies counts byte frequencies and scales them with the same
-// semantics as BuildFrequencies followed by ScaleFrequencies. It panics if a
+// MustBuildScaledFrequencies counts byte frequencies and scales them with the same
+// semantics as MustBuildFrequencies followed by ScaleFrequencies. It panics if a
 // symbol count would exceed math.MaxUint32; use BuildScaledFrequenciesChecked
 // to handle that error explicitly.
-func BuildScaledFrequencies(data []byte, maxTotal uint32) []uint32 {
+//
+// This is a convenience function for use in tests and initialization code where
+// the input is known to be safe. For production code, prefer BuildScaledFrequenciesChecked.
+func MustBuildScaledFrequencies(data []byte, maxTotal uint32) []uint32 {
 	freq, err := BuildScaledFrequenciesChecked(data, maxTotal)
 	if err != nil {
 		panic(err)
 	}
 	return freq
+}
+
+// BuildScaledFrequencies counts byte frequencies and scales them with the same
+// semantics as BuildFrequencies followed by ScaleFrequencies.
+// Deprecated: Use BuildScaledFrequenciesChecked for proper error handling, or
+// MustBuildScaledFrequencies if panic behavior is explicitly desired.
+func BuildScaledFrequencies(data []byte, maxTotal uint32) []uint32 {
+	return MustBuildScaledFrequencies(data, maxTotal)
 }
 
 // BuildScaledFrequenciesChecked counts byte frequencies and scales them with

@@ -43,7 +43,7 @@ func TestSymbolLimit(t *testing.T) {
 
 func TestBuildFrequencies(t *testing.T) {
 	data := []byte("aabbbc")
-	freq := BuildFrequencies(data)
+	freq := MustBuildFrequencies(data)
 
 	if freq['a'] != 2 {
 		t.Errorf("freq['a'] = %d, want 2", freq['a'])
@@ -60,7 +60,7 @@ func TestBuildFrequencies(t *testing.T) {
 }
 
 func TestBuildFrequencies_Empty(t *testing.T) {
-	freq := BuildFrequencies([]byte{})
+	freq := MustBuildFrequencies([]byte{})
 
 	// All byte frequencies should be 0
 	for i := 0; i < 256; i++ {
@@ -93,7 +93,7 @@ func TestAccumulateFrequencies_RejectsSymbolOverflow(t *testing.T) {
 func TestBuildScaledFrequencies_ClampsTotalAndPreservesEOF(t *testing.T) {
 	data := append(bytes.Repeat([]byte{'a'}, 12), bytes.Repeat([]byte{'b'}, 6)...)
 
-	freq := BuildScaledFrequencies(data, 8)
+	freq := MustBuildScaledFrequencies(data, 8)
 
 	var total uint32
 	for _, f := range freq {
@@ -113,10 +113,10 @@ func TestBuildScaledFrequencies_ClampsTotalAndPreservesEOF(t *testing.T) {
 func TestBuildScaledFrequencies_MatchesScaleFrequenciesSemantics(t *testing.T) {
 	data := []byte{'a', 'b', 'c', 'd'}
 
-	want := BuildFrequencies(data)
+	want := MustBuildFrequencies(data)
 	ScaleFrequencies(want, 4)
 
-	got := BuildScaledFrequencies(data, 4)
+	got := MustBuildScaledFrequencies(data, 4)
 
 	for i := range want {
 		if got[i] != want[i] {
@@ -171,7 +171,7 @@ func TestBuildFrequenciesFromReader_MatchesSliceHelper(t *testing.T) {
 		t.Fatalf("BuildFrequenciesFromReader failed: %v", err)
 	}
 
-	want := BuildFrequencies(data)
+	want := MustBuildFrequencies(data)
 	for i := range want {
 		if got[i] != want[i] {
 			t.Fatalf("got[%d] = %d, want %d", i, got[i], want[i])
@@ -188,7 +188,7 @@ func TestBuildScaledFrequenciesFromReader_MatchesSliceHelper(t *testing.T) {
 		t.Fatalf("BuildScaledFrequenciesFromReader failed: %v", err)
 	}
 
-	want := BuildScaledFrequencies(data, 4)
+	want := MustBuildScaledFrequencies(data, 4)
 	for i := range want {
 		if got[i] != want[i] {
 			t.Fatalf("got[%d] = %d, want %d", i, got[i], want[i])

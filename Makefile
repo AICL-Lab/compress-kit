@@ -9,13 +9,13 @@
 build: build-huffman build-arithmetic build-range build-rle
 
 build-huffman:
-	g++ -std=c++17 -O2 -Wall -Wextra -Werror -Ialgorithms/shared/cpp/include algorithms/shared/cpp/src/buffer_api.cpp algorithms/shared/cpp/src/cli_launcher.cpp algorithms/huffman/cpp/main.cpp -o algorithms/huffman/cpp/huffman_cpp
+	g++ -std=c++17 -O2 -Wall -Wextra -Werror -Ialgorithms/shared/cpp/include algorithms/shared/cpp/src/buffer_api.cpp algorithms/shared/cpp/src/cli_launcher.cpp algorithms/shared/cpp/src/frequency_table.cpp algorithms/huffman/cpp/main.cpp -o algorithms/huffman/cpp/huffman_cpp
 	go build -o algorithms/huffman/go/huffman_go ./algorithms/huffman/go/cmd
 	cargo build --manifest-path algorithms/huffman/rust/Cargo.toml --bin huffman_rust --release
 	cp algorithms/huffman/rust/target/release/huffman_rust algorithms/huffman/rust/huffman_rust
 
 build-arithmetic:
-	g++ -std=c++17 -O2 -Wall -Wextra -Werror -Ialgorithms/shared/cpp/include algorithms/shared/cpp/src/buffer_api.cpp algorithms/shared/cpp/src/cli_launcher.cpp algorithms/arithmetic/cpp/main.cpp -o algorithms/arithmetic/cpp/arithmetic_cpp
+	g++ -std=c++17 -O2 -Wall -Wextra -Werror -Ialgorithms/shared/cpp/include algorithms/shared/cpp/src/buffer_api.cpp algorithms/shared/cpp/src/cli_launcher.cpp algorithms/shared/cpp/src/frequency_table.cpp algorithms/arithmetic/cpp/main.cpp -o algorithms/arithmetic/cpp/arithmetic_cpp
 	go build -o algorithms/arithmetic/go/arithmetic_go ./algorithms/arithmetic/go/cmd
 	cargo build --manifest-path algorithms/arithmetic/rust/Cargo.toml --bin arithmetic_rust --release
 	cp algorithms/arithmetic/rust/target/release/arithmetic_rust algorithms/arithmetic/rust/arithmetic_rust
@@ -40,7 +40,7 @@ test: test-data \
        test-conformance test-cli-smoke
 
 test-shared-cpp:
-	g++ -std=c++17 -O2 -Wall -Wextra -Werror -DCOMPRESSKIT_NO_MAIN -Ialgorithms/shared/cpp/include algorithms/shared/cpp/src/buffer_api.cpp algorithms/shared/cpp/src/cli_launcher.cpp algorithms/huffman/cpp/main.cpp algorithms/arithmetic/cpp/main.cpp algorithms/range/cpp/main.cpp algorithms/rle/cpp/main.cpp algorithms/shared/cpp/tests/test_lifecycle.cpp -o algorithms/shared/cpp/tests/test_lifecycle
+	g++ -std=c++17 -O2 -Wall -Wextra -Werror -DCOMPRESSKIT_NO_MAIN -Ialgorithms/shared/cpp/include algorithms/shared/cpp/src/buffer_api.cpp algorithms/shared/cpp/src/cli_launcher.cpp algorithms/shared/cpp/src/frequency_table.cpp algorithms/huffman/cpp/main.cpp algorithms/arithmetic/cpp/main.cpp algorithms/range/cpp/main.cpp algorithms/rle/cpp/main.cpp algorithms/shared/cpp/tests/test_lifecycle.cpp -o algorithms/shared/cpp/tests/test_lifecycle
 	./algorithms/shared/cpp/tests/test_lifecycle
 
 test-shared-go:

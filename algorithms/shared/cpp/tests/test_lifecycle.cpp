@@ -1,10 +1,12 @@
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
+#include <sstream>
 #include <string>
 #include <vector>
 
 #include "compresskit/algorithms.hpp"
+#include "compresskit/frequency_table.hpp"
 
 namespace {
 
@@ -129,6 +131,65 @@ void test_decode_buffer_preserves_finish_retry_prefix() {
     assert(std::string(decoded.value.begin(), decoded.value.end()) == "uvwxyz");
 }
 
+void test_write_frequency_table_uses_little_endian_layout() {
+    std::ostringstream out(std::ios::binary);
+    const std::vector<uint32_t> freq = {0x78563412u, 0x01020304u};
+
+    const bool ok = compresskit::write_frequency_table(out, freq);
+    assert(ok);
+
+    const std::string bytes = out.str();
+    const std::string expected(
+        "\x02\x00\x00\x00"
+        "\x12\x34\x56\x78"
+        "\x04\x03\x02\x01",
+        12);
+    assert(bytes == expected);
+}
+
+void test_read_frequency_table_decodes_little_endian_values() {
+    const std::string bytes(
+        "\x02\x00\x00\x00"
+        "\x12\x34\x56\x78"
+        "\x04\x03\x02\x01",
+        12);
+    std::istringstream in(bytes, std::ios::binary);
+    std::vector<uint32_t> freq;
+    uint32_t actual_count = 0;
+
+    const auto status = compresskit::read_frequency_table(in, freq, 2, &actual_count);
+
+    assert(status == compresskit::FrequencyTableReadStatus::OK);
+    assert(actual_count == 2);
+    assert((freq == std::vector<uint32_t>{0x78563412u, 0x01020304u}));
+}
+
+void test_read_frequency_table_reports_bad_count() {
+    const std::string bytes("\x02\x00\x00\x00", 4);
+    std::istringstream in(bytes, std::ios::binary);
+    std::vector<uint32_t> freq;
+    uint32_t actual_count = 0;
+
+    const auto status = compresskit::read_frequency_table(in, freq, 3, &actual_count);
+
+    assert(status == compresskit::FrequencyTableReadStatus::BAD_COUNT);
+    assert(actual_count == 2);
+    assert(freq.empty());
+}
+
+void test_accumulate_frequencies_reports_overflow() {
+    std::vector<uint32_t> freq(257, 0);
+    freq[0] = UINT32_MAX;
+    std::istringstream in(std::string(1, '\0'), std::ios::binary);
+    uint32_t overflow_symbol = UINT32_MAX;
+
+    const auto status = compresskit::accumulate_frequencies(in, freq, &overflow_symbol);
+
+    assert(status == compresskit::FrequencyCountStatus::OVERFLOW);
+    assert(overflow_symbol == 0);
+    assert(freq[0] == UINT32_MAX);
+}
+
 }  // namespace
 
 int main() {
@@ -145,6 +206,10 @@ int main() {
 
     test_encode_buffer_preserves_finish_retry_prefix();
     test_decode_buffer_preserves_finish_retry_prefix();
+    test_write_frequency_table_uses_little_endian_layout();
+    test_read_frequency_table_decodes_little_endian_values();
+    test_read_frequency_table_reports_bad_count();
+    test_accumulate_frequencies_reports_overflow();
 
     return 0;
 }

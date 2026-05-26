@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "compresskit/buffer_api.hpp"
+#include "compresskit/frequency_table.hpp"
 
 class BitWriter {
    public:
@@ -242,10 +243,17 @@ static std::vector<uint32_t> build_frequencies_from_file(const std::string& inpu
     if (!in) {
         return freq;
     }
-    char c;
-    while (in.get(c)) {
-        unsigned char uc = static_cast<unsigned char>(c);
-        freq[static_cast<uint32_t>(uc)]++;
+    uint32_t overflow_symbol = 0;
+    const auto status = compresskit::accumulate_frequencies(in, freq, &overflow_symbol);
+    if (status == compresskit::FrequencyCountStatus::IO_ERROR) {
+        std::cerr << "Failed to read input file\n";
+        freq.clear();
+        return freq;
+    }
+    if (status == compresskit::FrequencyCountStatus::OVERFLOW) {
+        std::cerr << "Frequency overflow for symbol " << overflow_symbol << "\n";
+        freq.clear();
+        return freq;
     }
     freq[EOF_SYMBOL] = 1;
     scale_frequencies(freq);
@@ -266,28 +274,18 @@ static std::vector<uint32_t> build_cumulative(const std::vector<uint32_t>& freq)
 }
 
 static void write_frequencies(std::ostream& out, const std::vector<uint32_t>& freq) {
-    uint32_t count = static_cast<uint32_t>(freq.size());
-    out.write(reinterpret_cast<const char*>(&count), sizeof(count));
-    for (uint32_t v : freq) {
-        out.write(reinterpret_cast<const char*>(&v), sizeof(v));
-    }
+    compresskit::write_frequency_table(out, freq);
 }
 
 static bool read_frequencies(std::istream& in, std::vector<uint32_t>& freq) {
     uint32_t count = 0;
-    in.read(reinterpret_cast<char*>(&count), sizeof(count));
-    if (!in) {
+    const auto status = compresskit::read_frequency_table(in, freq, SYMBOL_LIMIT, &count);
+    if (status == compresskit::FrequencyTableReadStatus::TRUNCATED) {
         std::cerr << "Failed to read frequency table\n";
         return false;
     }
-    if (count != SYMBOL_LIMIT) {
+    if (status == compresskit::FrequencyTableReadStatus::BAD_COUNT) {
         std::cerr << "Bad frequency table size: " << count << "\n";
-        return false;
-    }
-    freq.assign(count, 0);
-    in.read(reinterpret_cast<char*>(freq.data()), freq.size() * sizeof(uint32_t));
-    if (!in) {
-        std::cerr << "Failed to read frequency table\n";
         return false;
     }
     return true;
@@ -305,8 +303,10 @@ static bool compress_file(const std::string& input_path, const std::string& outp
             }
         }
     }
-
     std::vector<uint32_t> freq = build_frequencies_from_file(input_path);
+    if (freq.empty()) {
+        return false;
+    }
     std::vector<uint32_t> cumulative = build_cumulative(freq);
 
     std::ifstream in(input_path, std::ios::binary);

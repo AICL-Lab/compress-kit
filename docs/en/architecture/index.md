@@ -65,11 +65,13 @@ graph TB
 
 ### 1. CLI Layer
 
-Unified command-line entry supporting all algorithms and languages:
+Each algorithm ships as a separate binary with a unified interface:
 
 ```bash
-compress-kit encode --algo huffman --lang go input.bin output.bin
-compress-kit decode --algo huffman --lang rust output.bin decoded.bin
+# Contract: <binary> <encode|decode> <input> <output>
+./huffman_go encode input.bin input.huf
+./huffman_rust decode input.huf decoded.bin
+./arithmetic_cpp encode input.bin input.aenc
 ```
 
 **Design highlight**: 94% boilerplate reduction through unified launcher.

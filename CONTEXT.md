@@ -207,6 +207,12 @@ Go 语言实现的共享工具模块，位于 `algorithms/shared/go/codec/`：
 - `openspec/specs/core-architecture/spec.md` - 核心架构规范
 - `openspec/specs/encoding-project/spec.md` - 项目需求规范
 - `openspec/specs/cross-language-testing/spec.md` - 测试规范
+- `docs/architecture/contract-inventory.md` - 架构合同清单（2026-05-31 存档）
+- `docs/adr/0001-validation-metadata-module-shape.md` - 验证元数据模块形状决策
+- `docs/adr/0002-semantic-error-alignment-across-languages.md` - 跨语言语义错误对齐决策
+- `docs/adr/0003-range-coder-corpus-cap-policy.md` - Range Coder 语料库上限策略决策
+- `docs/adr/0004-rle-buffered-streaming-stance.md` - RLE 缓冲流式语义决策
+- `docs/adr/0005-range-cpp-bench-mode-migration-path.md` - Range C++ bench 模式迁移路径决策
 
 ## 文档术语表
 

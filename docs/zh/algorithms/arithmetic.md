@@ -6,9 +6,7 @@ Arithmetic 是一种无损数据压缩算法，将**整个消息编码为区间 
 
 与 Huffman 为每个符号分配整数位长的编码不同，Arithmetic 可以分配**分数位长的编码**，使其更接近理论熵极限。
 
-::: code-group
-
-```cpp [C++]
+```cpp
 void encode(const vector<uint8_t>& data, 
             const vector<double>& probs) {
     double low = 0.0;
@@ -25,43 +23,6 @@ void encode(const vector<uint8_t>& data,
     write_value((low + high) / 2, output_bits);
 }
 ```
-
-```go [Go]
-func Encode(data []byte, probs []float64) []byte {
-    low, high := 0.0, 1.0
-    
-    for _, symbol := range data {
-        range_ := high - low
-        high = low + range_*cumProb[symbol+1]
-        low = low + range_*cumProb[symbol]
-    }
-    
-    bits := int(math.Ceil(-math.Log2(high - low)))
-    value := (low + high) / 2
-    
-    return bitsToBytes(value, bits)
-}
-```
-
-```rust [Rust]
-pub fn encode(data: &[u8], probs: &[f64]) -> Vec<u8> {
-    let mut low = 0.0;
-    let mut high = 1.0;
-    
-    for &symbol in data {
-        let range = high - low;
-        high = low + range * cum_prob[symbol as usize + 1];
-        low = low + range * cum_prob[symbol as usize];
-    }
-    
-    let bits = ((high - low).log2().abs().ceil()) as usize;
-    let value = (low + high) / 2.0;
-    
-    bits_to_bytes(value, bits)
-}
-```
-
-:::
 
 ## Arithmetic vs Huffman
 

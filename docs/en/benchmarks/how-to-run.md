@@ -1,6 +1,6 @@
 # How to Run Benchmarks
 
-This project includes a Python-based benchmark framework that measures encode/decode speed and compression ratios for all algorithms and languages.
+This project includes a Python-based benchmark framework that measures encode/decode speed and compression ratios for all algorithms.
 
 ## Prerequisites
 
@@ -18,7 +18,7 @@ make bench
 
 This runs the `scripts/run_all_bench.py` script, which:
 1. Generates test data (if `tests/data/` is empty)
-2. Runs the validated algorithm × language × dataset matrix
+2. Runs the validated algorithm × dataset matrix
 3. Measures timing and compression ratio
 4. Saves reports to `reports/` and refreshes `docs/.vitepress/data/benchmarks.json`
 

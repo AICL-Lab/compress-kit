@@ -6,9 +6,13 @@
 
 ## 编译
 
+项目使用 CMake 构建。`make build` 是对 CMake 调用的薄封装：
+
 ```bash
-g++ -std=c++17 -O2 -Wall -Wextra -o <binary> main.cpp
+cmake -S . -B build && cmake --build build
 ```
+
+构建产物位于 `build/` 目录下（如 `build/huffman_cpp`）。
 
 ### 推荐编译选项
 
@@ -25,8 +29,8 @@ g++ -std=c++17 -O2 -Wall -Wextra -o <binary> main.cpp
 ### 用法
 
 ```bash
-./huffman_cpp encode input.bin output.huf
-./huffman_cpp decode output.huf decoded.bin
+./build/huffman_cpp encode input.bin output.huf
+./build/huffman_cpp decode output.huf decoded.bin
 ```
 
 ### 内部结构
@@ -51,8 +55,8 @@ g++ -std=c++17 -O2 -Wall -Wextra -o <binary> main.cpp
 ### 用法
 
 ```bash
-./arithmetic_cpp encode input.bin output.aenc
-./arithmetic_cpp decode output.aenc decoded.bin
+./build/arithmetic_cpp encode input.bin output.aenc
+./build/arithmetic_cpp decode output.aenc decoded.bin
 ```
 
 ### 关键类
@@ -67,8 +71,8 @@ g++ -std=c++17 -O2 -Wall -Wextra -o <binary> main.cpp
 ### 用法
 
 ```bash
-./rangecoder_cpp encode input.bin output.rcnc
-./rangecoder_cpp decode output.rcnc decoded.bin
+./build/rangecoder_cpp encode input.bin output.rcnc
+./build/rangecoder_cpp decode output.rcnc decoded.bin
 ```
 
 ### 文件格式
@@ -85,8 +89,8 @@ g++ -std=c++17 -O2 -Wall -Wextra -o <binary> main.cpp
 ## RLE (`algorithms/rle/cpp/main.cpp`)
 
 ```bash
-./rle_cpp encode input.bin output.rle
-./rle_cpp decode output.rle decoded.bin
+./build/rle_cpp encode input.bin output.rle
+./build/rle_cpp decode output.rle decoded.bin
 ```
 
 ### 文件格式

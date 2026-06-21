@@ -1,203 +1,85 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
-#include <fstream>
-#include <iostream>
-#include <string>
+#include <stdexcept>
+#include <vector>
 
 #include "compresskit/buffer_api.hpp"
+#include "compresskit/constants.hpp"
 
-// Simple Run-Length encoding implementation.
+// Run-Length encoding.
 // Format:
-// - Magic number: 4 bytes "RLE\x00" for format identification
-// - Followed by (count, value) pairs until EOF:
-//   - count: 4-byte unsigned integer, little-endian, represents how many times value repeats, must
-//   be > 0.
-//   - value: 1 byte, represents the byte value to repeat.
-// This format is simple; all three language implementations are fully consistent for cross-decoding
-// and benchmarking.
+// - Magic: 4 bytes "RLE\x00"
+// - (count: uint32 LE, value: byte) pairs until EOF; count must be > 0.
 
-// Magic number for RLE format identification
-static const char RLE_MAGIC[4] = {'R', 'L', 'E', '\x00'};
+namespace {
 
-// Maximum output size limit (1 GiB) to prevent decompression bomb attacks
-static const uint64_t MAX_OUTPUT_SIZE = 1ULL * 1024 * 1024 * 1024;
-
-static void write_u32_le(std::ostream& out, uint32_t v) {
-    unsigned char buf[4];
-    buf[0] = static_cast<unsigned char>(v & 0xFFu);
-    buf[1] = static_cast<unsigned char>((v >> 8) & 0xFFu);
-    buf[2] = static_cast<unsigned char>((v >> 16) & 0xFFu);
-    buf[3] = static_cast<unsigned char>((v >> 24) & 0xFFu);
-    out.write(reinterpret_cast<const char*>(buf), 4);
+void write_u32_le(std::vector<uint8_t>& out, uint32_t v) {
+    out.push_back(static_cast<uint8_t>(v & 0xFFu));
+    out.push_back(static_cast<uint8_t>((v >> 8) & 0xFFu));
+    out.push_back(static_cast<uint8_t>((v >> 16) & 0xFFu));
+    out.push_back(static_cast<uint8_t>((v >> 24) & 0xFFu));
 }
 
-// Read a 32-bit little-endian unsigned integer from stream.
-// Returns:
-//   true  - Successfully read a complete value and write to out_value
-//   false - Normal EOF (no bytes read)
-// On truncation (partial bytes read), error message is output to stderr.
-static bool read_u32_le(std::istream& in, uint32_t& out_value) {
-    unsigned char buf[4];
-    in.read(reinterpret_cast<char*>(buf), 4);
-    std::streamsize got = in.gcount();
-    if (got == 0) {
-        // Normal EOF
-        return false;
-    }
-    if (got != 4 || !in) {
-        std::cerr << "RLE data truncated: cannot read complete count field\n";
-        in.setstate(std::ios::badbit);
-        return false;
-    }
-    out_value = (static_cast<uint32_t>(buf[0])) | (static_cast<uint32_t>(buf[1]) << 8) |
-                (static_cast<uint32_t>(buf[2]) << 16) | (static_cast<uint32_t>(buf[3]) << 24);
-    return true;
-}
+}  // namespace
 
-static bool rle_encode_file_checked(const std::string& input_path, const std::string& output_path);
-static bool rle_decode_file_checked(const std::string& input_path, const std::string& output_path);
+std::vector<uint8_t> rle_encode_buffer(const std::vector<uint8_t>& input) {
+    std::vector<uint8_t> out;
+    out.push_back(static_cast<uint8_t>(compresskit::RLE_MAGIC[0]));
+    out.push_back(static_cast<uint8_t>(compresskit::RLE_MAGIC[1]));
+    out.push_back(static_cast<uint8_t>(compresskit::RLE_MAGIC[2]));
+    out.push_back(static_cast<uint8_t>(compresskit::RLE_MAGIC[3]));
 
-bool rle_encode_file(const std::string& input_path, const std::string& output_path) {
-    return rle_encode_file_checked(input_path, output_path);
-}
-
-// Perform Run-Length encoding on entire file.
-// input_path is the original binary file path.
-// output_path is the encoded file path.
-static bool rle_encode_file_checked(const std::string& input_path, const std::string& output_path) {
-    std::ifstream in(input_path, std::ios::binary);
-    if (!in) {
-        std::cerr << "cannot open input file for reading: " << input_path << "\n";
-        return false;
-    }
-    std::ofstream out(output_path, std::ios::binary);
-    if (!out) {
-        std::cerr << "cannot open output file for writing: " << output_path << "\n";
-        return false;
+    if (input.empty()) {
+        return out;
     }
 
-    // Write magic number
-    out.write(RLE_MAGIC, 4);
-    if (!out) {
-        std::cerr << "failed to write RLE magic number\n";
-        return false;
-    }
-
-    char c;
-    if (!in.get(c)) {
-        // Empty file: encoding result is magic number only.
-        return true;
-    }
-    unsigned char current = static_cast<unsigned char>(c);
+    uint8_t current = input[0];
     uint32_t count = 1;
-
-    while (in.get(c)) {
-        unsigned char b = static_cast<unsigned char>(c);
-        if (b == current && count < 0xFFFFFFFFu) {
+    for (std::size_t i = 1; i < input.size(); ++i) {
+        if (input[i] == current && count < 0xFFFFFFFFu) {
             ++count;
         } else {
             write_u32_le(out, count);
-            out.put(static_cast<char>(current));
-            if (!out) {
-                std::cerr << "failed to write RLE data\n";
-                return false;
-            }
-            current = b;
+            out.push_back(current);
+            current = input[i];
             count = 1;
         }
     }
-
-    // Write last run
     write_u32_le(out, count);
-    out.put(static_cast<char>(current));
-    if (!out) {
-        std::cerr << "failed to write RLE data\n";
-        return false;
-    }
-
-    return true;
+    out.push_back(current);
+    return out;
 }
 
-// Decode RLE encoded file back to original byte stream.
-// input_path is the encoded input file path.
-// output_path is the decoded output file path.
-static bool rle_decode_file_checked(const std::string& input_path, const std::string& output_path) {
-    std::ifstream in(input_path, std::ios::binary);
-    if (!in) {
-        std::cerr << "cannot open input file for reading: " << input_path << "\n";
-        return false;
+std::vector<uint8_t> rle_decode_buffer(const std::vector<uint8_t>& input) {
+    if (input.size() < 4) {
+        throw std::runtime_error("RLE: input too short for magic");
     }
-    std::ofstream out(output_path, std::ios::binary);
-    if (!out) {
-        std::cerr << "cannot open output file for writing: " << output_path << "\n";
-        return false;
+    if (std::memcmp(input.data(), compresskit::RLE_MAGIC, 4) != 0) {
+        throw std::runtime_error("RLE: bad magic");
     }
 
-    // Verify magic number
-    char magic[4] = {};
-    in.read(magic, 4);
-    if (!in || in.gcount() != 4) {
-        std::cerr << "cannot read magic number\n";
-        return false;
-    }
-    if (std::memcmp(magic, RLE_MAGIC, 4) != 0) {
-        std::cerr << "invalid RLE file: bad magic number\n";
-        return false;
-    }
-
-    const std::size_t BUF_SIZE = 4096;
-    char buffer[BUF_SIZE];
-    uint64_t total_written = 0;
-
-    while (true) {
-        uint32_t count = 0;
-        if (!read_u32_le(in, count)) {
-            if (!in.bad()) {
-                // Normal EOF
-                break;
-            } else {
-                // read_u32_le already output error message
-                return false;
-            }
+    std::vector<uint8_t> out;
+    std::size_t pos = 4;
+    while (pos < input.size()) {
+        if (pos + 5 > input.size()) {
+            throw std::runtime_error("RLE: truncated count+value pair");
         }
+        uint32_t count = static_cast<uint32_t>(input[pos]) |
+                         (static_cast<uint32_t>(input[pos + 1]) << 8) |
+                         (static_cast<uint32_t>(input[pos + 2]) << 16) |
+                         (static_cast<uint32_t>(input[pos + 3]) << 24);
+        uint8_t value = input[pos + 4];
+        pos += 5;
         if (count == 0) {
-            std::cerr << "invalid RLE data: count should not be 0\n";
-            return false;
+            throw std::runtime_error("RLE: count must not be 0");
         }
-
-        // Check output size limit
-        if (total_written + static_cast<uint64_t>(count) > MAX_OUTPUT_SIZE) {
-            std::cerr << "output size limit exceeded (max " << MAX_OUTPUT_SIZE << " bytes)\n";
-            return false;
+        if (out.size() + count > compresskit::MAX_OUTPUT_SIZE) {
+            throw std::runtime_error("RLE: output size limit exceeded");
         }
-
-        char value_char;
-        if (!in.get(value_char)) {
-            std::cerr << "RLE data truncated: missing value byte\n";
-            return false;
-        }
-        unsigned char value = static_cast<unsigned char>(value_char);
-
-        while (count > 0) {
-            std::size_t chunk = static_cast<std::size_t>(
-                std::min<uint32_t>(count, static_cast<uint32_t>(BUF_SIZE)));
-            std::memset(buffer, static_cast<int>(value), chunk);
-            out.write(buffer, static_cast<std::streamsize>(chunk));
-            if (!out) {
-                std::cerr << "failed to write decoded data\n";
-                return false;
-            }
-            total_written += static_cast<uint64_t>(chunk);
-            count -= static_cast<uint32_t>(chunk);
-        }
+        out.insert(out.end(), count, value);
     }
-
-    return true;
-}
-
-bool rle_decode_file(const std::string& input_path, const std::string& output_path) {
-    return rle_decode_file_checked(input_path, output_path);
+    return out;
 }
 
 #ifndef COMPRESSKIT_NO_MAIN
@@ -206,10 +88,10 @@ bool rle_decode_file(const std::string& input_path, const std::string& output_pa
 int main(int argc, char** argv) {
     compresskit::cli::Algorithm algo{
         [](const std::string& in, const std::string& out) {
-            return compresskit::encode_file_via_buffer(rle_encode_file, in, out);
+            return compresskit::encode_file_via_buffer(rle_encode_buffer, in, out);
         },
         [](const std::string& in, const std::string& out) {
-            return compresskit::decode_file_via_buffer(rle_decode_file, in, out);
+            return compresskit::decode_file_via_buffer(rle_decode_buffer, in, out);
         }};
     return compresskit::cli::run("rle", algo, argc, argv);
 }

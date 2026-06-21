@@ -12,14 +12,12 @@ caller
 ## Why It Exists
 
 - file-to-file CLIs now share the same buffer-layer path as in-memory callers
-- lifecycle semantics are consistent across C++17, Go, and Rust
+- lifecycle semantics are consistent across the C++17 implementation
 - shared error handling makes later frame-format and conformance work easier to build on
 
-## Language Hosts
+## Language Host
 
 - C++: `algorithms/shared/cpp`
-- Go: `algorithms/shared/go`
-- Rust: `algorithms/shared/rust`
 
 ## Security Boundary
 
@@ -28,4 +26,4 @@ caller
 
 ## Verification
 
-`make test` includes shared streaming lifecycle tests for all three languages before the algorithm-specific suites.
+`make test` includes shared streaming lifecycle tests before the algorithm-specific suites.

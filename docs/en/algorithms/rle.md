@@ -4,9 +4,7 @@ RLE is the **simplest compression algorithm**, replacing consecutive repeated by
 
 ## How It Works
 
-::: code-group
-
-```cpp [C++]
+```cpp
 vector<uint8_t> encode(const vector<uint8_t>& data) {
     vector<uint8_t> result;
     
@@ -34,59 +32,6 @@ vector<uint8_t> encode(const vector<uint8_t>& data) {
     return result;
 }
 ```
-
-```go [Go]
-func Encode(data []byte) []byte {
-    var result bytes.Buffer
-    
-    for i := 0; i < len(data); {
-        current := data[i]
-        count := uint32(1)
-        
-        for i+int(count) < len(data) && 
-            data[i+int(count)] == current && 
-            count < math.MaxUint32 {
-            count++
-        }
-        
-        // Write count as uint32 (little-endian) + value
-        binary.Write(&result, binary.LittleEndian, count)
-        result.WriteByte(current)
-        
-        i += int(count)
-    }
-    
-    return result.Bytes()
-}
-```
-
-```rust [Rust]
-pub fn encode(data: &[u8]) -> Vec<u8> {
-    let mut result = Vec::new();
-    let mut i = 0;
-    
-    while i < data.len() {
-        let current = data[i];
-        let mut count: u32 = 1;
-        
-        while i + count as usize < data.len() && 
-              data[i + count as usize] == current && 
-              count < u32::MAX {
-            count += 1;
-        }
-        
-        // Write count (little-endian) + value
-        result.extend_from_slice(&count.to_le_bytes());
-        result.push(current);
-        
-        i += count as usize;
-    }
-    
-    result
-}
-```
-
-:::
 
 ## File Format
 

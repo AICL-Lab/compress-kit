@@ -42,24 +42,10 @@ Prefix-code based lossless compression algorithm. Builds an optimal prefix tree 
 
 ### Usage Example
 
-::: code-group
-
-```bash [C++]
-./huffman_cpp encode input.bin output.huf
-./huffman_cpp decode output.huf restored.bin
+```bash
+./build/huffman_cpp encode input.bin output.huf
+./build/huffman_cpp decode output.huf restored.bin
 ```
-
-```bash [Go]
-./huffman_go encode input.bin output.huf
-./huffman_go decode output.huf restored.bin
-```
-
-```bash [Rust]
-./huffman_rust encode input.bin output.huf
-./huffman_rust decode output.huf restored.bin
-```
-
-:::
 
 ---
 
@@ -106,59 +92,15 @@ An integer-based implementation equivalent to arithmetic coding but typically mo
 | Patent status | Had historical patents | No restrictions |
 | Engineering use | Academic study | Production systems |
 
-### Library API Usage
-
-**Go Library**:
-```go
-import "github.com/LessUp/compress-kit/algorithms/range/go/rangecoder"
-
-// Encode data
-encoded, err := rangecoder.Encode(data)
-if err != nil {
-    log.Fatal(err)
-}
-
-// Decode data
-decoded, err := rangecoder.Decode(encoded)
-if err != nil {
-    log.Fatal(err)
-}
-```
-
-**Rust Crate**:
-```rust
-use rangecoder;
-
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let encoded = rangecoder::encode(input)?;
-    let decoded = rangecoder::decode(&encoded)?;
-    Ok(())
-}
-```
-
 ### CLI Usage
 
-::: code-group
-
-```bash [C++]
-./rangecoder_cpp encode input.bin output.rcnc
-./rangecoder_cpp decode output.rcnc restored.bin
+```bash
+./build/rangecoder_cpp encode input.bin output.rcnc
+./build/rangecoder_cpp decode output.rcnc restored.bin
 ```
-
-```bash [Go]
-./rangecoder_go encode input.bin output.rcnc
-./rangecoder_go decode output.rcnc restored.bin
-```
-
-```bash [Rust]
-cargo run --bin rangecoder -- encode input.bin output.rcnc
-cargo run --bin rangecoder -- decode output.rcnc restored.bin
-```
-
-:::
 
 ::: warning Performance Note
-The Range Coder decoder has a known performance issue for files >500 KiB. Use smaller test files for cross-language verification.
+The Range Coder decoder has a known performance issue for files >500 KiB. Use smaller test files for verification.
 :::
 
 ---
@@ -187,24 +129,10 @@ Each run is stored as a `(count, value)` pair after the magic header.
 
 ### Usage Example
 
-::: code-group
-
-```bash [C++]
-./rle_cpp encode input.bin output.rle
-./rle_cpp decode output.rle restored.bin
+```bash
+./build/rle_cpp encode input.bin output.rle
+./build/rle_cpp decode output.rle restored.bin
 ```
-
-```bash [Go]
-./rle_go encode input.bin output.rle
-./rle_go decode output.rle restored.bin
-```
-
-```bash [Rust]
-./rle_rust encode input.bin output.rle
-./rle_rust decode output.rle restored.bin
-```
-
-:::
 
 ---
 

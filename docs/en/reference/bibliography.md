@@ -109,7 +109,7 @@ If you reference CompressKit in academic work, we suggest using the following fo
 ```bibtex
 @misc{compresskit2026,
   author = {CompressKit Team},
-  title = {CompressKit: Cross-Language Lossless Compression Algorithms},
+  title = {CompressKit: C++17 Lossless Compression Algorithms},
   year = {2026},
   publisher = {GitHub},
   url = {https://github.com/LessUp/compress-kit}

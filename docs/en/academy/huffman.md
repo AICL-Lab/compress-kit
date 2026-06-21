@@ -64,47 +64,60 @@ Huffman's algorithm uses a **greedy strategy**: repeatedly merge the two nodes w
 
 ### Tree Building Algorithm
 
-```go
-func buildHuffmanTree(freqs map[byte]int) *Node {
-    // Use a min-heap
-    h := &minHeap{}
-    for sym, freq := range freqs {
-        heap.Push(h, &Node{Symbol: sym, Freq: freq})
+```cpp
+struct Node {
+    uint8_t symbol;
+    uint32_t freq;
+    Node* left = nullptr;
+    Node* right = nullptr;
+};
+
+struct Compare {
+    bool operator()(Node* a, Node* b) {
+        if (a->freq == b->freq) return a->symbol > b->symbol;
+        return a->freq > b->freq;
     }
-    
-    // Merge until only one node remains
-    for h.Len() > 1 {
-        left := heap.Pop(h).(*Node)
-        right := heap.Pop(h).(*Node)
-        parent := &Node{
-            Freq:  left.Freq + right.Freq,
-            Left:  left,
-            Right: right,
+};
+
+Node* buildHuffmanTree(const std::vector<uint32_t>& freqs) {
+    // Use a min-heap (priority_queue is a max-heap by default; invert with >)
+    std::priority_queue<Node*, std::vector<Node*>, Compare> pq;
+    for (int sym = 0; sym < 256; ++sym) {
+        if (freqs[sym] > 0) {
+            pq.push(new Node{static_cast<uint8_t>(sym), freqs[sym]});
         }
-        heap.Push(h, parent)
     }
-    
-    return heap.Pop(h).(*Node)
+
+    // Merge until only one node remains
+    while (pq.size() > 1) {
+        Node* left = pq.top(); pq.pop();
+        Node* right = pq.top(); pq.pop();
+        Node* parent = new Node{0, left->freq + right->freq, left, right};
+        pq.push(parent);
+    }
+
+    return pq.top();
 }
 ```
 
 ### Code Table Generation
 
-```go
-func generateCodes(root *Node, code string, codes map[byte]string) {
-    if root == nil {
-        return
+```cpp
+void generateCodes(Node* root, const std::string& code,
+                   std::array<std::string, 256>& codes) {
+    if (root == nullptr) {
+        return;
     }
-    
-    if root.Left == nil && root.Right == nil {
+
+    if (root->left == nullptr && root->right == nullptr) {
         // Leaf node: save the code
-        codes[root.Symbol] = code
-        return
+        codes[root->symbol] = code;
+        return;
     }
-    
+
     // Recursively generate codes for left and right subtrees
-    generateCodes(root.Left, code+"0", codes)
-    generateCodes(root.Right, code+"1", codes)
+    generateCodes(root->left, code + "0", codes);
+    generateCodes(root->right, code + "1", codes);
 }
 ```
 
@@ -119,16 +132,16 @@ func generateCodes(root *Node, code string, codes map[byte]string) {
 
 ### Determinism Guarantee
 
-To ensure cross-language binary compatibility, when frequencies are equal, sort by symbol value:
+To ensure deterministic binary output, when frequencies are equal, sort by symbol value:
 
-```go
-// Comparison function
-func (h *minHeap) Less(i, j int) bool {
-    if h.nodes[i].Freq == h.nodes[j].Freq {
-        return h.nodes[i].Symbol < h.nodes[j].Symbol
+```cpp
+// Comparison function: break ties by symbol value for deterministic output
+struct Compare {
+    bool operator()(Node* a, Node* b) {
+        if (a->freq == b->freq) return a->symbol > b->symbol;
+        return a->freq > b->freq;
     }
-    return h.nodes[i].Freq < h.nodes[j].Freq
-}
+};
 ```
 
 ## Binary Format
@@ -162,11 +175,9 @@ CompressKit's Huffman encoding output format:
 
 ### Measured Performance
 
-| Language | Encoding Speed | Decoding Speed | Memory Usage |
-|----------|---------------|----------------|--------------|
-| Rust | 387 MB/s | 456 MB/s | 1.5 MB |
+| Implementation | Encoding Speed | Decoding Speed | Memory Usage |
+|-----------------|---------------|----------------|--------------|
 | C++ | 312 MB/s | 398 MB/s | 1.8 MB |
-| Go | 245 MB/s | 312 MB/s | 2.1 MB |
 
 ## Comparison with Other Algorithms
 

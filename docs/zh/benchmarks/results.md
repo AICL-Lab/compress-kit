@@ -17,7 +17,7 @@
 | JSON 位置 | 字段 | 含义 |
 |-----------|------|------|
 | 顶层 | `generated` | 文档当前展示的基准快照日期 |
-| 每条 `results[]` 记录 | `algorithm`、`language`、`dataset` | 图表中的基准坐标 |
+| 每条 `results[]` 记录 | `algorithm`、`dataset` | 图表中的基准坐标 |
 | 每条 `results[]` 记录 | `encodeTime`、`decodeTime` | 挂钟时间，单位毫秒 |
 | 每条 `results[]` 记录 | `encodeSpeed`、`decodeSpeed` | 吞吐量，单位 MiB/s |
 | 每条 `results[]` 记录 | `compressionRatio`、`throughput` | 压缩比，以及 UI 使用的粗粒度吞吐标签 |
@@ -35,7 +35,7 @@
 
 ## 正确解读快照
 
-- 得出语言差异结论前，请先确保比较的是**同一数据集**。
+- 得出结论前，请先确保比较的是**同一数据集**。
 - Range 结果故意使用更小的输入，不能直接与 10 MiB 数据集做绝对吞吐对比。
 - RLE 主要适用于高重复输入，对其他数据可能产生膨胀。
 
@@ -53,5 +53,4 @@ npm run docs:build
 ## 另见
 
 - [如何运行基准测试](/zh/benchmarks/how-to-run) — 详细说明
-- [跨语言测试](/zh/testing/cross-language) — 验证方法
 - [算法指南](/zh/guide/algorithms) — 对比和选择指南

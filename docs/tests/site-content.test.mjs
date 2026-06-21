@@ -55,7 +55,7 @@ test('homepage and benchmark metadata share one canonical algorithm catalog', ()
 test('benchmark catalog preserves shipped language order', () => {
   assert.deepEqual(
     benchmarkCatalog.languages.map(entry => entry.id),
-    ['cpp', 'go', 'rust'],
+    ['cpp'],
     'benchmark legend should stay aligned with shipped languages'
   )
 })

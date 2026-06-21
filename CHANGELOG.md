@@ -7,34 +7,27 @@ style categories and uses semantic versioning for releases.
 
 ## [Unreleased]
 
-### Added
-
-- RLE format now includes 4-byte magic number `RLE\x00` for file type identification.
-- Added `.golangci.yml` for Go linting configuration.
-- Added `.clippy.toml` for Rust linting configuration.
-- Executable cross-language conformance matrix via `make test-conformance`.
-- Streaming API lifecycle and buffer contract coverage across shared C++/Go/Rust layers.
-- Unified CLI launcher module for all algorithms (shared/go/cli, shared/cpp/cli_launcher, shared/rust/cli).
-
-### Fixed
-
-- C++ buffer API now uses platform-appropriate temp directory instead of hardcoded `/tmp/`.
-- Rust RLE decode now validates count=0 to prevent invalid data.
-- Rust Huffman encoding performance improved by using `Vec<u8>` instead of `String` for bitstream.
-- Fixed Rust Arithmetic Coding streaming decode compatibility for short bitstreams.
-- Fixed Rust Arithmetic Coding treatment of `0x00` input bytes so they are not confused with the EOF symbol.
-- Unified buffer growth strategies across C++, Go, and Rust for semantic consistency.
-- Transactional retry logic now preserves partial writes correctly.
-
 ### Changed
 
-- **BREAKING**: RLE format now includes 4-byte magic header. Old RLE files without magic are incompatible.
-- Archived future shared-frame, extended-conformance, and benchmark-governance proposals as deferred OpenSpec design context.
-- Refined README and documentation entry points so the GitHub README stays a concise repository gateway.
-- Removed 41 unused BMAD skills from `.claude/skills/` directory (~2MB reduction).
-- Simplified `AGENTS.md` and `CLAUDE.md` for better AI agent guidance.
-- **Architecture Deepening**: Unified CLI entry points (94% boilerplate reduction) and buffer layer orchestration.
-- Archived internal decision documents to `.archive/superpowers-20260508/` for cleaner documentation structure.
+- **BREAKING**: Project refactored to C++17-only. Go and Rust implementations removed.
+- **BREAKING**: Build system migrated from raw g++ Makefile to CMake.
+- Removed OpenSpec, Cursor, and Claude skill meta-tooling directories.
+- Removed cross-language conformance matrix and streaming API contract tests.
+- Buffer layer rewritten to use in-memory transforms instead of temporary files.
+- Huffman encoding now uses `uint64_t` code words instead of `std::string` for 8x density.
+- Huffman decoding now uses 8-bit lookup table per internal node (~8x faster than bit-by-bit tree walk).
+- Range Coder now uses shared `frequency_table` utilities (was duplicating scale/cumulative/header logic).
+- `scale_frequencies` rewritten from O(N×M) decrement loop to O(N log N) proportional reduction.
+- `build_cumulative` now signals all-zero tables via empty result instead of silent fallback.
+- Centralized constants (`SYMBOL_LIMIT`, `EOF_SYMBOL`, magic bytes, size limits) in `constants.hpp`.
+- VitePress documentation pruned of Go/Rust content; bilingual (en/zh) structure retained.
+- Issue templates pruned of Go/Rust/OpenSpec/cross-language references; Language scope reduced to C++17 / Python scripts / Docs (feature template adds CI).
+
+### Added
+
+- `CMakeLists.txt` with static library target, 4 algorithm executables, and CTest integration.
+- `algorithms/shared/cpp/include/compresskit/constants.hpp` for shared constants.
+- Shared `count_frequencies`, `scale_frequencies`, `build_cumulative` utilities in `frequency_table.hpp`.
 
 ## [1.0.0] - 2026-01-07
 

@@ -20,9 +20,7 @@ struct Result {
     StatusCode status = StatusCode::OK;
     T value{};
 
-    bool ok() const noexcept {
-        return status == StatusCode::OK;
-    }
+    bool ok() const noexcept { return status == StatusCode::OK; }
 };
 
 }  // namespace compresskit

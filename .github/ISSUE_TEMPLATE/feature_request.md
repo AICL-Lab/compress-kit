@@ -18,16 +18,8 @@ Describe the smallest useful change.
 ## Affected areas
 
 - Algorithm: Huffman / Arithmetic / Range Coder / RLE / Shared / N/A
-- Language: C++17 / Go / Rust / Python scripts / Docs / CI
+- Language: C++17 / Python scripts / Docs / CI
 - Contract impact: CLI / binary format / streaming API / conformance / none
-
-## OpenSpec impact
-
-Does this require changing `openspec/specs/` or creating a new OpenSpec change?
-
-- [ ] Yes, this changes requirements or binary/API behavior.
-- [ ] No, this is implementation-only or documentation-only.
-- [ ] Unsure.
 
 ## Verification plan
 

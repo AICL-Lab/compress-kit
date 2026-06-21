@@ -15,26 +15,10 @@ INVALID_MODE = "invalid"
 TIMEOUT_SECONDS = 10.0
 
 ALGORITHMS = {
-    "huffman": [
-        ROOT / "algorithms/huffman/cpp/huffman_cpp",
-        ROOT / "algorithms/huffman/go/huffman_go",
-        ROOT / "algorithms/huffman/rust/huffman_rust",
-    ],
-    "arithmetic": [
-        ROOT / "algorithms/arithmetic/cpp/arithmetic_cpp",
-        ROOT / "algorithms/arithmetic/go/arithmetic_go",
-        ROOT / "algorithms/arithmetic/rust/arithmetic_rust",
-    ],
-    "range": [
-        ROOT / "algorithms/range/cpp/rangecoder_cpp",
-        ROOT / "algorithms/range/go/rangecoder_go",
-        ROOT / "algorithms/range/rust/target/release/rangecoder",
-    ],
-    "rle": [
-        ROOT / "algorithms/rle/cpp/rle_cpp",
-        ROOT / "algorithms/rle/go/rle_go",
-        ROOT / "algorithms/rle/rust/rle_rust",
-    ],
+    "huffman": [ROOT / "build/huffman_cpp"],
+    "arithmetic": [ROOT / "build/arithmetic_cpp"],
+    "range": [ROOT / "build/rangecoder_cpp"],
+    "rle": [ROOT / "build/rle_cpp"],
 }
 
 CORPUS = (

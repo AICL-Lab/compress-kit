@@ -10,7 +10,7 @@ Welcome to the CompressKit Algorithm Academy. Here you will gain deep understand
 ## Academy Goals
 
 - **Theoretical Depth**: Understand the mathematical foundations and information theory principles
-- **Implementation Insights**: Master key design decisions for cross-language binary compatibility
+- **Implementation Insights**: Master key design decisions for binary format compatibility
 - **Performance Wisdom**: Learn to choose optimal algorithms based on data characteristics
 - **Engineering Practice**: Production-grade design from state machines to error handling
 
@@ -77,8 +77,7 @@ Welcome to the CompressKit Algorithm Academy. Here you will gain deep understand
 ### Advanced: System Design
 
 5. [Streaming API](/en/api/streaming) - Core of the streaming architecture
-6. [Cross-Language Testing](/en/testing/cross-language) - Binary compatibility verification
-7. [Architecture Design](/en/architecture/) - System architecture overview
+6. [Architecture Design](/en/architecture/) - System architecture overview
 
 ## Algorithm Selection Decision Tree
 

@@ -1,56 +1,17 @@
 #include "compresskit/buffer_api.hpp"
 
-#include <unistd.h>
-
 #include <algorithm>
-#include <cstdio>
-#include <cstdlib>
 #include <fstream>
 #include <limits>
 #include <stdexcept>
-#include <string>
 #include <utility>
+
+#include "compresskit/constants.hpp"
 
 namespace compresskit {
 namespace {
 
-constexpr std::uint64_t kMaxInputSize = 4ULL * 1024 * 1024 * 1024;
-constexpr std::uint64_t kMaxOutputSize = 1ULL * 1024 * 1024 * 1024;
 constexpr std::size_t kInitialEncodeOverhead = 2048;
-
-class ScopedTempFile {
-   public:
-    explicit ScopedTempFile(const char* prefix) {
-        // Use platform-appropriate temp directory
-        const char* tmp_dir = std::getenv("TMPDIR");
-        if (!tmp_dir)
-            tmp_dir = std::getenv("TMP");
-        if (!tmp_dir)
-            tmp_dir = std::getenv("TEMP");
-        if (!tmp_dir)
-            tmp_dir = "/tmp";
-        std::string pattern = std::string(tmp_dir) + "/" + prefix + "-XXXXXX";
-        std::vector<char> buffer(pattern.begin(), pattern.end());
-        buffer.push_back('\0');
-        int fd = mkstemp(buffer.data());
-        if (fd < 0) {
-            throw std::runtime_error("failed to create temp file");
-        }
-        close(fd);
-        path_ = buffer.data();
-    }
-
-    ~ScopedTempFile() {
-        if (!path_.empty()) {
-            std::remove(path_.c_str());
-        }
-    }
-
-    const std::string& path() const noexcept { return path_; }
-
-   private:
-    std::string path_;
-};
 
 std::size_t encode_limit_for(std::size_t input_size) {
     if (input_size > (std::numeric_limits<std::size_t>::max() - kInitialEncodeOverhead) / 8) {
@@ -71,50 +32,24 @@ bool write_file(const std::string& path, const std::vector<uint8_t>& data) {
     return static_cast<bool>(out);
 }
 
-Result<std::vector<uint8_t>> read_file(const std::string& path, bool enforce_output_limit) {
+std::vector<uint8_t> read_file(const std::string& path) {
     std::ifstream in(path, std::ios::binary | std::ios::ate);
     if (!in) {
-        return {StatusCode::ERR_CORRUPT, {}};
+        throw std::runtime_error("cannot open input file");
     }
     std::streampos size = in.tellg();
     if (size < 0) {
-        return {StatusCode::ERR_CORRUPT, {}};
-    }
-    if (enforce_output_limit && static_cast<std::uint64_t>(size) > kMaxOutputSize) {
-        return {StatusCode::ERR_SIZE_LIMIT, {}};
+        throw std::runtime_error("cannot determine input file size");
     }
     std::vector<uint8_t> data(static_cast<std::size_t>(size));
     in.seekg(0, std::ios::beg);
     if (!data.empty()) {
         in.read(reinterpret_cast<char*>(data.data()), static_cast<std::streamsize>(data.size()));
         if (!in) {
-            return {StatusCode::ERR_CORRUPT, {}};
+            throw std::runtime_error("failed to read input file");
         }
     }
-    return {StatusCode::OK, std::move(data)};
-}
-
-Result<std::vector<uint8_t>> run_transform(FileTransform transform,
-                                           const std::vector<uint8_t>& input,
-                                           bool enforce_output_limit) {
-    try {
-        ScopedTempFile input_file("compresskit-in");
-        ScopedTempFile output_file("compresskit-out");
-        if (!write_file(input_file.path(), input)) {
-            return {StatusCode::ERR_CORRUPT, {}};
-        }
-        if (!transform(input_file.path(), output_file.path())) {
-            Result<std::vector<uint8_t>> maybe_output =
-                read_file(output_file.path(), enforce_output_limit);
-            if (maybe_output.status == StatusCode::ERR_SIZE_LIMIT) {
-                return maybe_output;
-            }
-            return {StatusCode::ERR_CORRUPT, {}};
-        }
-        return read_file(output_file.path(), enforce_output_limit);
-    } catch (const std::exception&) {
-        return {StatusCode::ERR_CORRUPT, {}};
-    }
+    return data;
 }
 
 Result<std::size_t> invalid_state_result() {
@@ -125,13 +60,11 @@ template <typename Step>
 Result<std::size_t> run_buffer_step(std::vector<uint8_t>& out, std::size_t total_written,
                                     std::size_t limit, Step step) {
     for (;;) {
-        Result<std::size_t> result =
-            step({out.data() + total_written, out.size() - total_written});
+        Result<std::size_t> result = step({out.data() + total_written, out.size() - total_written});
         if (result.status != StatusCode::BUF_TOO_SMALL) {
             if (!result.ok()) {
                 return result;
             }
-            // Successful writes already fit in the provided slice; only the growth path can hit the limit.
             return {StatusCode::OK, total_written + result.value};
         }
 
@@ -146,18 +79,15 @@ Result<std::size_t> run_buffer_step(std::vector<uint8_t>& out, std::size_t total
 
 }  // namespace
 
-BufferEncoder::BufferEncoder(FileTransform transform)
+BufferEncoder::BufferEncoder(BufferTransform transform)
     : transform_(transform), state_(State::READY), total_input_(0) {}
 
 Result<std::size_t> BufferEncoder::process(ByteView in, MutableByteView) {
-    if (state_ == State::FINISHED) {
+    if (state_ == State::FINISHED || state_ == State::ERROR) {
         state_ = State::ERROR;
         return invalid_state_result();
     }
-    if (state_ == State::ERROR) {
-        return invalid_state_result();
-    }
-    if (total_input_ > kMaxInputSize - in.size) {
+    if (total_input_ > MAX_INPUT_SIZE - in.size) {
         state_ = State::ERROR;
         return {StatusCode::ERR_SIZE_LIMIT, 0};
     }
@@ -168,11 +98,8 @@ Result<std::size_t> BufferEncoder::process(ByteView in, MutableByteView) {
 }
 
 Result<std::size_t> BufferEncoder::flush(MutableByteView) {
-    if (state_ == State::FINISHED) {
+    if (state_ == State::FINISHED || state_ == State::ERROR) {
         state_ = State::ERROR;
-        return invalid_state_result();
-    }
-    if (state_ == State::ERROR) {
         return invalid_state_result();
     }
     if (state_ == State::STREAMING) {
@@ -182,27 +109,27 @@ Result<std::size_t> BufferEncoder::flush(MutableByteView) {
 }
 
 Result<std::size_t> BufferEncoder::finish(MutableByteView out) {
-    if (state_ == State::FINISHED) {
+    if (state_ == State::FINISHED || state_ == State::ERROR) {
         state_ = State::ERROR;
-        return invalid_state_result();
-    }
-    if (state_ == State::ERROR) {
         return invalid_state_result();
     }
 
-    Result<std::vector<uint8_t>> encoded = run_transform(transform_, input_, false);
-    if (!encoded.ok()) {
+    std::vector<uint8_t> encoded;
+    try {
+        encoded = transform_(input_);
+    } catch (const std::exception&) {
         state_ = State::ERROR;
-        return {encoded.status, 0};
+        return {StatusCode::ERR_CORRUPT, 0};
     }
-    if (encoded.value.size() > out.size) {
+
+    if (encoded.size() > out.size) {
         return {StatusCode::BUF_TOO_SMALL, 0};
     }
-    if (!encoded.value.empty()) {
-        std::copy(encoded.value.begin(), encoded.value.end(), out.data);
+    if (!encoded.empty()) {
+        std::copy(encoded.begin(), encoded.end(), out.data);
     }
     state_ = State::FINISHED;
-    return {StatusCode::OK, encoded.value.size()};
+    return {StatusCode::OK, encoded.size()};
 }
 
 void BufferEncoder::reset() noexcept {
@@ -215,18 +142,15 @@ State BufferEncoder::state() const noexcept {
     return state_;
 }
 
-BufferDecoder::BufferDecoder(FileTransform transform)
+BufferDecoder::BufferDecoder(BufferTransform transform)
     : transform_(transform), state_(State::READY), total_input_(0) {}
 
 Result<std::size_t> BufferDecoder::process(ByteView in, MutableByteView) {
-    if (state_ == State::FINISHED) {
+    if (state_ == State::FINISHED || state_ == State::ERROR) {
         state_ = State::ERROR;
         return invalid_state_result();
     }
-    if (state_ == State::ERROR) {
-        return invalid_state_result();
-    }
-    if (total_input_ > kMaxInputSize - in.size) {
+    if (total_input_ > MAX_INPUT_SIZE - in.size) {
         state_ = State::ERROR;
         return {StatusCode::ERR_SIZE_LIMIT, 0};
     }
@@ -237,11 +161,8 @@ Result<std::size_t> BufferDecoder::process(ByteView in, MutableByteView) {
 }
 
 Result<std::size_t> BufferDecoder::flush(MutableByteView) {
-    if (state_ == State::FINISHED) {
+    if (state_ == State::FINISHED || state_ == State::ERROR) {
         state_ = State::ERROR;
-        return invalid_state_result();
-    }
-    if (state_ == State::ERROR) {
         return invalid_state_result();
     }
     if (state_ == State::STREAMING) {
@@ -251,27 +172,31 @@ Result<std::size_t> BufferDecoder::flush(MutableByteView) {
 }
 
 Result<std::size_t> BufferDecoder::finish(MutableByteView out) {
-    if (state_ == State::FINISHED) {
+    if (state_ == State::FINISHED || state_ == State::ERROR) {
         state_ = State::ERROR;
-        return invalid_state_result();
-    }
-    if (state_ == State::ERROR) {
         return invalid_state_result();
     }
 
-    Result<std::vector<uint8_t>> decoded = run_transform(transform_, input_, true);
-    if (!decoded.ok()) {
+    std::vector<uint8_t> decoded;
+    try {
+        decoded = transform_(input_);
+    } catch (const std::exception&) {
         state_ = State::ERROR;
-        return {decoded.status, 0};
+        return {StatusCode::ERR_CORRUPT, 0};
     }
-    if (decoded.value.size() > out.size) {
+
+    if (decoded.size() > MAX_OUTPUT_SIZE) {
+        state_ = State::ERROR;
+        return {StatusCode::ERR_SIZE_LIMIT, 0};
+    }
+    if (decoded.size() > out.size) {
         return {StatusCode::BUF_TOO_SMALL, 0};
     }
-    if (!decoded.value.empty()) {
-        std::copy(decoded.value.begin(), decoded.value.end(), out.data);
+    if (!decoded.empty()) {
+        std::copy(decoded.begin(), decoded.end(), out.data);
     }
     state_ = State::FINISHED;
-    return {StatusCode::OK, decoded.value.size()};
+    return {StatusCode::OK, decoded.size()};
 }
 
 void BufferDecoder::reset() noexcept {
@@ -285,7 +210,7 @@ State BufferDecoder::state() const noexcept {
 }
 
 Result<std::vector<uint8_t>> encode_buffer(Encoder& encoder, const std::vector<uint8_t>& input) {
-    if (input.size() > kMaxInputSize) {
+    if (input.size() > MAX_INPUT_SIZE) {
         return {StatusCode::ERR_SIZE_LIMIT, {}};
     }
 
@@ -300,9 +225,10 @@ Result<std::vector<uint8_t>> encode_buffer(Encoder& encoder, const std::vector<u
     std::vector<uint8_t> out(initial_size);
     std::size_t total_written = 0;
 
-    Result<std::size_t> result = run_buffer_step(
-        out, total_written, limit,
-        [&](MutableByteView out_view) { return encoder.process({input.data(), input.size()}, out_view); });
+    Result<std::size_t> result =
+        run_buffer_step(out, total_written, limit, [&](MutableByteView out_view) {
+            return encoder.process({input.data(), input.size()}, out_view);
+        });
     if (!result.ok()) {
         return {result.status, {}};
     }
@@ -320,22 +246,23 @@ Result<std::vector<uint8_t>> encode_buffer(Encoder& encoder, const std::vector<u
 }
 
 Result<std::vector<uint8_t>> decode_buffer(Decoder& decoder, const std::vector<uint8_t>& input) {
-    if (input.size() > kMaxInputSize) {
+    if (input.size() > MAX_INPUT_SIZE) {
         return {StatusCode::ERR_SIZE_LIMIT, {}};
     }
 
     std::vector<uint8_t> out(input.size() + 1024);
     std::size_t total_written = 0;
 
-    Result<std::size_t> result = run_buffer_step(
-        out, total_written, kMaxOutputSize,
-        [&](MutableByteView out_view) { return decoder.process({input.data(), input.size()}, out_view); });
+    Result<std::size_t> result =
+        run_buffer_step(out, total_written, MAX_OUTPUT_SIZE, [&](MutableByteView out_view) {
+            return decoder.process({input.data(), input.size()}, out_view);
+        });
     if (!result.ok()) {
         return {result.status, {}};
     }
     total_written = result.value;
 
-    result = run_buffer_step(out, total_written, kMaxOutputSize,
+    result = run_buffer_step(out, total_written, MAX_OUTPUT_SIZE,
                              [&](MutableByteView out_view) { return decoder.finish(out_view); });
     if (!result.ok()) {
         return {result.status, {}};
@@ -346,32 +273,37 @@ Result<std::vector<uint8_t>> decode_buffer(Decoder& decoder, const std::vector<u
     return {StatusCode::OK, std::move(out)};
 }
 
-bool encode_file_via_buffer(FileTransform transform, const std::string& input_path,
+bool encode_file_via_buffer(BufferTransform transform, const std::string& input_path,
                             const std::string& output_path) {
-    Result<std::vector<uint8_t>> input = read_file(input_path, false);
-    if (!input.ok()) {
+    try {
+        std::vector<uint8_t> input = read_file(input_path);
+        if (input.size() > MAX_INPUT_SIZE) {
+            return false;
+        }
+        BufferEncoder encoder(transform);
+        Result<std::vector<uint8_t>> encoded = encode_buffer(encoder, input);
+        if (!encoded.ok()) {
+            return false;
+        }
+        return write_file(output_path, encoded.value);
+    } catch (const std::exception&) {
         return false;
     }
-    BufferEncoder encoder(transform);
-    Result<std::vector<uint8_t>> encoded = encode_buffer(encoder, input.value);
-    if (!encoded.ok()) {
-        return false;
-    }
-    return write_file(output_path, encoded.value);
 }
 
-bool decode_file_via_buffer(FileTransform transform, const std::string& input_path,
+bool decode_file_via_buffer(BufferTransform transform, const std::string& input_path,
                             const std::string& output_path) {
-    Result<std::vector<uint8_t>> input = read_file(input_path, false);
-    if (!input.ok()) {
+    try {
+        std::vector<uint8_t> input = read_file(input_path);
+        BufferDecoder decoder(transform);
+        Result<std::vector<uint8_t>> decoded = decode_buffer(decoder, input);
+        if (!decoded.ok()) {
+            return false;
+        }
+        return write_file(output_path, decoded.value);
+    } catch (const std::exception&) {
         return false;
     }
-    BufferDecoder decoder(transform);
-    Result<std::vector<uint8_t>> decoded = decode_buffer(decoder, input.value);
-    if (!decoded.ok()) {
-        return false;
-    }
-    return write_file(output_path, decoded.value);
 }
 
 }  // namespace compresskit

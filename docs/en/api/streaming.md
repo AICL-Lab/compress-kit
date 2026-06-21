@@ -1,9 +1,11 @@
 # Streaming API
 
-CompressKit now exposes the same two-layer in-memory API across C++17, Go, and Rust:
+CompressKit exposes a two-layer in-memory API in C++17:
 
 - A stateful streaming layer with `process`, `flush`, `finish`, and `reset`
 - A stateless buffer layer that wraps the full lifecycle for one-shot byte-slice operations
+
+The streaming layer operates as an in-memory transform: input bytes are processed through the algorithm core and produced as output bytes in a single pass. The buffer layer is a thin convenience wrapper over the same streaming lifecycle.
 
 ## Lifecycle
 
@@ -43,38 +45,6 @@ new decoder -> process(input) -> finish()
 
 It exists to keep file-to-file paths and in-memory callers on the same implementation path.
 
-## Go Example
-
-```go
-import (
-    "github.com/LessUp/compress-kit/algorithms/shared/go/codec"
-    "huffman"
-)
-
-func encode(data []byte) ([]byte, error) {
-    return codec.EncodeBuffer(huffman.NewStreamingEncoder(), data)
-}
-
-func decode(encoded []byte) ([]byte, error) {
-    return codec.DecodeBuffer(huffman.NewStreamingDecoder(), encoded)
-}
-```
-
-## Rust Example
-
-```rust
-use compresskit_codec::codec::{decode_buffer, encode_buffer};
-use huffman::{StreamingDecoder, StreamingEncoder};
-
-fn roundtrip(input: &[u8]) -> Result<Vec<u8>, compresskit_codec::codec::CodecError> {
-    let mut encoder = StreamingEncoder::new();
-    let encoded = encode_buffer(&mut encoder, input)?;
-
-    let mut decoder = StreamingDecoder::new();
-    decode_buffer(&mut decoder, &encoded)
-}
-```
-
 ## C++ Example
 
 ```cpp
@@ -91,4 +61,4 @@ std::vector<uint8_t> encode(const std::vector<uint8_t>& input) {
 
 ## Verification
 
-`make test` now runs shared streaming-layer tests for C++, Go, and Rust before the algorithm-specific suites.
+`make test` runs the shared streaming-layer tests for C++ before the algorithm-specific suites.

@@ -64,47 +64,60 @@ $$
 
 ### 树构建算法
 
-```go
-func buildHuffmanTree(freqs map[byte]int) *Node {
-    // 使用最小堆
-    h := &minHeap{}
-    for sym, freq := range freqs {
-        heap.Push(h, &Node{Symbol: sym, Freq: freq})
+```cpp
+struct Node {
+    uint8_t symbol;
+    uint32_t freq;
+    Node* left = nullptr;
+    Node* right = nullptr;
+};
+
+struct Compare {
+    bool operator()(Node* a, Node* b) {
+        if (a->freq == b->freq) return a->symbol > b->symbol;
+        return a->freq > b->freq;
     }
-    
-    // 合并直到只剩一个节点
-    for h.Len() > 1 {
-        left := heap.Pop(h).(*Node)
-        right := heap.Pop(h).(*Node)
-        parent := &Node{
-            Freq:  left.Freq + right.Freq,
-            Left:  left,
-            Right: right,
+};
+
+Node* buildHuffmanTree(const std::vector<uint32_t>& freqs) {
+    // 使用最小堆（priority_queue 默认是最大堆，用 > 实现最小堆）
+    std::priority_queue<Node*, std::vector<Node*>, Compare> pq;
+    for (int sym = 0; sym < 256; ++sym) {
+        if (freqs[sym] > 0) {
+            pq.push(new Node{static_cast<uint8_t>(sym), freqs[sym]});
         }
-        heap.Push(h, parent)
     }
-    
-    return heap.Pop(h).(*Node)
+
+    // 合并直到只剩一个节点
+    while (pq.size() > 1) {
+        Node* left = pq.top(); pq.pop();
+        Node* right = pq.top(); pq.pop();
+        Node* parent = new Node{0, left->freq + right->freq, left, right};
+        pq.push(parent);
+    }
+
+    return pq.top();
 }
 ```
 
 ### 码表生成
 
-```go
-func generateCodes(root *Node, code string, codes map[byte]string) {
-    if root == nil {
-        return
+```cpp
+void generateCodes(Node* root, const std::string& code,
+                   std::array<std::string, 256>& codes) {
+    if (root == nullptr) {
+        return;
     }
-    
-    if root.Left == nil && root.Right == nil {
+
+    if (root->left == nullptr && root->right == nullptr) {
         // 叶节点：保存编码
-        codes[root.Symbol] = code
-        return
+        codes[root->symbol] = code;
+        return;
     }
-    
+
     // 递归生成左右子树编码
-    generateCodes(root.Left, code+"0", codes)
-    generateCodes(root.Right, code+"1", codes)
+    generateCodes(root->left, code + "0", codes);
+    generateCodes(root->right, code + "1", codes);
 }
 ```
 
@@ -119,16 +132,16 @@ func generateCodes(root *Node, code string, codes map[byte]string) {
 
 ### 确定性保证
 
-为确保跨语言二进制兼容，频率相同时按符号值排序：
+为确保确定性二进制输出，频率相同时按符号值排序：
 
-```go
-// 比较函数
-func (h *minHeap) Less(i, j int) bool {
-    if h.nodes[i].Freq == h.nodes[j].Freq {
-        return h.nodes[i].Symbol < h.nodes[j].Symbol
+```cpp
+// 比较函数：频率相同时按符号值排序，保证确定性输出
+struct Compare {
+    bool operator()(Node* a, Node* b) {
+        if (a->freq == b->freq) return a->symbol > b->symbol;
+        return a->freq > b->freq;
     }
-    return h.nodes[i].Freq < h.nodes[j].Freq
-}
+};
 ```
 
 ## 二进制格式
@@ -162,11 +175,9 @@ CompressKit 的 Huffman 编码输出格式：
 
 ### 实测性能
 
-| 语言 | 编码速度 | 解码速度 | 内存占用 |
+| 实现 | 编码速度 | 解码速度 | 内存占用 |
 |------|---------|---------|----------|
-| Rust | 387 MB/s | 456 MB/s | 1.5 MB |
 | C++ | 312 MB/s | 398 MB/s | 1.8 MB |
-| Go | 245 MB/s | 312 MB/s | 2.1 MB |
 
 ## 与其他算法对比
 

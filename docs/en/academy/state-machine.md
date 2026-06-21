@@ -87,19 +87,17 @@ stateDiagram-v2
 
 ### Error Types
 
-```go
-type ErrorKind int
-
-const (
-    KindBufTooSmall     // Output buffer insufficient
-    KindTruncated       // Input stream ended prematurely
-    KindCorrupt         // Data corrupted or checksum failed
-    KindInvalidState    // Current state doesn't support this operation
-    KindSizeLimit       // Exceeded safety limits
-    KindVersionUnsupported  // Unsupported version
-    KindUnknownAlgo     // Unknown algorithm identifier
-    KindIO              // I/O error
-)
+```cpp
+enum class ErrorKind {
+    BufTooSmall,          // Output buffer insufficient
+    Truncated,            // Input stream ended prematurely
+    Corrupt,              // Data corrupted or checksum failed
+    InvalidState,         // Current state doesn't support this operation
+    SizeLimit,            // Exceeded safety limits
+    VersionUnsupported,   // Unsupported version
+    UnknownAlgo,          // Unknown algorithm identifier
+    IO,                   // I/O error
+};
 ```
 
 ### Transactional Guarantee
@@ -112,17 +110,17 @@ This means the caller can:
 2. Retry the operation
 3. No need to reset the entire encoder
 
-```go
+```cpp
 // Usage example
-output := make([]byte, initialSize)
-for {
-    n, err := encoder.Process(input)
-    if err == ErrBufTooSmall {
+std::vector<uint8_t> output(initialSize);
+while (true) {
+    auto result = encoder.process(input);
+    if (result.error == ErrorKind::BufTooSmall) {
         // State unchanged, safe to retry
-        output = make([]byte, len(output)*2)
-        continue
+        output.resize(output.size() * 2);
+        continue;
     }
-    break
+    break;
 }
 ```
 
@@ -143,18 +141,7 @@ To simplify usage, CompressKit provides a Buffer Layer:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## Cross-Language Consistency
-
-State machine design is completely consistent across three languages:
-
-| Language | State Definition | Transition Rules | Error Codes |
-|----------|-----------------|------------------|-------------|
-| Go | ✅ Same | ✅ Same | ✅ Same |
-| Rust | ✅ Same | ✅ Same | ✅ Same |
-| C++ | ✅ Same | ✅ Same | ✅ Same |
-
 ## Further Reading
 
 - [Streaming API Reference](/en/api/streaming) - Complete API documentation
 - [Architecture Design](/en/architecture/) - Binary protocol design
-- [Cross-Language Testing](/en/testing/cross-language) - Conformance verification

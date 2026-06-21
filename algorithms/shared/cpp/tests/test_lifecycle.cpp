@@ -19,12 +19,14 @@ struct AlgorithmCase {
 struct ScriptedEncoder final : compresskit::Encoder {
     int finish_calls = 0;
 
-    compresskit::Result<std::size_t> process(compresskit::ByteView, compresskit::MutableByteView) override {
+    compresskit::Result<std::size_t> process(compresskit::ByteView,
+                                             compresskit::MutableByteView) override {
         return {compresskit::StatusCode::OK, 0};
     }
 
     compresskit::Result<std::size_t> flush(compresskit::MutableByteView) override {
-        // encode_buffer does not call flush; this only satisfies the interface in the scripted test double.
+        // encode_buffer does not call flush; this only satisfies the interface in the scripted test
+        // double.
         return {compresskit::StatusCode::OK, 0};
     }
 
@@ -45,12 +47,14 @@ struct ScriptedEncoder final : compresskit::Encoder {
 struct ScriptedDecoder final : compresskit::Decoder {
     int finish_calls = 0;
 
-    compresskit::Result<std::size_t> process(compresskit::ByteView, compresskit::MutableByteView) override {
+    compresskit::Result<std::size_t> process(compresskit::ByteView,
+                                             compresskit::MutableByteView) override {
         return {compresskit::StatusCode::OK, 0};
     }
 
     compresskit::Result<std::size_t> flush(compresskit::MutableByteView) override {
-        // decode_buffer does not call flush; this only satisfies the interface in the scripted test double.
+        // decode_buffer does not call flush; this only satisfies the interface in the scripted test
+        // double.
         return {compresskit::StatusCode::OK, 0};
     }
 
@@ -76,14 +80,17 @@ void test_roundtrip_and_lifecycle(const AlgorithmCase& algorithm) {
 
     auto process_one = encoder.process({input.data(), 4}, {nullptr, 0});
     assert(process_one.status == compresskit::StatusCode::OK);
+    assert(process_one.value == 0);
     assert(encoder.state() == compresskit::State::STREAMING);
 
     auto flush = encoder.flush({nullptr, 0});
     assert(flush.status == compresskit::StatusCode::OK);
+    assert(flush.value == 0);
     assert(encoder.state() == compresskit::State::FLUSHING);
 
     auto process_two = encoder.process({input.data() + 4, input.size() - 4}, {nullptr, 0});
     assert(process_two.status == compresskit::StatusCode::OK);
+    assert(process_two.value == 0);
     assert(encoder.state() == compresskit::State::STREAMING);
 
     std::vector<uint8_t> tiny(1);
@@ -94,11 +101,13 @@ void test_roundtrip_and_lifecycle(const AlgorithmCase& algorithm) {
     std::vector<uint8_t> encoded(4096);
     auto finish = encoder.finish({encoded.data(), encoded.size()});
     assert(finish.status == compresskit::StatusCode::OK);
+    assert(finish.value > 0);
     assert(encoder.state() == compresskit::State::FINISHED);
     encoded.resize(finish.value);
 
     auto invalid = encoder.process({input.data(), input.size()}, {nullptr, 0});
     assert(invalid.status == compresskit::StatusCode::ERR_INVALID_STATE);
+    assert(invalid.value == 0);
     assert(encoder.state() == compresskit::State::ERROR);
 
     encoder.reset();
@@ -135,8 +144,7 @@ void test_write_frequency_table_uses_little_endian_layout() {
     std::ostringstream out(std::ios::binary);
     const std::vector<uint32_t> freq = {0x78563412u, 0x01020304u};
 
-    const bool ok = compresskit::write_frequency_table(out, freq);
-    assert(ok);
+    assert(compresskit::write_frequency_table(out, freq));
 
     const std::string bytes = out.str();
     const std::string expected(
@@ -158,7 +166,6 @@ void test_read_frequency_table_decodes_little_endian_values() {
     uint32_t actual_count = 0;
 
     const auto status = compresskit::read_frequency_table(in, freq, 2, &actual_count);
-
     assert(status == compresskit::FrequencyTableReadStatus::OK);
     assert(actual_count == 2);
     assert((freq == std::vector<uint32_t>{0x78563412u, 0x01020304u}));

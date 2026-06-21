@@ -1,402 +1,289 @@
 #include <cstdint>
-#include <fstream>
-#include <iostream>
-#include <string>
+#include <cstring>
+#include <stdexcept>
 #include <vector>
 
 #include "compresskit/buffer_api.hpp"
+#include "compresskit/constants.hpp"
 #include "compresskit/frequency_table.hpp"
 
+// Arithmetic coding (32-bit state, static model).
+// Format: "AENC" + frequency table (LE) + bitstream (MSB-first).
+
+namespace {
+
+constexpr uint32_t MAX_TOTAL = 1u << 24;
+constexpr uint64_t STATE_BITS = 32;
+constexpr uint64_t FULL_RANGE = 1ull << STATE_BITS;
+constexpr uint64_t HALF_RANGE = FULL_RANGE >> 1;
+constexpr uint64_t FIRST_QUARTER = HALF_RANGE >> 1;
+constexpr uint64_t THIRD_QUARTER = FIRST_QUARTER * 3;
+
 class BitWriter {
-   public:
-    explicit BitWriter(std::ostream& s) : stream(s), buffer(0), bits_in_buffer(0) {}
-
+public:
     void write_bit(int bit) {
-        buffer = static_cast<uint8_t>((buffer << 1) | (bit & 1));
-        bits_in_buffer++;
-        if (bits_in_buffer == 8) {
-            stream.put(static_cast<char>(buffer));
-            bits_in_buffer = 0;
-            buffer = 0;
+        buffer_ = static_cast<uint8_t>((buffer_ << 1) | (bit & 1));
+        if (++bits_ == 8) {
+            out_.push_back(buffer_);
+            bits_ = 0;
+            buffer_ = 0;
         }
     }
-
     void flush() {
-        if (bits_in_buffer > 0) {
-            buffer <<= (8 - bits_in_buffer);
-            stream.put(static_cast<char>(buffer));
-            bits_in_buffer = 0;
-            buffer = 0;
+        if (bits_ > 0) {
+            buffer_ = static_cast<uint8_t>(buffer_ << (8 - bits_));
+            out_.push_back(buffer_);
+            bits_ = 0;
+            buffer_ = 0;
         }
     }
+    std::vector<uint8_t> finish() {
+        flush();
+        return std::move(out_);
+    }
 
-   private:
-    std::ostream& stream;
-    uint8_t buffer;
-    int bits_in_buffer;
+private:
+    std::vector<uint8_t> out_;
+    uint8_t buffer_ = 0;
+    int bits_ = 0;
 };
 
 class BitReader {
-   public:
-    explicit BitReader(std::istream& s)
-        : stream(s), current_byte(0), bits_remaining(0), reached_eof(false) {}
-
+public:
+    explicit BitReader(const std::vector<uint8_t>& data) : data_(data) {}
     int read_bit() {
-        if (bits_remaining == 0) {
-            int c = stream.get();
-            if (c == EOF) {
-                reached_eof = true;
-                return 0;
-            }
-            current_byte = static_cast<uint8_t>(c);
-            bits_remaining = 8;
+        if (byte_pos_ >= data_.size()) {
+            return 0;
         }
-        bits_remaining--;
-        return (current_byte >> bits_remaining) & 1;
+        int bit = (data_[byte_pos_] >> (7 - bit_pos_)) & 1;
+        if (++bit_pos_ == 8) {
+            ++byte_pos_;
+            bit_pos_ = 0;
+        }
+        return bit;
     }
+    bool eof() const { return byte_pos_ >= data_.size(); }
 
-    bool eof() const { return reached_eof; }
-
-   private:
-    std::istream& stream;
-    uint8_t current_byte;
-    int bits_remaining;
-    bool reached_eof;
+private:
+    const std::vector<uint8_t>& data_;
+    std::size_t byte_pos_ = 0;
+    int bit_pos_ = 0;
 };
 
 class ArithmeticEncoder {
-   public:
+public:
     explicit ArithmeticEncoder(BitWriter& w)
-        : writer(w), low(0), high(FULL_RANGE - 1), pending_bits(0) {}
+        : writer_(w), low_(0), high_(FULL_RANGE - 1), pending_(0) {}
 
     void encode_symbol(uint32_t symbol, const std::vector<uint32_t>& cumulative) {
-        uint64_t range = high - low + 1;
+        uint64_t range = high_ - low_ + 1;
         uint64_t total = cumulative.back();
         uint64_t sym_low = cumulative[symbol];
         uint64_t sym_high = cumulative[symbol + 1];
-
-        high = low + (range * sym_high) / total - 1;
-        low = low + (range * sym_low) / total;
-
+        high_ = low_ + (range * sym_high) / total - 1;
+        low_ = low_ + (range * sym_low) / total;
         for (;;) {
-            if (high < HALF_RANGE) {
+            if (high_ < HALF_RANGE) {
                 output_bit(0);
-            } else if (low >= HALF_RANGE) {
+            } else if (low_ >= HALF_RANGE) {
                 output_bit(1);
-                low -= HALF_RANGE;
-                high -= HALF_RANGE;
-            } else if (low >= FIRST_QUARTER && high < THIRD_QUARTER) {
-                pending_bits++;
-                low -= FIRST_QUARTER;
-                high -= FIRST_QUARTER;
+                low_ -= HALF_RANGE;
+                high_ -= HALF_RANGE;
+            } else if (low_ >= FIRST_QUARTER && high_ < THIRD_QUARTER) {
+                ++pending_;
+                low_ -= FIRST_QUARTER;
+                high_ -= FIRST_QUARTER;
             } else {
                 break;
             }
-            low <<= 1;
-            high = (high << 1) | 1;
+            low_ <<= 1;
+            high_ = (high_ << 1) | 1;
         }
     }
 
     void finish() {
-        pending_bits++;
-        if (low < FIRST_QUARTER) {
-            output_bit(0);
-        } else {
-            output_bit(1);
-        }
-        writer.flush();
+        ++pending_;
+        output_bit(low_ < FIRST_QUARTER ? 0 : 1);
+        writer_.flush();
     }
 
-   private:
-    static constexpr uint64_t STATE_BITS = 32;
-    static constexpr uint64_t FULL_RANGE = (static_cast<uint64_t>(1) << STATE_BITS);
-    static constexpr uint64_t HALF_RANGE = FULL_RANGE >> 1;
-    static constexpr uint64_t FIRST_QUARTER = HALF_RANGE >> 1;
-    static constexpr uint64_t THIRD_QUARTER = FIRST_QUARTER * 3;
-
-    BitWriter& writer;
-    uint64_t low;
-    uint64_t high;
-    uint64_t pending_bits;
-
+private:
     void output_bit(int bit) {
-        writer.write_bit(bit);
+        writer_.write_bit(bit);
         int complement = bit ^ 1;
-        while (pending_bits > 0) {
-            writer.write_bit(complement);
-            pending_bits--;
+        while (pending_ > 0) {
+            writer_.write_bit(complement);
+            --pending_;
         }
     }
+    BitWriter& writer_;
+    uint64_t low_, high_, pending_;
 };
 
 class ArithmeticDecoder {
-   public:
-    explicit ArithmeticDecoder(BitReader& r) : reader(r), low(0), high(FULL_RANGE - 1), code(0) {
-        for (uint64_t i = 0; i < STATE_BITS; i++) {
-            code = (code << 1) | static_cast<uint64_t>(reader.read_bit());
+public:
+    explicit ArithmeticDecoder(BitReader& r)
+        : reader_(r), low_(0), high_(FULL_RANGE - 1), code_(0) {
+        for (uint64_t i = 0; i < STATE_BITS; ++i) {
+            code_ = (code_ << 1) | static_cast<uint64_t>(reader_.read_bit());
         }
     }
 
     uint32_t decode_symbol(const std::vector<uint32_t>& cumulative) {
-        uint64_t range = high - low + 1;
+        uint64_t range = high_ - low_ + 1;
         uint64_t total = cumulative.back();
-        uint64_t offset = code - low;
+        uint64_t offset = code_ - low_;
         uint64_t value = ((offset + 1) * total - 1) / range;
 
+        // Binary search for symbol (O(log N)).
         uint32_t lo = 0;
         uint32_t hi = static_cast<uint32_t>(cumulative.size() - 1);
         while (lo + 1 < hi) {
             uint32_t mid = lo + (hi - lo) / 2;
-            if (cumulative[mid] > value) {
+            if (static_cast<uint64_t>(cumulative[mid]) > value) {
                 hi = mid;
             } else {
                 lo = mid;
             }
         }
         uint32_t symbol = lo;
-
         uint64_t sym_low = cumulative[symbol];
         uint64_t sym_high = cumulative[symbol + 1];
-
-        high = low + (range * sym_high) / total - 1;
-        low = low + (range * sym_low) / total;
-
+        high_ = low_ + (range * sym_high) / total - 1;
+        low_ = low_ + (range * sym_low) / total;
         for (;;) {
-            if (high < HALF_RANGE) {
-            } else if (low >= HALF_RANGE) {
-                low -= HALF_RANGE;
-                high -= HALF_RANGE;
-                code -= HALF_RANGE;
-            } else if (low >= FIRST_QUARTER && high < THIRD_QUARTER) {
-                low -= FIRST_QUARTER;
-                high -= FIRST_QUARTER;
-                code -= FIRST_QUARTER;
+            if (high_ < HALF_RANGE) {
+            } else if (low_ >= HALF_RANGE) {
+                low_ -= HALF_RANGE;
+                high_ -= HALF_RANGE;
+                code_ -= HALF_RANGE;
+            } else if (low_ >= FIRST_QUARTER && high_ < THIRD_QUARTER) {
+                low_ -= FIRST_QUARTER;
+                high_ -= FIRST_QUARTER;
+                code_ -= FIRST_QUARTER;
             } else {
                 break;
             }
-            low <<= 1;
-            high = (high << 1) | 1;
-            code = (code << 1) | static_cast<uint64_t>(reader.read_bit());
+            low_ <<= 1;
+            high_ = (high_ << 1) | 1;
+            code_ = (code_ << 1) | static_cast<uint64_t>(reader_.read_bit());
         }
-
         return symbol;
     }
 
-   private:
-    static constexpr uint64_t STATE_BITS = 32;
-    static constexpr uint64_t FULL_RANGE = (static_cast<uint64_t>(1) << STATE_BITS);
-    static constexpr uint64_t HALF_RANGE = FULL_RANGE >> 1;
-    static constexpr uint64_t FIRST_QUARTER = HALF_RANGE >> 1;
-    static constexpr uint64_t THIRD_QUARTER = FIRST_QUARTER * 3;
-
-    BitReader& reader;
-    uint64_t low;
-    uint64_t high;
-    uint64_t code;
+private:
+    BitReader& reader_;
+    uint64_t low_, high_, code_;
 };
 
-static const uint32_t SYMBOL_LIMIT = 257;
-static const uint32_t EOF_SYMBOL = SYMBOL_LIMIT - 1;
-static const uint32_t MAX_TOTAL = 1u << 24;
-static const uint64_t MAX_INPUT_SIZE = 4ULL * 1024 * 1024 * 1024;  // 4 GiB max
-
-static void scale_frequencies(std::vector<uint32_t>& freq) {
-    uint64_t total = 0;
-    for (uint32_t f : freq) {
-        total += f;
-    }
-    if (total == 0) {
-        for (size_t i = 0; i < freq.size(); i++) {
-            freq[i] = 1;
-        }
-        return;
-    }
-    if (total <= MAX_TOTAL) {
-        return;
-    }
-    uint64_t new_total = 0;
-    for (size_t i = 0; i < freq.size(); i++) {
-        if (freq[i] == 0) {
-            continue;
-        }
-        uint64_t scaled = static_cast<uint64_t>(freq[i]) * MAX_TOTAL / total;
-        if (scaled == 0) {
-            scaled = 1;
-        }
-        freq[i] = static_cast<uint32_t>(scaled);
-        new_total += scaled;
-    }
-    if (new_total == 0) {
-        uint32_t base = MAX_TOTAL / static_cast<uint32_t>(freq.size());
-        if (base == 0) {
-            base = 1;
-        }
-        for (size_t i = 0; i < freq.size(); i++) {
-            freq[i] = base;
-        }
-    }
-}
-
-static std::vector<uint32_t> build_frequencies_from_file(const std::string& input_path) {
-    std::vector<uint32_t> freq(SYMBOL_LIMIT, 0);
-    std::ifstream in(input_path, std::ios::binary);
-    if (!in) {
-        return freq;
-    }
-    uint32_t overflow_symbol = 0;
-    const auto status = compresskit::accumulate_frequencies(in, freq, &overflow_symbol);
-    if (status == compresskit::FrequencyCountStatus::IO_ERROR) {
-        std::cerr << "Failed to read input file\n";
-        freq.clear();
-        return freq;
-    }
-    if (status == compresskit::FrequencyCountStatus::OVERFLOW) {
-        std::cerr << "Frequency overflow for symbol " << overflow_symbol << "\n";
-        freq.clear();
-        return freq;
-    }
-    freq[EOF_SYMBOL] = 1;
-    scale_frequencies(freq);
+std::vector<uint32_t> build_frequencies(const std::vector<uint8_t>& data) {
+    std::vector<uint32_t> freq = compresskit::count_frequencies(data);
+    freq[compresskit::EOF_SYMBOL] = 1;
+    compresskit::scale_frequencies(freq, MAX_TOTAL);
     return freq;
 }
 
-static std::vector<uint32_t> build_cumulative(const std::vector<uint32_t>& freq) {
-    std::vector<uint32_t> cumulative(freq.size() + 1, 0);
-    for (size_t i = 0; i < freq.size(); i++) {
-        cumulative[i + 1] = cumulative[i] + freq[i];
+void write_header(std::vector<uint8_t>& out, const std::vector<uint32_t>& freq) {
+    out.push_back(static_cast<uint8_t>(compresskit::ARITHMETIC_MAGIC[0]));
+    out.push_back(static_cast<uint8_t>(compresskit::ARITHMETIC_MAGIC[1]));
+    out.push_back(static_cast<uint8_t>(compresskit::ARITHMETIC_MAGIC[2]));
+    out.push_back(static_cast<uint8_t>(compresskit::ARITHMETIC_MAGIC[3]));
+    // Frequency table: count (u32 LE) + count × u32 LE.
+    auto push_u32 = [&](uint32_t v) {
+        out.push_back(static_cast<uint8_t>(v & 0xFFu));
+        out.push_back(static_cast<uint8_t>((v >> 8) & 0xFFu));
+        out.push_back(static_cast<uint8_t>((v >> 16) & 0xFFu));
+        out.push_back(static_cast<uint8_t>((v >> 24) & 0xFFu));
+    };
+    push_u32(static_cast<uint32_t>(freq.size()));
+    for (uint32_t v : freq) {
+        push_u32(v);
     }
-    if (cumulative.back() == 0) {
-        for (size_t i = 0; i < freq.size(); i++) {
-            cumulative[i + 1] = static_cast<uint32_t>(i + 1);
+}
+
+std::vector<uint32_t> read_frequencies(const std::vector<uint8_t>& input, std::size_t& pos) {
+    if (pos + 4 > input.size()) {
+        throw std::runtime_error("arithmetic: truncated frequency count");
+    }
+    uint32_t count = static_cast<uint32_t>(input[pos]) |
+                     (static_cast<uint32_t>(input[pos + 1]) << 8) |
+                     (static_cast<uint32_t>(input[pos + 2]) << 16) |
+                     (static_cast<uint32_t>(input[pos + 3]) << 24);
+    pos += 4;
+    if (count != compresskit::SYMBOL_LIMIT) {
+        throw std::runtime_error("arithmetic: bad frequency count");
+    }
+    std::vector<uint32_t> freq(count, 0);
+    for (uint32_t i = 0; i < count; ++i) {
+        if (pos + 4 > input.size()) {
+            throw std::runtime_error("arithmetic: truncated frequency entry");
         }
+        freq[i] = static_cast<uint32_t>(input[pos]) | (static_cast<uint32_t>(input[pos + 1]) << 8) |
+                  (static_cast<uint32_t>(input[pos + 2]) << 16) |
+                  (static_cast<uint32_t>(input[pos + 3]) << 24);
+        pos += 4;
     }
-    return cumulative;
+    return freq;
 }
 
-static void write_frequencies(std::ostream& out, const std::vector<uint32_t>& freq) {
-    compresskit::write_frequency_table(out, freq);
-}
+}  // namespace
 
-static bool read_frequencies(std::istream& in, std::vector<uint32_t>& freq) {
-    uint32_t count = 0;
-    const auto status = compresskit::read_frequency_table(in, freq, SYMBOL_LIMIT, &count);
-    if (status == compresskit::FrequencyTableReadStatus::TRUNCATED) {
-        std::cerr << "Failed to read frequency table\n";
-        return false;
+std::vector<uint8_t> arithmetic_encode_buffer(const std::vector<uint8_t>& input) {
+    if (input.size() > compresskit::MAX_INPUT_SIZE) {
+        throw std::runtime_error("arithmetic: input too large");
     }
-    if (status == compresskit::FrequencyTableReadStatus::BAD_COUNT) {
-        std::cerr << "Bad frequency table size: " << count << "\n";
-        return false;
-    }
-    return true;
-}
-
-static bool compress_file(const std::string& input_path, const std::string& output_path) {
-    // Check input file size to prevent frequency overflow
-    {
-        std::ifstream check(input_path, std::ios::binary | std::ios::ate);
-        if (check) {
-            auto size = check.tellg();
-            if (size > 0 && static_cast<uint64_t>(size) > MAX_INPUT_SIZE) {
-                std::cerr << "Input file too large (max " << MAX_INPUT_SIZE << " bytes)\n";
-                return false;
-            }
-        }
-    }
-    std::vector<uint32_t> freq = build_frequencies_from_file(input_path);
-    if (freq.empty()) {
-        return false;
-    }
-    std::vector<uint32_t> cumulative = build_cumulative(freq);
-
-    std::ifstream in(input_path, std::ios::binary);
-    if (!in) {
-        std::cerr << "Cannot open input file for reading\n";
-        return false;
-    }
-    std::ofstream out(output_path, std::ios::binary);
-    if (!out) {
-        std::cerr << "Cannot open output file for writing\n";
-        return false;
+    std::vector<uint32_t> freq = build_frequencies(input);
+    std::vector<uint32_t> cumulative = compresskit::build_cumulative(freq);
+    if (cumulative.empty()) {
+        throw std::runtime_error("arithmetic: empty frequency table");
     }
 
-    const char magic[4] = {'A', 'E', 'N', 'C'};
-    out.write(magic, sizeof(magic));
-    write_frequencies(out, freq);
+    std::vector<uint8_t> out;
+    write_header(out, freq);
 
-    BitWriter bit_writer(out);
-    ArithmeticEncoder encoder(bit_writer);
-
-    char c;
-    while (in.get(c)) {
-        uint32_t sym = static_cast<uint8_t>(c);
-        encoder.encode_symbol(sym, cumulative);
+    BitWriter writer;
+    ArithmeticEncoder encoder(writer);
+    for (uint8_t b : input) {
+        encoder.encode_symbol(static_cast<uint32_t>(b), cumulative);
     }
-    encoder.encode_symbol(EOF_SYMBOL, cumulative);
+    encoder.encode_symbol(compresskit::EOF_SYMBOL, cumulative);
     encoder.finish();
 
-    if (in.bad()) {
-        std::cerr << "Failed to read input file\n";
-        return false;
-    }
-    if (!out) {
-        std::cerr << "Failed to write output file\n";
-        return false;
-    }
-
-    return true;
+    std::vector<uint8_t> bits = writer.finish();
+    out.insert(out.end(), bits.begin(), bits.end());
+    return out;
 }
 
-static bool decompress_file(const std::string& input_path, const std::string& output_path) {
-    std::ifstream in(input_path, std::ios::binary);
-    if (!in) {
-        std::cerr << "Cannot open input file for reading\n";
-        return false;
+std::vector<uint8_t> arithmetic_decode_buffer(const std::vector<uint8_t>& input) {
+    if (input.size() < 4) {
+        throw std::runtime_error("arithmetic: input too short");
     }
-    char magic[4] = {};
-    in.read(magic, sizeof(magic));
-    if (!in || magic[0] != 'A' || magic[1] != 'E' || magic[2] != 'N' || magic[3] != 'C') {
-        std::cerr << "Invalid input file format\n";
-        return false;
+    if (std::memcmp(input.data(), compresskit::ARITHMETIC_MAGIC, 4) != 0) {
+        throw std::runtime_error("arithmetic: bad magic");
     }
-
-    std::vector<uint32_t> freq;
-    if (!read_frequencies(in, freq)) {
-        return false;
-    }
-    std::vector<uint32_t> cumulative = build_cumulative(freq);
-
-    std::ofstream out(output_path, std::ios::binary);
-    if (!out) {
-        std::cerr << "Cannot open output file for writing\n";
-        return false;
+    std::size_t pos = 4;
+    std::vector<uint32_t> freq = read_frequencies(input, pos);
+    std::vector<uint32_t> cumulative = compresskit::build_cumulative(freq);
+    if (cumulative.empty()) {
+        throw std::runtime_error("arithmetic: invalid frequency table");
     }
 
-    BitReader bit_reader(in);
-    ArithmeticDecoder decoder(bit_reader);
+    std::vector<uint8_t> payload(input.begin() + pos, input.end());
+    BitReader reader(payload);
+    ArithmeticDecoder decoder(reader);
 
+    std::vector<uint8_t> out;
     for (;;) {
         uint32_t sym = decoder.decode_symbol(cumulative);
-        if (sym == EOF_SYMBOL) {
+        if (sym == compresskit::EOF_SYMBOL) {
             break;
         }
-        unsigned char b = static_cast<unsigned char>(sym);
-        out.put(static_cast<char>(b));
-        if (!out) {
-            std::cerr << "Failed to write output file\n";
-            return false;
+        if (out.size() >= compresskit::MAX_OUTPUT_SIZE) {
+            throw std::runtime_error("arithmetic: output size limit exceeded");
         }
+        out.push_back(static_cast<uint8_t>(sym));
     }
-
-    return true;
-}
-
-bool arithmetic_encode_file(const std::string& input_path, const std::string& output_path) {
-    return compress_file(input_path, output_path);
-}
-
-bool arithmetic_decode_file(const std::string& input_path, const std::string& output_path) {
-    return decompress_file(input_path, output_path);
+    return out;
 }
 
 #ifndef COMPRESSKIT_NO_MAIN
@@ -405,10 +292,10 @@ bool arithmetic_decode_file(const std::string& input_path, const std::string& ou
 int main(int argc, char** argv) {
     compresskit::cli::Algorithm algo{
         [](const std::string& in, const std::string& out) {
-            return compresskit::encode_file_via_buffer(arithmetic_encode_file, in, out);
+            return compresskit::encode_file_via_buffer(arithmetic_encode_buffer, in, out);
         },
         [](const std::string& in, const std::string& out) {
-            return compresskit::decode_file_via_buffer(arithmetic_decode_file, in, out);
+            return compresskit::decode_file_via_buffer(arithmetic_decode_buffer, in, out);
         }};
     return compresskit::cli::run("arithmetic", algo, argc, argv);
 }

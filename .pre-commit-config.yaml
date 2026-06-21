@@ -1,9 +1,9 @@
-# Pre-commit hooks for encoding project
+# Pre-commit hooks for CompressKit
 # Install: pip install pre-commit && pre-commit install
 # Run manually: pre-commit run --all-files
 
 repos:
-  # General checks (consolidated)
+  # General checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
@@ -21,26 +21,7 @@ repos:
     rev: v18.1.1
     hooks:
       - id: clang-format
-        files: \.(cpp|h)$
-
-  # Go formatting and linting
-  - repo: https://github.com/TekWizely/pre-commit-golang
-    rev: v1.0.0-rc.1
-    hooks:
-      - id: go-fmt
-        files: \.go$
-      - id: go-vet
-        files: \.go$
-
-  # Rust formatting and linting (uses existing .clippy.toml)
-  - repo: https://github.com/doublify/pre-commit-rust
-    rev: v1.0
-    hooks:
-      - id: fmt
-        files: \.rs$
-        args: ['--check']
-      - id: clippy
-        files: \.rs$
+        files: \.(cpp|h|hpp)$
 
   # Python formatting
   - repo: https://github.com/psf/black

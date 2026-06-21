@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['cpp', 'go', 'rust']
+        language: ['cpp']
 
     steps:
       - name: Checkout code
@@ -39,22 +39,8 @@ jobs:
       - name: Build C++ (for C++ analysis)
         if: matrix.language == 'cpp'
         run: |
-          cd algorithms/huffman/cpp && g++ -std=c++17 -O2 -I../../shared/cpp/include main.cpp -o huffman_cpp
-          cd ../../arithmetic/cpp && g++ -std=c++17 -O2 -I../../shared/cpp/include main.cpp -o arithmetic_cpp
-          cd ../../range/cpp && g++ -std=c++17 -O2 -I../../shared/cpp/include main.cpp -o rangecoder_cpp
-          cd ../../rle/cpp && g++ -std=c++17 -O2 -I../../shared/cpp/include main.cpp -o rle_cpp
-
-      - name: Setup Rust (for Rust analysis)
-        if: matrix.language == 'rust'
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Build Rust (for Rust analysis)
-        if: matrix.language == 'rust'
-        run: |
-          cargo build --manifest-path algorithms/huffman/rust/Cargo.toml --bin huffman_rust
-          cargo build --manifest-path algorithms/arithmetic/rust/Cargo.toml --bin arithmetic_rust
-          cargo build --manifest-path algorithms/range/rust/Cargo.toml
-          cargo build --manifest-path algorithms/rle/rust/Cargo.toml --bin rle_rust
+          cmake -S . -B build
+          cmake --build build
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3

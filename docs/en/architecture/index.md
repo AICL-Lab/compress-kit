@@ -5,7 +5,7 @@ description: CompressKit layered architecture and module design
 
 # System Architecture Design
 
-CompressKit employs a clear layered architecture ensuring code maintainability, testability, and cross-language consistency.
+CompressKit employs a clear layered architecture ensuring code maintainability, testability, and a consistent in-memory contract.
 
 ## Architecture Overview
 
@@ -65,11 +65,11 @@ graph TB
 
 ### 1. CLI Layer
 
-Unified command-line entry supporting all algorithms and languages:
+Unified command-line entry supporting all algorithms:
 
 ```bash
-compress-kit encode --algo huffman --lang go input.bin output.bin
-compress-kit decode --algo huffman --lang rust output.bin decoded.bin
+./build/huffman_cpp encode input.bin output.bin
+./build/huffman_cpp decode output.bin decoded.bin
 ```
 
 **Design highlight**: 94% boilerplate reduction through unified launcher.
@@ -78,16 +78,10 @@ compress-kit decode --algo huffman --lang rust output.bin decoded.bin
 
 Stateless convenience wrapper for simple use cases:
 
-```go
-// Go example
-encoder := huffman.NewBufferedEncoder()
-output, err := encoder.Encode(input)
-```
-
-```rust
-// Rust example
-let encoder = huffman::BufferedEncoder::new();
-let output = encoder.encode(&input)?;
+```cpp
+// C++ example
+auto encoder = compresskit::make_huffman_encoder();
+auto output = compresskit::encode_buffer(encoder, input);
 ```
 
 **Features**:
@@ -99,16 +93,16 @@ let output = encoder.encode(&input)?;
 
 Core state machine implementation supporting incremental processing:
 
-```go
-encoder := huffman.NewStreamingEncoder()
+```cpp
+auto encoder = compresskit::make_huffman_encoder();
 
 // Incremental processing
-encoder.Process(chunk1)
-encoder.Process(chunk2)
-encoder.Process(chunk3)
+encoder->process(chunk1);
+encoder->process(chunk2);
+encoder->process(chunk3);
 
 // Finish and get result
-output, err := encoder.Finish()
+auto output = encoder->finish();
 ```
 
 **Features**:
@@ -122,10 +116,10 @@ Implementations of four compression algorithms:
 
 | Algorithm | File | Core Functions |
 |-----------|------|----------------|
-| Huffman | `huffman/encode.go` | `encodeBlock()`, `buildTree()` |
-| Arithmetic | `arithmetic/encode.go` | `encodeSymbol()`, `normalize()` |
-| Range | `range/encode.go` | `encodeSymbol()`, `shiftBytes()` |
-| RLE | `rle/encode.go` | `encodeRun()` |
+| Huffman | `huffman/main.cpp` | `encodeBlock()`, `buildTree()` |
+| Arithmetic | `arithmetic/main.cpp` | `encodeSymbol()`, `normalize()` |
+| Range | `range/main.cpp` | `encodeSymbol()`, `shiftBytes()` |
+| RLE | `rle/main.cpp` | `encodeRun()` |
 
 ### 5. Shared Utilities
 
@@ -148,8 +142,6 @@ Cross-algorithm shared infrastructure:
 ```
 
 ### Frequency Table Format
-
-**Cross-language unified**:
 
 - Order: symbols 0-255 (byte values), symbol 256 (EOF)
 - Byte order: Little-Endian
@@ -181,4 +173,3 @@ Hidden complexity:
 ## Further Reading
 
 - [Streaming API](/en/api/streaming) - 5-state FSM details and complete API documentation
-- [Cross-Language Testing](/en/testing/cross-language) - Conformance verification

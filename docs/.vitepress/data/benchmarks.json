@@ -14,28 +14,6 @@
       "throughput": "low"
     },
     {
-      "algorithm": "huffman",
-      "language": "go",
-      "dataset": "textlike_10MiB",
-      "encodeTime": 471.5,
-      "decodeTime": 2671.3,
-      "encodeSpeed": 21.2,
-      "decodeSpeed": 3.7,
-      "compressionRatio": 0.746,
-      "throughput": "low"
-    },
-    {
-      "algorithm": "huffman",
-      "language": "rust",
-      "dataset": "textlike_10MiB",
-      "encodeTime": 929.4,
-      "decodeTime": 1264.7,
-      "encodeSpeed": 10.8,
-      "decodeSpeed": 7.9,
-      "compressionRatio": 0.746,
-      "throughput": "low"
-    },
-    {
       "algorithm": "arithmetic",
       "language": "cpp",
       "dataset": "textlike_10MiB",
@@ -43,28 +21,6 @@
       "decodeTime": 3785.4,
       "encodeSpeed": 6.7,
       "decodeSpeed": 2.6,
-      "compressionRatio": 0.743,
-      "throughput": "low"
-    },
-    {
-      "algorithm": "arithmetic",
-      "language": "go",
-      "dataset": "textlike_10MiB",
-      "encodeTime": 1789.5,
-      "decodeTime": 3990.7,
-      "encodeSpeed": 5.6,
-      "decodeSpeed": 2.5,
-      "compressionRatio": 0.743,
-      "throughput": "low"
-    },
-    {
-      "algorithm": "arithmetic",
-      "language": "rust",
-      "dataset": "textlike_10MiB",
-      "encodeTime": 1270.6,
-      "decodeTime": 5127.7,
-      "encodeSpeed": 7.9,
-      "decodeSpeed": 2.0,
       "compressionRatio": 0.743,
       "throughput": "low"
     },
@@ -80,28 +36,6 @@
       "throughput": "low"
     },
     {
-      "algorithm": "range",
-      "language": "go",
-      "dataset": "small_dictionary_like",
-      "encodeTime": 7.6,
-      "decodeTime": 6.0,
-      "encodeSpeed": 1.1,
-      "decodeSpeed": 1.4,
-      "compressionRatio": 0.615,
-      "throughput": "low"
-    },
-    {
-      "algorithm": "range",
-      "language": "rust",
-      "dataset": "small_dictionary_like",
-      "encodeTime": 3.0,
-      "decodeTime": 4.7,
-      "encodeSpeed": 2.8,
-      "decodeSpeed": 1.8,
-      "compressionRatio": 0.615,
-      "throughput": "low"
-    },
-    {
       "algorithm": "rle",
       "language": "cpp",
       "dataset": "repetitive_10MiB",
@@ -111,28 +45,6 @@
       "decodeSpeed": 17.3,
       "compressionRatio": 0.002,
       "throughput": "medium"
-    },
-    {
-      "algorithm": "rle",
-      "language": "go",
-      "dataset": "repetitive_10MiB",
-      "encodeTime": 102.5,
-      "decodeTime": 435.3,
-      "encodeSpeed": 97.6,
-      "decodeSpeed": 23.0,
-      "compressionRatio": 0.002,
-      "throughput": "medium"
-    },
-    {
-      "algorithm": "rle",
-      "language": "rust",
-      "dataset": "repetitive_10MiB",
-      "encodeTime": 65.3,
-      "decodeTime": 226.4,
-      "encodeSpeed": 153.1,
-      "decodeSpeed": 44.2,
-      "compressionRatio": 0.002,
-      "throughput": "high"
     }
   ]
 }

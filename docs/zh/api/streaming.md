@@ -1,9 +1,11 @@
 # Streaming API
 
-CompressKit 现在在 C++17、Go 和 Rust 三种语言里都提供一致的两层内存 API：
+CompressKit 在 C++17 中提供两层内存 API：
 
 - 有状态的 streaming 层：`process`、`flush`、`finish`、`reset`
 - 无状态的 buffer 层：封装完整生命周期，适合一次性处理字节切片
+
+streaming 层以内存 transform 方式工作：输入字节经过算法核心处理后一次性产出输出字节。buffer 层只是对同一套 streaming 生命周期的薄封装。
 
 ## 生命周期
 
@@ -43,38 +45,6 @@ new decoder -> process(input) -> finish()
 
 这样可以让 file-to-file 路径与内存调用路径共用同一套实现。
 
-## Go 示例
-
-```go
-import (
-    "github.com/LessUp/compress-kit/algorithms/shared/go/codec"
-    "huffman"
-)
-
-func encode(data []byte) ([]byte, error) {
-    return codec.EncodeBuffer(huffman.NewStreamingEncoder(), data)
-}
-
-func decode(encoded []byte) ([]byte, error) {
-    return codec.DecodeBuffer(huffman.NewStreamingDecoder(), encoded)
-}
-```
-
-## Rust 示例
-
-```rust
-use compresskit_codec::codec::{decode_buffer, encode_buffer};
-use huffman::{StreamingDecoder, StreamingEncoder};
-
-fn roundtrip(input: &[u8]) -> Result<Vec<u8>, compresskit_codec::codec::CodecError> {
-    let mut encoder = StreamingEncoder::new();
-    let encoded = encode_buffer(&mut encoder, input)?;
-
-    let mut decoder = StreamingDecoder::new();
-    decode_buffer(&mut decoder, &encoded)
-}
-```
-
 ## C++ 示例
 
 ```cpp
@@ -91,4 +61,4 @@ std::vector<uint8_t> encode(const std::vector<uint8_t>& input) {
 
 ## 验证方式
 
-`make test` 现在会先运行 C++、Go、Rust 三种语言的共享 streaming 层测试，再运行各算法测试套件。
+`make test` 会先运行 C++ 的共享 streaming 层测试，再运行各算法测试套件。

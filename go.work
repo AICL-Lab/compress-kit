@@ -1,9 +1,0 @@
-go 1.21
-
-use (
-	./algorithms/arithmetic/go
-	./algorithms/huffman/go
-	./algorithms/range/go
-	./algorithms/rle/go
-	./algorithms/shared/go
-)

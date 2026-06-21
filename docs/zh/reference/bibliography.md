@@ -109,7 +109,7 @@ description: 压缩算法相关的经典论文、教材和开源项目
 ```bibtex
 @misc{compresskit2026,
   author = {CompressKit Team},
-  title = {CompressKit: Cross-Language Lossless Compression Algorithms},
+  title = {CompressKit: C++17 Lossless Compression Algorithms},
   year = {2026},
   publisher = {GitHub},
   url = {https://github.com/LessUp/compress-kit}

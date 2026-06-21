@@ -89,66 +89,63 @@ stateDiagram-v2
 └─────────────┴────────────────────────────────────────────────────────────┘
 ```
 
-### Go 实现
+### C++ 实现
 
-```go
-type State int
+```cpp
+enum class State {
+    Ready,
+    Streaming,
+    Flushing,
+    Finished,
+    Error,
+};
 
-const (
-    StateReady State = iota
-    StateStreaming
-    StateFlushing
-    StateFinished
-    StateError
-)
-
-func (e *Encoder) Process(input []byte) error {
-    if e.state == StateFinished || e.state == StateError {
-        e.state = StateError
-        return ErrInvalidState
-    }
-    
-    // 处理数据...
-    e.state = StateStreaming
-    return nil
-}
-
-func (e *Encoder) Finish() ([]byte, error) {
-    if e.state == StateFinished || e.state == StateError {
-        if e.state == StateError {
-            return nil, ErrInvalidState
+class Encoder {
+public:
+    Result process(const std::vector<uint8_t>& input) {
+        if (state_ == State::Finished || state_ == State::Error) {
+            state_ = State::Error;
+            return make_error(ErrInvalidState);
         }
-        return nil, nil // 幂等性
+        // 处理数据...
+        state_ = State::Streaming;
+        return ok();
     }
-    
-    // 完成处理...
-    e.state = StateFinished
-    return e.output, nil
-}
 
-func (e *Encoder) Reset() {
-    e.state = StateReady
-    // 重置内部缓冲区...
-}
+    Result finish() {
+        if (state_ == State::Finished || state_ == State::Error) {
+            if (state_ == State::Error) return make_error(ErrInvalidState);
+            return ok(); // 幂等性
+        }
+        // 完成处理...
+        state_ = State::Finished;
+        return ok(output_);
+    }
+
+    void reset() {
+        state_ = State::Ready;
+        // 重置内部缓冲区...
+    }
+private:
+    State state_ = State::Ready;
+};
 ```
 
 ## 错误处理策略
 
 ### 错误类型
 
-```go
-type ErrorKind int
-
-const (
-    KindBufTooSmall     // 输出缓冲区不足
-    KindTruncated       // 输入流过早结束
-    KindCorrupt         // 数据损坏或校验失败
-    KindInvalidState    // 当前状态不支持此操作
-    KindSizeLimit       // 超过安全限制
-    KindVersionUnsupported  // 不支持的版本
-    KindUnknownAlgo     // 未知的算法标识
-    KindIO              // I/O 错误
-)
+```cpp
+enum class ErrorKind {
+    BufTooSmall,          // 输出缓冲区不足
+    Truncated,            // 输入流过早结束
+    Corrupt,              // 数据损坏或校验失败
+    InvalidState,         // 当前状态不支持此操作
+    SizeLimit,            // 超过安全限制
+    VersionUnsupported,   // 不支持的版本
+    UnknownAlgo,          // 未知的算法标识
+    IO,                   // I/O 错误
+};
 ```
 
 ### 事务性保证
@@ -161,17 +158,17 @@ const (
 2. 重试操作
 3. 不需要重置整个编码器
 
-```go
+```cpp
 // 使用示例
-output := make([]byte, initialSize)
-for {
-    n, err := encoder.Process(input)
-    if err == ErrBufTooSmall {
+std::vector<uint8_t> output(initialSize);
+while (true) {
+    auto result = encoder.process(input);
+    if (result.error == ErrorKind::BufTooSmall) {
         // 状态不变，可以安全重试
-        output = make([]byte, len(output)*2)
-        continue
+        output.resize(output.size() * 2);
+        continue;
     }
-    break
+    break;
 }
 ```
 
@@ -198,34 +195,10 @@ for {
 - **自动缓冲**：内部处理缓冲区扩展
 - **简化 API**：`Encode(input) → output`
 
-```go
+```cpp
 // Buffer Layer 使用示例
-encoder := huffman.NewBufferedEncoder()
-output, err := encoder.Encode(input)  // 一次调用完成
-```
-
-## 跨语言一致性
-
-状态机设计在三种语言中完全一致：
-
-| 语言 | 状态定义 | 转换规则 | 错误码 |
-|------|----------|----------|--------|
-| Go | ✅ 相同 | ✅ 相同 | ✅ 相同 |
-| Rust | ✅ 相同 | ✅ 相同 | ✅ 相同 |
-| C++ | ✅ 相同 | ✅ 相同 | ✅ 相同 |
-
-### 测试验证
-
-通过 **7 个生命周期测试用例** 验证状态机行为：
-
-```
-L1: READY → process → STREAMING → finish → FINISHED
-L2: READY → process → STREAMING → process → STREAMING → finish
-L3: READY → process → STREAMING → flush → FLUSHING → finish
-L4: READY → finish (empty) → FINISHED
-L5: FINISHED → reset → READY
-L6: FINISHED → process → ERROR
-L7: ERROR → reset → READY
+auto encoder = compresskit::make_huffman_encoder();
+auto output = compresskit::encode_buffer(encoder, input);  // 一次调用完成
 ```
 
 ## 设计权衡
@@ -248,5 +221,4 @@ L7: ERROR → reset → READY
 ## 扩展阅读
 
 - [Streaming API 参考](/zh/api/streaming) - 完整 API 文档
-- [跨语言兼容](/zh/guide/architecture) - 二进制协议设计
-- [测试策略](/zh/testing/cross-language) - 一致性验证方法
+- [架构设计](/zh/architecture/) - 二进制协议设计

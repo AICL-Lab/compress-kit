@@ -6,11 +6,17 @@ All C++ implementations keep single-file algorithm cores, but now depend on a sh
 
 ## Compilation
 
+The project is built with CMake. `make build` is a thin wrapper around the CMake invocation:
+
 ```bash
-g++ -std=c++17 -O2 -Wall -Wextra -o <binary> main.cpp
+cmake -S . -B build && cmake --build build
 ```
 
+Binaries are produced under `build/` (e.g. `build/huffman_cpp`).
+
 ### Recommended Flags
+
+The CMake build enables C++17 with optimization and warnings. For debug builds, AddressSanitizer and UBSan can be enabled through the CMake configuration.
 
 | Flag | Purpose |
 |------|---------|
@@ -25,8 +31,8 @@ g++ -std=c++17 -O2 -Wall -Wextra -o <binary> main.cpp
 ### Usage
 
 ```bash
-./huffman_cpp encode input.bin output.huf
-./huffman_cpp decode output.huf decoded.bin
+./build/huffman_cpp encode input.bin output.huf
+./build/huffman_cpp decode output.huf decoded.bin
 ```
 
 ### Internal Structure
@@ -51,8 +57,8 @@ g++ -std=c++17 -O2 -Wall -Wextra -o <binary> main.cpp
 ### Usage
 
 ```bash
-./arithmetic_cpp encode input.bin output.aenc
-./arithmetic_cpp decode output.aenc decoded.bin
+./build/arithmetic_cpp encode input.bin output.aenc
+./build/arithmetic_cpp decode output.aenc decoded.bin
 ```
 
 ### Key Classes
@@ -67,8 +73,8 @@ g++ -std=c++17 -O2 -Wall -Wextra -o <binary> main.cpp
 ### Usage
 
 ```bash
-./rangecoder_cpp encode input.bin output.rcnc
-./rangecoder_cpp decode output.rcnc decoded.bin
+./build/rangecoder_cpp encode input.bin output.rcnc
+./build/rangecoder_cpp decode output.rcnc decoded.bin
 ```
 
 ### File Format
@@ -87,8 +93,8 @@ g++ -std=c++17 -O2 -Wall -Wextra -o <binary> main.cpp
 ### Usage
 
 ```bash
-./rle_cpp encode input.bin output.rle
-./rle_cpp decode output.rle decoded.bin
+./build/rle_cpp encode input.bin output.rle
+./build/rle_cpp decode output.rle decoded.bin
 ```
 
 ### File Format

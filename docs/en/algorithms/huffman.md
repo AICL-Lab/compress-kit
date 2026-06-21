@@ -4,9 +4,7 @@ Huffman coding is a lossless data compression algorithm that uses **variable-len
 
 ## How It Works
 
-::: code-group
-
-```cpp [C++]
+```cpp
 void buildHuffmanTree(const vector<uint32_t>& freq) {
     priority_queue<Node*, vector<Node*>, Compare> pq;
     
@@ -32,73 +30,6 @@ void buildHuffmanTree(const vector<uint32_t>& freq) {
     root = pq.top();
 }
 ```
-
-```go [Go]
-func buildHuffmanTree(freq []uint32) *Node {
-    pq := make(PriorityQueue, 0)
-    heap.Init(&pq)
-    
-    // Create leaf nodes
-    for i, f := range freq {
-        if f > 0 {
-            heap.Push(&pq, &Node{
-                symbol: byte(i),
-                freq:   f,
-            })
-        }
-    }
-    
-    // Build tree
-    for pq.Len() > 1 {
-        left := heap.Pop(&pq).(*Node)
-        right := heap.Pop(&pq).(*Node)
-        
-        parent := &Node{
-            freq:  left.freq + right.freq,
-            left:  left,
-            right: right,
-        }
-        heap.Push(&pq, parent)
-    }
-    
-    return heap.Pop(&pq).(*Node)
-}
-```
-
-```rust [Rust]
-fn build_huffman_tree(freq: &[u32; 256]) -> Option<Box<Node>> {
-    use std::collections::BinaryHeap;
-    
-    let mut heap: BinaryHeap<_> = freq.iter()
-        .enumerate()
-        .filter(|(_, &f)| f > 0)
-        .map(|(i, &f)| Node {
-            symbol: i as u8,
-            freq: f,
-            left: None,
-            right: None,
-        })
-        .collect();
-    
-    while heap.len() > 1 {
-        let left = heap.pop().unwrap();
-        let right = heap.pop().unwrap();
-        
-        let parent = Box::new(Node {
-            symbol: 0,
-            freq: left.freq + right.freq,
-            left: Some(left),
-            right: Some(right),
-        });
-        
-        heap.push(parent);
-    }
-    
-    heap.pop()
-}
-```
-
-:::
 
 ## Algorithm Steps
 
@@ -140,61 +71,9 @@ fn build_huffman_tree(freq: &[u32; 256]) -> Option<Box<Node>> {
 
 ## CLI Usage
 
-::: code-group
-
-```bash [C++]
-./huffman_cpp encode input.txt output.huf
-./huffman_cpp decode output.huf restored.txt
-```
-
-```bash [Go]
-./huffman_go encode input.txt output.huf
-./huffman_go decode output.huf restored.txt
-```
-
-```bash [Rust]
-./huffman_rust encode input.txt output.huf
-./huffman_rust decode output.huf restored.txt
-```
-
-:::
-
-## Library Usage
-
-### Go
-
-```go
-package main
-
-import (
-    "github.com/LessUp/compress-kit/algorithms/huffman/go/huffman"
-)
-
-func main() {
-    // Encode
-    encoded, err := huffman.Encode(inputData)
-    if err != nil {
-        log.Fatal(err)
-    }
-    
-    // Decode
-    decoded, err := huffman.Decode(encoded)
-    if err != nil {
-        log.Fatal(err)
-    }
-}
-```
-
-### Rust
-
-```rust
-use compress_kit::huffman::{encode, decode};
-
-fn main() -> Result<(), Box<dyn Error>> {
-    let encoded = encode(&input)?;
-    let decoded = decode(&encoded)?;
-    Ok(())
-}
+```bash
+./build/huffman_cpp encode input.txt output.huf
+./build/huffman_cpp decode output.huf restored.txt
 ```
 
 ## Further Reading

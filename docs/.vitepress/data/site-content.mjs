@@ -102,8 +102,6 @@ export const benchmarkCatalog = {
   })),
   languages: [
     { id: 'cpp', color: '#667eea', label: { en: 'C++', zh: 'C++' } },
-    { id: 'go', color: '#00add8', label: { en: 'Go', zh: 'Go' } },
-    { id: 'rust', color: '#de6e4b', label: { en: 'Rust', zh: 'Rust' } },
   ],
   datasets: [
     { id: 'textlike_10MiB', label: { en: 'Text-like (10 MiB)', zh: '类文本 (10 MiB)' } },
@@ -135,25 +133,12 @@ export const homepageFeatureCatalog = [
     ],
   })),
   {
-    id: 'cross-language',
-    kind: 'guide',
-    title: { en: '🔄 Cross-Language', zh: '🔄 跨语言兼容' },
-    description: {
-      en: 'Encode in one language, decode in another. All implementations produce identical binary output.',
-      zh: '一种语言编码，另一种语言解码。所有实现产生完全相同的二进制输出。',
-    },
-    tags: [
-      { label: { en: 'Get Started', zh: '快速开始' }, link: '/guide/getting-started' },
-      { label: { en: 'Testing', zh: '测试' }, link: '/testing/cross-language' },
-    ],
-  },
-  {
     id: 'benchmarks',
     kind: 'guide',
     title: { en: '📊 Benchmarks', zh: '📊 性能基准' },
     description: {
-      en: 'Performance benchmarks across all algorithms and languages. Compare speed and compression.',
-      zh: '跨所有算法和语言的性能基准测试。比较速度和压缩率。',
+      en: 'Performance benchmarks across all algorithms. Compare speed and compression.',
+      zh: '跨所有算法的性能基准测试。比较速度和压缩率。',
     },
     tags: [
       { label: { en: 'View Results', zh: '查看结果' }, link: '/benchmarks/results' },
@@ -184,7 +169,7 @@ const navCatalog = [
   {
     id: 'api',
     text: { en: 'API', zh: 'API' },
-    link: '/api/go',
+    link: '/api/cpp',
     activeMatch: { en: '/en/api/', zh: '/zh/api/' },
   },
   {
@@ -227,8 +212,6 @@ const sidebarCatalog = [
     title: { en: 'API Reference', zh: 'API 参考' },
     items: [
       { text: { en: 'Streaming API', zh: 'Streaming API' }, link: '/api/streaming' },
-      { text: { en: 'Go Library', zh: 'Go 库' }, link: '/api/go' },
-      { text: { en: 'Rust Crate', zh: 'Rust 包' }, link: '/api/rust' },
       { text: { en: 'C++ Header', zh: 'C++ 头文件' }, link: '/api/cpp' },
     ],
   },
@@ -237,7 +220,6 @@ const sidebarCatalog = [
     items: [
       { text: { en: 'Performance Results', zh: '性能结果' }, link: '/benchmarks/results' },
       { text: { en: 'How to Run', zh: '如何运行' }, link: '/benchmarks/how-to-run' },
-      { text: { en: 'Cross-Language Testing', zh: '跨语言测试' }, link: '/testing/cross-language' },
     ],
   },
   {
@@ -245,7 +227,6 @@ const sidebarCatalog = [
     items: [
       { text: { en: 'Architecture Design', zh: '系统架构设计' }, link: '/architecture/' },
       { text: { en: 'Bibliography', zh: '参考文献' }, link: '/reference/bibliography' },
-      { text: { en: 'OpenSpec Specs', zh: 'OpenSpec 规范' }, link: 'https://github.com/LessUp/compress-kit/tree/master/openspec/specs' },
       { text: { en: 'Contributing', zh: '参与贡献' }, link: '/guide/contributing' },
       { text: { en: 'Changelog', zh: '更新日志' }, link: '/release-notes/changelog' },
     ],
@@ -337,8 +318,8 @@ export function getHomepageContent(locale) {
     ),
     intro: localize(
       {
-        en: 'CompressKit provides classic lossless compression algorithms with cross-language compatibility. Encode in C++, decode in Go. Encode in Rust, decode in C++. All implementations produce identical binary output.',
-        zh: 'CompressKit 提供经典的无损压缩算法，支持跨语言兼容。C++ 编码，Go 解码。Rust 编码，C++ 解码。所有实现产生完全相同的二进制输出。',
+        en: 'CompressKit provides classic lossless compression algorithms in C++17. Read the implementations, run the same inputs through each algorithm, and verify round-trip correctness.',
+        zh: 'CompressKit 提供使用 C++17 实现的经典无损压缩算法。阅读实现、对每个算法运行相同输入、验证 round-trip 正确性。',
       },
       currentLocale
     ),
@@ -347,7 +328,7 @@ export function getHomepageContent(locale) {
       quickStart: localize({ en: 'Quick Start', zh: '快速开始' }, currentLocale),
     },
     quickStartCommand: 'git clone https://github.com/LessUp/compress-kit.git && cd compress-kit && make build && make test',
-    stats: ['C++17', 'Go', 'Rust'],
+    stats: ['C++17', 'CMake'],
     navLinks: [
       { text: localize({ en: 'Get Started', zh: '快速开始' }, currentLocale), link: withLocale(currentLocale, '/guide/getting-started') },
       { text: 'GitHub', link: 'https://github.com/LessUp/compress-kit' },

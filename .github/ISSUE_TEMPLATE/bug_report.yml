@@ -21,9 +21,6 @@ body:
       description: Which language implementation?
       options:
         - C++
-        - Go
-        - Rust
-        - Cross-language
     validations:
       required: true
   - type: textarea
@@ -39,6 +36,6 @@ body:
     attributes:
       label: Environment
       description: Your system information
-      placeholder: "OS: Linux/macOS/Windows\nGo version: 1.21+\nRust version: 1.70+\nC++ compiler: g++ 10+"
+      placeholder: "OS: Linux/macOS/Windows\nC++ compiler: g++ 10+\nCMake: 3.16+"
     validations:
       required: false

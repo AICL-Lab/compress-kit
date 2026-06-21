@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <strong>Classic lossless compression algorithms in C++17, Go, and Rust.</strong>
+  <strong>Classic lossless compression algorithms in C++17.</strong>
 </p>
 
 <p align="center">
@@ -18,19 +18,19 @@
   <b>English</b> | <a href="README.zh-CN.md">简体中文</a> | <a href="https://lessup.github.io/compress-kit/">Documentation</a>
 </p>
 
-CompressKit is an educational, verification-focused repository for comparing four
-classic compression algorithms across three implementation languages. It is not
+CompressKit is an educational, verification-focused repository for studying four
+classic compression algorithms in a single C++17 implementation. It is not
 a black-box package: the point is to read the implementations, run the same
-inputs through each language, and verify that compatible formats stay compatible.
+inputs through each algorithm, and verify round-trip correctness.
 
 ## What is included
 
-| Algorithm | C++17 | Go | Rust | Best fit |
-|-----------|------:|---:|-----:|----------|
-| Huffman Coding | ✓ | ✓ | ✓ | General text/data and prefix-code learning |
-| Arithmetic Coding | ✓ | ✓ | ✓ | Entropy-coding concepts and ratio comparison |
-| Range Coder | ✓ | ✓ | ✓ | Arithmetic-coder style implementation comparison |
-| Run-Length Encoding | ✓ | ✓ | ✓ | Highly repetitive data and simple format study |
+| Algorithm | Best fit |
+|-----------|----------|
+| Huffman Coding | General text/data and prefix-code learning |
+| Arithmetic Coding | Entropy-coding concepts and ratio comparison |
+| Range Coder | Arithmetic-coder style implementation comparison |
+| Run-Length Encoding | Highly repetitive data and simple format study |
 
 All command-line tools use:
 
@@ -49,19 +49,19 @@ make test
 ```
 
 For a pinned toolchain, open the checked-in `.devcontainer/` in VS Code or
-Codespaces. For local docs work, prefer the lockfile-backed installs:
+Codespaces. For local docs work:
 
 ```bash
 npm ci
 (cd docs && npm ci)
 ```
 
-Minimal cross-language check:
+Quick round-trip check:
 
 ```bash
 printf "Hello CompressKit\n" > input.txt
-./algorithms/huffman/cpp/huffman_cpp encode input.txt output.huf
-./algorithms/huffman/go/huffman_go decode output.huf restored.txt
+./build/huffman_cpp encode input.txt output.huf
+./build/huffman_cpp decode output.huf restored.txt
 diff input.txt restored.txt
 ```
 
@@ -73,34 +73,23 @@ diff input.txt restored.txt
 | Setup and first run | <https://lessup.github.io/compress-kit/en/guide/getting-started> |
 | Algorithm comparison | <https://lessup.github.io/compress-kit/en/guide/algorithms> |
 | API references | <https://lessup.github.io/compress-kit/en/api/streaming> |
-| Cross-language testing | <https://lessup.github.io/compress-kit/en/testing/cross-language> |
 
 ## Repository shape
 
 ```text
-algorithms/   # huffman, arithmetic, range, rle; each has cpp/go/rust
-tests/        # generated corpus, streaming contracts, conformance matrix
+algorithms/   # huffman, arithmetic, range, rle; each has cpp/
+tests/        # generated corpus, CLI smoke tests
 docs/         # VitePress documentation site
-openspec/     # project specifications and archived design changes
 ```
 
 ## Engineering baseline
 
 | Command | Purpose |
 |---------|---------|
-| `make build` | Build all C++/Go/Rust CLI tools |
-| `make test` | Run unit, streaming, and cross-language conformance tests |
-| `make test-conformance` | Run the executable decode matrix |
-| `make bench` | Run benchmark scripts |
+| `make build` | Build all C++ CLI tools (CMake) |
+| `make test` | Run unit tests and CLI smoke tests |
+| `make lint` | clang-format dry-run |
 | `npm run docs:build` | Build the documentation site |
-
-Known limitation: the Range Coder has documented decode performance issues on
-large files; local conformance and benchmark paths cap Range-heavy sweeps
-accordingly. See the Range Coder docs before using it for large inputs.
-
-`make bench` also refreshes `docs/.vitepress/data/benchmarks.json`, which feeds
-the benchmark chart in the docs. Treat the generated chart/data pair as the
-benchmark source of truth for the current snapshot.
 
 ## License
 

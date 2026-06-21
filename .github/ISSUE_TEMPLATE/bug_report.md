@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Report a CompressKit build, codec, or cross-language compatibility bug
+about: Report a CompressKit build, codec, or compatibility bug
 title: "[BUG] "
 labels: bug
 assignees: ""
@@ -13,7 +13,7 @@ Describe the failure in one or two sentences.
 ## Scope
 
 - Algorithm: Huffman / Arithmetic / Range Coder / RLE / Shared
-- Language: C++17 / Go / Rust / Python scripts / Docs
+- Language: C++17 / Python scripts / Docs
 - Surface: CLI / library API / streaming API / conformance / docs / CI
 
 ## Reproduction
@@ -45,11 +45,9 @@ paste output here
 
 - OS:
 - C++ compiler:
-- Go version:
-- Rust version:
 - Python version, if scripts are involved:
 
 ## Notes
 
-If this affects a binary format or cross-language behavior, mention which
-encoder/decoder pair failed, for example `arithmetic cpp -> rust`.
+If this affects a binary format or compatibility behavior, mention which
+encoder/decoder pair failed.

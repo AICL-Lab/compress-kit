@@ -18,7 +18,7 @@ the source of truth for the current repository snapshot.
 | JSON location | Fields | Meaning |
 |---------------|--------|---------|
 | top level | `generated` | Date of the benchmark snapshot used by the docs |
-| each `results[]` row | `algorithm`, `language`, `dataset` | Benchmark coordinate shown in the chart |
+| each `results[]` row | `algorithm`, `dataset` | Benchmark coordinate shown in the chart |
 | each `results[]` row | `encodeTime`, `decodeTime` | Wall-clock milliseconds |
 | each `results[]` row | `encodeSpeed`, `decodeSpeed` | Throughput in MiB/s |
 | each `results[]` row | `compressionRatio`, `throughput` | Size ratio plus the coarse throughput label used by the UI |
@@ -36,8 +36,7 @@ snapshot without any manual table editing on this page.
 
 ## Reading the Snapshot Safely
 
-- Compare implementations on the **same dataset** before drawing language
-  conclusions.
+- Compare results on the **same dataset** before drawing conclusions.
 - Range results are intentionally shown on a smaller input; do not read them as
   apples-to-apples throughput versus the 10 MiB datasets.
 - RLE is most meaningful on repetitive inputs and may expand other data.
@@ -58,5 +57,4 @@ npm run docs:build
 ## See Also
 
 - [How to Run Benchmarks](/en/benchmarks/how-to-run) — Detailed instructions
-- [Cross-Language Testing](/en/testing/cross-language) — Verification methodology
 - [Algorithm Guide](/en/guide/algorithms) — Comparison and selection guide

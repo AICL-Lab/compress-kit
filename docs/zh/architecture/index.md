@@ -5,7 +5,7 @@ description: CompressKit 的分层架构与模块设计
 
 # 系统架构设计
 
-CompressKit 采用清晰的分层架构，确保代码的可维护性、可测试性和跨语言一致性。
+CompressKit 采用清晰的分层架构，确保代码的可维护性、可测试性和一致的内存契约。
 
 ## 架构总览
 
@@ -65,11 +65,11 @@ graph TB
 
 ### 1. CLI Layer（命令行接口）
 
-统一的命令行入口，支持所有算法和语言：
+统一的命令行入口，支持所有算法：
 
 ```bash
-compress-kit encode --algo huffman --lang go input.bin output.bin
-compress-kit decode --algo huffman --lang rust output.bin decoded.bin
+./build/huffman_cpp encode input.bin output.bin
+./build/huffman_cpp decode output.bin decoded.bin
 ```
 
 **设计亮点**：94% 的样板代码削减，通过统一 launcher 实现。
@@ -78,16 +78,10 @@ compress-kit decode --algo huffman --lang rust output.bin decoded.bin
 
 无状态的便捷封装，适合简单场景：
 
-```go
-// Go 示例
-encoder := huffman.NewBufferedEncoder()
-output, err := encoder.Encode(input)
-```
-
-```rust
-// Rust 示例
-let encoder = huffman::BufferedEncoder::new();
-let output = encoder.encode(&input)?;
+```cpp
+// C++ 示例
+auto encoder = compresskit::make_huffman_encoder();
+auto output = compresskit::encode_buffer(encoder, input);
 ```
 
 **特点**：
@@ -99,16 +93,16 @@ let output = encoder.encode(&input)?;
 
 核心的状态机实现，支持增量处理：
 
-```go
-encoder := huffman.NewStreamingEncoder()
+```cpp
+auto encoder = compresskit::make_huffman_encoder();
 
 // 增量处理
-encoder.Process(chunk1)
-encoder.Process(chunk2)
-encoder.Process(chunk3)
+encoder->process(chunk1);
+encoder->process(chunk2);
+encoder->process(chunk3);
 
 // 完成并获取结果
-output, err := encoder.Finish()
+auto output = encoder->finish();
 ```
 
 **特点**：
@@ -122,10 +116,10 @@ output, err := encoder.Finish()
 
 | 算法 | 文件 | 核心函数 |
 |------|------|----------|
-| Huffman | `huffman/encode.go` | `encodeBlock()`, `buildTree()` |
-| Arithmetic | `arithmetic/encode.go` | `encodeSymbol()`, `normalize()` |
-| Range | `range/encode.go` | `encodeSymbol()`, `shiftBytes()` |
-| RLE | `rle/encode.go` | `encodeRun()` |
+| Huffman | `huffman/main.cpp` | `encodeBlock()`, `buildTree()` |
+| Arithmetic | `arithmetic/main.cpp` | `encodeSymbol()`, `normalize()` |
+| Range | `range/main.cpp` | `encodeSymbol()`, `shiftBytes()` |
+| RLE | `rle/main.cpp` | `encodeRun()` |
 
 ### 5. Shared Utilities（共享工具）
 
@@ -189,8 +183,6 @@ output, err := encoder.Finish()
 
 ### 频率表格式
 
-**跨语言统一**：
-
 - 顺序：符号 0-255（字节值），符号 256（EOF）
 - 字节序：小端序（Little-Endian）
 - 总大小：4 字节（符号计数）+ 257 × 4 字节 = 1032 字节
@@ -227,4 +219,3 @@ BufferedEncoder.Encode(input) → output
 
 - [状态机设计](/zh/academy/state-machine) - 5 状态 FSM 详解
 - [Streaming API](/zh/api/streaming) - 完整 API 文档
-- [跨语言测试](/zh/testing/cross-language) - 一致性验证

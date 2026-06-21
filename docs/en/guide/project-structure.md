@@ -1,38 +1,34 @@
 # Project Structure
 
-CompressKit is organized around algorithms first, then languages. This keeps the
-same algorithm easy to compare across C++17, Go, and Rust without hiding
-language-specific conventions.
+CompressKit is organized around algorithms first. Each algorithm keeps a
+single-file C++17 core with a shared streaming/buffer facade, so the same
+algorithm is easy to compare and maintain without language-specific forks.
 
 ## Source layout
 
 ```text
 algorithms/
 ├── shared/        # streaming and buffer API foundations
-├── huffman/       # cpp/, go/, rust/
-├── arithmetic/    # cpp/, go/, rust/
-├── range/         # cpp/, go/, rust/
-└── rle/           # cpp/, go/, rust/
+├── huffman/       # cpp/
+├── arithmetic/    # cpp/
+├── range/         # cpp/
+└── rle/           # cpp/
 
 tests/
 ├── gen_testdata.py
-├── streaming_api_contract/
-└── conformance/
+└── streaming_api_contract/
 
 docs/              # VitePress site: root portal + en/ + zh/
-openspec/          # stable specs and archived design changes
 ```
 
 ## Responsibility boundaries
 
 | Area | Owns | Does not own |
 |------|------|--------------|
-| `algorithms/<algo>/<lang>/` | Algorithm implementation, CLI entrypoint, language tests | Global docs or cross-language orchestration |
+| `algorithms/<algo>/cpp/` | Algorithm implementation, CLI entrypoint, algorithm tests | Global docs orchestration |
 | `algorithms/shared/` | Streaming lifecycle, buffer convenience APIs, shared contract tests | Algorithm-specific file formats |
-| `tests/conformance/` | Cross-language encode/decode matrix for stable formats | Future shared-frame validation |
 | `tests/data/` | Generated local corpus from `make test-data` | Source-controlled fixtures |
-| `docs/` | User-facing guide, API notes, known limitations | OpenSpec change tracking |
-| `openspec/` | Normative requirements and archived proposal history | Marketing copy |
+| `docs/` | User-facing guide, API notes, known limitations | Marketing copy |
 
 ## Binary formats
 
@@ -45,17 +41,13 @@ The current terminal baseline keeps per-algorithm formats stable:
 | Range Coder | `RCNC` + frequency table | `.rcnc` | Byte stream |
 | RLE | `RLE\x00` | `.rle` | Magic + `(count: uint32 LE, value: byte)` pairs |
 
-Future shared-frame proposals are archived under `openspec/changes/archive/` and
-are not part of the active file format contract.
-
 ## Generated artifacts
 
 Build outputs and generated data are intentionally ignored:
 
-- algorithm binaries such as `huffman_cpp`, `huffman_go`, `huffman_rust`
-- Rust `target/` directories
+- algorithm binaries under `build/` (e.g. `build/huffman_cpp`)
 - `tests/data/*.bin`
-- benchmark reports and temporary conformance directories
+- benchmark reports and temporary directories
 - `docs/.vitepress/dist/`
 
 Use `make clean` before packaging or reviewing repository shape.
@@ -64,4 +56,3 @@ Use `make clean` before packaging or reviewing repository shape.
 
 - [Getting Started](/en/guide/getting-started)
 - [Streaming API](/en/api/streaming)
-- [Cross-Language Testing](/en/testing/cross-language)

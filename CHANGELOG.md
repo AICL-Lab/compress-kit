@@ -38,6 +38,14 @@ style categories and uses semantic versioning for releases.
 - `CONTEXT.md` "参考资料" section rebuilt: keeps ADR 0001/0003/0004/0005 references, drops the 0002 link and the deleted `openspec/` spec links.
 - `docs/en/architecture/index.md` CLI section kept on the C++17-only single-binary contract (`./build/<algo>_cpp`); dropped multi-language `--lang` and `<algo>_<lang>` invocations.
 
+### Changed (Clean Code: extract shared utilities)
+
+- Extracted in-memory little-endian serialization helpers (`write_u32_le`, `write_magic`, `write_frequency_header`, `read_frequency_header`) to new `compresskit/serialization.hpp`. Eliminates duplicated `push_u32` lambdas and `read_frequencies` functions across huffman/arithmetic/range (~90 lines removed).
+- Extracted `BitWriter` and `BitReader` to new `compresskit/bit_io.hpp`. Eliminates duplicated `BitWriter` class across huffman/arithmetic (~28 lines removed).
+- RLE encode now uses shared `write_magic` and `write_u32_le` instead of inline copies.
+- Removed unused `name` parameter from `compresskit::cli::run` (and all 4 algorithm call sites).
+- Renamed `kInitialEncodeOverhead` (Google-style) to `INITIAL_ENCODE_OVERHEAD` (matches codebase UPPER_CASE convention for local constants).
+
 ## [1.0.0] - 2026-01-07
 
 ### Added

@@ -6,29 +6,16 @@
 
 #include "compresskit/buffer_api.hpp"
 #include "compresskit/constants.hpp"
+#include "compresskit/serialization.hpp"
 
 // Run-Length encoding.
 // Format:
 // - Magic: 4 bytes "RLE\x00"
 // - (count: uint32 LE, value: byte) pairs until EOF; count must be > 0.
 
-namespace {
-
-void write_u32_le(std::vector<uint8_t>& out, uint32_t v) {
-    out.push_back(static_cast<uint8_t>(v & 0xFFu));
-    out.push_back(static_cast<uint8_t>((v >> 8) & 0xFFu));
-    out.push_back(static_cast<uint8_t>((v >> 16) & 0xFFu));
-    out.push_back(static_cast<uint8_t>((v >> 24) & 0xFFu));
-}
-
-}  // namespace
-
 std::vector<uint8_t> rle_encode_buffer(const std::vector<uint8_t>& input) {
     std::vector<uint8_t> out;
-    out.push_back(static_cast<uint8_t>(compresskit::RLE_MAGIC[0]));
-    out.push_back(static_cast<uint8_t>(compresskit::RLE_MAGIC[1]));
-    out.push_back(static_cast<uint8_t>(compresskit::RLE_MAGIC[2]));
-    out.push_back(static_cast<uint8_t>(compresskit::RLE_MAGIC[3]));
+    compresskit::write_magic(out, compresskit::RLE_MAGIC);
 
     if (input.empty()) {
         return out;
@@ -40,13 +27,13 @@ std::vector<uint8_t> rle_encode_buffer(const std::vector<uint8_t>& input) {
         if (input[i] == current && count < 0xFFFFFFFFu) {
             ++count;
         } else {
-            write_u32_le(out, count);
+            compresskit::write_u32_le(out, count);
             out.push_back(current);
             current = input[i];
             count = 1;
         }
     }
-    write_u32_le(out, count);
+    compresskit::write_u32_le(out, count);
     out.push_back(current);
     return out;
 }
@@ -93,6 +80,6 @@ int main(int argc, char** argv) {
         [](const std::string& in, const std::string& out) {
             return compresskit::decode_file_via_buffer(rle_decode_buffer, in, out);
         }};
-    return compresskit::cli::run("rle", algo, argc, argv);
+    return compresskit::cli::run(algo, argc, argv);
 }
 #endif

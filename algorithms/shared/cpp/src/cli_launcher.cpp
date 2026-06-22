@@ -5,7 +5,7 @@
 namespace compresskit {
 namespace cli {
 
-int run(const std::string& /*name*/, const Algorithm& algo, int argc, char** argv) {
+int run(const Algorithm& algo, int argc, char** argv) {
     if (argc != 4) {
         std::cerr << "Usage: " << argv[0] << " encode|decode input output\n";
         return 1;

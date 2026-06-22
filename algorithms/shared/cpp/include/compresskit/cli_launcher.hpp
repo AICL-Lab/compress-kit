@@ -14,7 +14,7 @@ struct Algorithm {
     FileTransform decode;
 };
 
-int run(const std::string& name, const Algorithm& algo, int argc, char** argv);
+int run(const Algorithm& algo, int argc, char** argv);
 
 }  // namespace cli
 }  // namespace compresskit

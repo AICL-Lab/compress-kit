@@ -6,9 +6,11 @@
 #include <stdexcept>
 #include <vector>
 
+#include "compresskit/bit_io.hpp"
 #include "compresskit/buffer_api.hpp"
 #include "compresskit/constants.hpp"
 #include "compresskit/frequency_table.hpp"
+#include "compresskit/serialization.hpp"
 
 // Huffman coding (static model, prefix codes).
 // Format: "HFMN" + frequency table (LE) + bitstream (MSB-first).
@@ -103,35 +105,6 @@ void build_codes(const std::vector<Node>& nodes, int32_t idx, Code* codes, uint6
     build_codes(nodes, n.right, codes, (prefix_bits << 1) | 1, prefix_len + 1);
 }
 
-class BitWriter {
-public:
-    void write_bit(int bit) {
-        buffer_ = static_cast<uint8_t>((buffer_ << 1) | (bit & 1));
-        if (++bits_ == 8) {
-            out_.push_back(buffer_);
-            bits_ = 0;
-            buffer_ = 0;
-        }
-    }
-    void flush() {
-        if (bits_ > 0) {
-            buffer_ = static_cast<uint8_t>(buffer_ << (8 - bits_));
-            out_.push_back(buffer_);
-            bits_ = 0;
-            buffer_ = 0;
-        }
-    }
-    std::vector<uint8_t> finish() {
-        flush();
-        return std::move(out_);
-    }
-
-private:
-    std::vector<uint8_t> out_;
-    uint8_t buffer_ = 0;
-    int bits_ = 0;
-};
-
 // 8-bit decode table entry: result of consuming one byte starting at `node`.
 struct DecodeEntry {
     uint8_t count = 0;         // number of symbols emitted (0..8)
@@ -167,48 +140,6 @@ void build_decode_table(const std::vector<Node>& nodes, int32_t root,
     }
 }
 
-void write_header(std::vector<uint8_t>& out, const std::vector<uint32_t>& freq) {
-    out.push_back(static_cast<uint8_t>(compresskit::HUFFMAN_MAGIC[0]));
-    out.push_back(static_cast<uint8_t>(compresskit::HUFFMAN_MAGIC[1]));
-    out.push_back(static_cast<uint8_t>(compresskit::HUFFMAN_MAGIC[2]));
-    out.push_back(static_cast<uint8_t>(compresskit::HUFFMAN_MAGIC[3]));
-    auto push_u32 = [&](uint32_t v) {
-        out.push_back(static_cast<uint8_t>(v & 0xFFu));
-        out.push_back(static_cast<uint8_t>((v >> 8) & 0xFFu));
-        out.push_back(static_cast<uint8_t>((v >> 16) & 0xFFu));
-        out.push_back(static_cast<uint8_t>((v >> 24) & 0xFFu));
-    };
-    push_u32(static_cast<uint32_t>(freq.size()));
-    for (uint32_t v : freq) {
-        push_u32(v);
-    }
-}
-
-std::vector<uint32_t> read_frequencies(const std::vector<uint8_t>& input, std::size_t& pos) {
-    if (pos + 4 > input.size()) {
-        throw std::runtime_error("huffman: truncated frequency count");
-    }
-    uint32_t count = static_cast<uint32_t>(input[pos]) |
-                     (static_cast<uint32_t>(input[pos + 1]) << 8) |
-                     (static_cast<uint32_t>(input[pos + 2]) << 16) |
-                     (static_cast<uint32_t>(input[pos + 3]) << 24);
-    pos += 4;
-    if (count != compresskit::SYMBOL_LIMIT) {
-        throw std::runtime_error("huffman: bad frequency count");
-    }
-    std::vector<uint32_t> freq(count, 0);
-    for (uint32_t i = 0; i < count; ++i) {
-        if (pos + 4 > input.size()) {
-            throw std::runtime_error("huffman: truncated frequency entry");
-        }
-        freq[i] = static_cast<uint32_t>(input[pos]) | (static_cast<uint32_t>(input[pos + 1]) << 8) |
-                  (static_cast<uint32_t>(input[pos + 2]) << 16) |
-                  (static_cast<uint32_t>(input[pos + 3]) << 24);
-        pos += 4;
-    }
-    return freq;
-}
-
 }  // namespace
 
 std::vector<uint8_t> huffman_encode_buffer(const std::vector<uint8_t>& input) {
@@ -227,9 +158,9 @@ std::vector<uint8_t> huffman_encode_buffer(const std::vector<uint8_t>& input) {
 
     std::vector<uint8_t> out;
     out.reserve(input.size() + 2048);
-    write_header(out, freq);
+    compresskit::write_frequency_header(out, compresskit::HUFFMAN_MAGIC, freq);
 
-    BitWriter writer;
+    compresskit::BitWriter writer;
     for (uint8_t b : input) {
         const Code& c = codes[b];
         for (uint8_t i = 0; i < c.len; ++i) {
@@ -253,7 +184,7 @@ std::vector<uint8_t> huffman_decode_buffer(const std::vector<uint8_t>& input) {
         throw std::runtime_error("huffman: bad magic");
     }
     std::size_t pos = 4;
-    std::vector<uint32_t> freq = read_frequencies(input, pos);
+    std::vector<uint32_t> freq = compresskit::read_frequency_header(input, pos, "huffman");
 
     std::vector<Node> nodes;
     nodes.reserve(2 * compresskit::SYMBOL_LIMIT);
@@ -304,6 +235,6 @@ int main(int argc, char** argv) {
         [](const std::string& in, const std::string& out) {
             return compresskit::decode_file_via_buffer(huffman_decode_buffer, in, out);
         }};
-    return compresskit::cli::run("huffman", algo, argc, argv);
+    return compresskit::cli::run(algo, argc, argv);
 }
 #endif

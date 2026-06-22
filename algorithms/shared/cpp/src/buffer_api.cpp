@@ -11,13 +11,13 @@
 namespace compresskit {
 namespace {
 
-constexpr std::size_t kInitialEncodeOverhead = 2048;
+constexpr std::size_t INITIAL_ENCODE_OVERHEAD = 2048;
 
 std::size_t encode_limit_for(std::size_t input_size) {
-    if (input_size > (std::numeric_limits<std::size_t>::max() - kInitialEncodeOverhead) / 8) {
+    if (input_size > (std::numeric_limits<std::size_t>::max() - INITIAL_ENCODE_OVERHEAD) / 8) {
         throw std::overflow_error("encode limit overflow");
     }
-    return input_size * 8 + kInitialEncodeOverhead;
+    return input_size * 8 + INITIAL_ENCODE_OVERHEAD;
 }
 
 bool write_file(const std::string& path, const std::vector<uint8_t>& data) {
@@ -221,7 +221,7 @@ Result<std::vector<uint8_t>> encode_buffer(Encoder& encoder, const std::vector<u
         return {StatusCode::ERR_SIZE_LIMIT, {}};
     }
 
-    std::size_t initial_size = std::min(limit, input.size() * 2 + kInitialEncodeOverhead);
+    std::size_t initial_size = std::min(limit, input.size() * 2 + INITIAL_ENCODE_OVERHEAD);
     std::vector<uint8_t> out(initial_size);
     std::size_t total_written = 0;
 

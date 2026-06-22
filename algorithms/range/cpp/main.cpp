@@ -6,6 +6,7 @@
 #include "compresskit/buffer_api.hpp"
 #include "compresskit/constants.hpp"
 #include "compresskit/frequency_table.hpp"
+#include "compresskit/serialization.hpp"
 
 // Range coder (32-bit state, byte-renormalisation, static model).
 // Format: "RCNC" + frequency table (LE) + range-coded byte stream.
@@ -97,48 +98,6 @@ private:
     uint32_t low_, high_, code_;
 };
 
-void write_header(std::vector<uint8_t>& out, const std::vector<uint32_t>& freq) {
-    out.push_back(static_cast<uint8_t>(compresskit::RANGE_MAGIC[0]));
-    out.push_back(static_cast<uint8_t>(compresskit::RANGE_MAGIC[1]));
-    out.push_back(static_cast<uint8_t>(compresskit::RANGE_MAGIC[2]));
-    out.push_back(static_cast<uint8_t>(compresskit::RANGE_MAGIC[3]));
-    auto push_u32 = [&](uint32_t v) {
-        out.push_back(static_cast<uint8_t>(v & 0xFFu));
-        out.push_back(static_cast<uint8_t>((v >> 8) & 0xFFu));
-        out.push_back(static_cast<uint8_t>((v >> 16) & 0xFFu));
-        out.push_back(static_cast<uint8_t>((v >> 24) & 0xFFu));
-    };
-    push_u32(static_cast<uint32_t>(freq.size()));
-    for (uint32_t v : freq) {
-        push_u32(v);
-    }
-}
-
-std::vector<uint32_t> read_frequencies(const std::vector<uint8_t>& input, std::size_t& pos) {
-    if (pos + 4 > input.size()) {
-        throw std::runtime_error("range: truncated frequency count");
-    }
-    uint32_t count = static_cast<uint32_t>(input[pos]) |
-                     (static_cast<uint32_t>(input[pos + 1]) << 8) |
-                     (static_cast<uint32_t>(input[pos + 2]) << 16) |
-                     (static_cast<uint32_t>(input[pos + 3]) << 24);
-    pos += 4;
-    if (count != compresskit::SYMBOL_LIMIT) {
-        throw std::runtime_error("range: bad frequency count");
-    }
-    std::vector<uint32_t> freq(count, 0);
-    for (uint32_t i = 0; i < count; ++i) {
-        if (pos + 4 > input.size()) {
-            throw std::runtime_error("range: truncated frequency entry");
-        }
-        freq[i] = static_cast<uint32_t>(input[pos]) | (static_cast<uint32_t>(input[pos + 1]) << 8) |
-                  (static_cast<uint32_t>(input[pos + 2]) << 16) |
-                  (static_cast<uint32_t>(input[pos + 3]) << 24);
-        pos += 4;
-    }
-    return freq;
-}
-
 std::vector<uint32_t> build_frequencies(const std::vector<uint8_t>& data) {
     std::vector<uint32_t> freq = compresskit::count_frequencies(data);
     freq[compresskit::EOF_SYMBOL] = 1;
@@ -160,7 +119,7 @@ std::vector<uint8_t> rangecoder_encode_buffer(const std::vector<uint8_t>& input)
 
     std::vector<uint8_t> out;
     out.reserve(input.size() + 2048);
-    write_header(out, freq);
+    compresskit::write_frequency_header(out, compresskit::RANGE_MAGIC, freq);
 
     RangeEncoder encoder(out);
     for (uint8_t b : input) {
@@ -179,7 +138,7 @@ std::vector<uint8_t> rangecoder_decode_buffer(const std::vector<uint8_t>& input)
         throw std::runtime_error("range: bad magic");
     }
     std::size_t pos = 4;
-    std::vector<uint32_t> freq = read_frequencies(input, pos);
+    std::vector<uint32_t> freq = compresskit::read_frequency_header(input, pos, "range");
     std::vector<uint32_t> cumulative = compresskit::build_cumulative(freq);
     if (cumulative.empty()) {
         throw std::runtime_error("range: invalid frequency table");
@@ -214,6 +173,6 @@ int main(int argc, char** argv) {
         [](const std::string& in, const std::string& out) {
             return compresskit::decode_file_via_buffer(rangecoder_decode_buffer, in, out);
         }};
-    return compresskit::cli::run("rangecoder", algo, argc, argv);
+    return compresskit::cli::run(algo, argc, argv);
 }
 #endif

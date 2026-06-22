@@ -63,6 +63,11 @@ style categories and uses semantic versioning for releases.
 - Named `EXPECTED_ARGC = 4` (program + mode + input + output) in `cli_launcher.cpp`.
 - Refactored `write_u32_le` / `write_magic` / `read_frequency_header` and rle count decode from unrolled byte shifts to `U32_SIZE`/`MAGIC_SIZE` loops.
 
+### Changed (Clean Code: finish magic-number sweep)
+
+- Converted stream-based `write_u32_le` / `read_u32_le` in `frequency_table.cpp` from unrolled byte shifts to `U32_SIZE` loops (matches `serialization.hpp` style).
+- Replaced bare `<<8` / `>>24` in range coder byte-renormalisation with `<< BITS_PER_BYTE` / `>> TOP_BYTE_SHIFT`; added local `TOP_BYTE_SHIFT = (STATE_BYTES - 1) * BITS_PER_BYTE` constant.
+
 ## [1.0.0] - 2026-01-07
 
 ### Added

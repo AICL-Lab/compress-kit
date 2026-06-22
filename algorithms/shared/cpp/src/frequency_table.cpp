@@ -10,24 +10,24 @@ namespace compresskit {
 namespace {
 
 bool write_u32_le(std::ostream& out, uint32_t value) {
-    const std::array<char, U32_SIZE> bytes = {
-        static_cast<char>(value & 0xFFu),
-        static_cast<char>((value >> 8) & 0xFFu),
-        static_cast<char>((value >> 16) & 0xFFu),
-        static_cast<char>((value >> 24) & 0xFFu),
-    };
-    out.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+    char bytes[U32_SIZE];
+    for (std::size_t i = 0; i < U32_SIZE; ++i) {
+        bytes[i] = static_cast<char>((value >> (i * BITS_PER_BYTE)) & 0xFFu);
+    }
+    out.write(bytes, static_cast<std::streamsize>(U32_SIZE));
     return static_cast<bool>(out);
 }
 
 bool read_u32_le(std::istream& in, uint32_t& value) {
-    std::array<unsigned char, U32_SIZE> bytes{};
-    in.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
+    unsigned char bytes[U32_SIZE]{};
+    in.read(reinterpret_cast<char*>(bytes), static_cast<std::streamsize>(U32_SIZE));
     if (!in) {
         return false;
     }
-    value = static_cast<uint32_t>(bytes[0]) | (static_cast<uint32_t>(bytes[1]) << 8) |
-            (static_cast<uint32_t>(bytes[2]) << 16) | (static_cast<uint32_t>(bytes[3]) << 24);
+    value = 0;
+    for (std::size_t i = 0; i < U32_SIZE; ++i) {
+        value |= static_cast<uint32_t>(bytes[i]) << (i * BITS_PER_BYTE);
+    }
     return true;
 }
 

@@ -46,6 +46,23 @@ style categories and uses semantic versioning for releases.
 - Removed unused `name` parameter from `compresskit::cli::run` (and all 4 algorithm call sites).
 - Renamed `kInitialEncodeOverhead` (Google-style) to `INITIAL_ENCODE_OVERHEAD` (matches codebase UPPER_CASE convention for local constants).
 
+### Changed (Clean Code: replace magic numbers with named constants)
+
+- Added shared binary-format constants to `constants.hpp`: `MAGIC_SIZE`, `U32_SIZE`, `BITS_PER_BYTE`, `BYTE_VALUES`, `RLE_PAIR_SIZE`, `STREAM_READ_BUFFER_SIZE`, `INITIAL_ENCODE_OVERHEAD`, `INITIAL_DECODE_OVERHEAD`.
+- Replaced bare `4` (magic size) with `MAGIC_SIZE` across huffman/arithmetic/range/rle decode paths and `serialization.hpp`.
+- Replaced bare `4` (uint32 LE size) with `U32_SIZE` in `serialization.hpp`, `frequency_table.cpp`, and rle inline count decode.
+- Replaced bare `8` / `7` (bits per byte) with `BITS_PER_BYTE` in `bit_io.hpp`, huffman decode table, and `buffer_api.cpp` encode-limit calculation.
+- Replaced bare `256` (byte value count) with `BYTE_VALUES` in huffman 8-bit decode table.
+- Replaced bare `5` (RLE count+value pair size) with `RLE_PAIR_SIZE` in rle decode.
+- Replaced bare `32 * 1024` (stream read buffer) with `STREAM_READ_BUFFER_SIZE` in `frequency_table.cpp`.
+- Promoted `INITIAL_ENCODE_OVERHEAD` from `buffer_api.cpp` anonymous namespace to `constants.hpp`; replaced bare `2048` reserve overhead in huffman/range encode.
+- Added `INITIAL_DECODE_OVERHEAD` constant; replaced bare `1024` decode buffer overhead in `buffer_api.cpp`.
+- Replaced `0xFFFFFFFFu` with `UINT32_MAX` in range coder encoder/decoder state.
+- Named `STATE_BYTES = 4` (range coder 32-bit state width) in range main.
+- Named `MAX_TREE_NODES = 2 * SYMBOL_LIMIT` (huffman worst-case node count) in huffman main.
+- Named `EXPECTED_ARGC = 4` (program + mode + input + output) in `cli_launcher.cpp`.
+- Refactored `write_u32_le` / `write_magic` / `read_frequency_header` and rle count decode from unrolled byte shifts to `U32_SIZE`/`MAGIC_SIZE` loops.
+
 ## [1.0.0] - 2026-01-07
 
 ### Added

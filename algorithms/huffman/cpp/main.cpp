@@ -36,6 +36,9 @@ struct Node {
     int32_t right = -1;
 };
 
+// Worst-case node count: every symbol becomes a leaf, plus internal merges.
+constexpr std::size_t MAX_TREE_NODES = 2 * compresskit::SYMBOL_LIMIT;
+
 struct HeapItem {
     uint64_t freq;
     uint32_t symbol;
@@ -107,21 +110,21 @@ void build_codes(const std::vector<Node>& nodes, int32_t idx, Code* codes, uint6
 
 // 8-bit decode table entry: result of consuming one byte starting at `node`.
 struct DecodeEntry {
-    uint8_t count = 0;         // number of symbols emitted (0..8)
-    uint32_t symbols[8] = {};  // symbol values (0..256, so need 9 bits)
-    int32_t next = 0;          // node index to continue from
+    uint8_t count = 0;  // number of symbols emitted (0..BITS_PER_BYTE)
+    uint32_t symbols[compresskit::BITS_PER_BYTE] = {};  // 0..256, need 9 bits
+    int32_t next = 0;                                   // node index to continue from
 };
 
 void build_decode_table(const std::vector<Node>& nodes, int32_t root,
-                        std::vector<std::array<DecodeEntry, 256>>& table) {
+                        std::vector<std::array<DecodeEntry, compresskit::BYTE_VALUES>>& table) {
     table.assign(nodes.size(), {});
     for (int32_t node = 0; node < static_cast<int32_t>(nodes.size()); ++node) {
         if (is_leaf(nodes, node))
             continue;
-        for (int b = 0; b < 256; ++b) {
+        for (uint32_t b = 0; b < compresskit::BYTE_VALUES; ++b) {
             DecodeEntry& e = table[node][b];
             int32_t cur = node;
-            for (int bit = 7; bit >= 0; --bit) {
+            for (int bit = compresskit::BITS_PER_BYTE - 1; bit >= 0; --bit) {
                 int v = (b >> bit) & 1;
                 cur = (v == 0) ? nodes[cur].left : nodes[cur].right;
                 if (cur < 0) {
@@ -150,14 +153,14 @@ std::vector<uint8_t> huffman_encode_buffer(const std::vector<uint8_t>& input) {
     freq[compresskit::EOF_SYMBOL] = 1;
 
     std::vector<Node> nodes;
-    nodes.reserve(2 * compresskit::SYMBOL_LIMIT);
+    nodes.reserve(MAX_TREE_NODES);
     int32_t root = build_tree(freq, nodes);
 
     std::vector<Code> codes(compresskit::SYMBOL_LIMIT);
     build_codes(nodes, root, codes.data(), 0, 0);
 
     std::vector<uint8_t> out;
-    out.reserve(input.size() + 2048);
+    out.reserve(input.size() + compresskit::INITIAL_ENCODE_OVERHEAD);
     compresskit::write_frequency_header(out, compresskit::HUFFMAN_MAGIC, freq);
 
     compresskit::BitWriter writer;
@@ -177,17 +180,17 @@ std::vector<uint8_t> huffman_encode_buffer(const std::vector<uint8_t>& input) {
 }
 
 std::vector<uint8_t> huffman_decode_buffer(const std::vector<uint8_t>& input) {
-    if (input.size() < 4) {
+    if (input.size() < compresskit::MAGIC_SIZE) {
         throw std::runtime_error("huffman: input too short");
     }
-    if (std::memcmp(input.data(), compresskit::HUFFMAN_MAGIC, 4) != 0) {
+    if (std::memcmp(input.data(), compresskit::HUFFMAN_MAGIC, compresskit::MAGIC_SIZE) != 0) {
         throw std::runtime_error("huffman: bad magic");
     }
-    std::size_t pos = 4;
+    std::size_t pos = compresskit::MAGIC_SIZE;
     std::vector<uint32_t> freq = compresskit::read_frequency_header(input, pos, "huffman");
 
     std::vector<Node> nodes;
-    nodes.reserve(2 * compresskit::SYMBOL_LIMIT);
+    nodes.reserve(MAX_TREE_NODES);
     int32_t root = build_tree(freq, nodes);
 
     // Single-symbol tree: root is a leaf. Output nothing (only EOF encoded).
@@ -195,7 +198,7 @@ std::vector<uint8_t> huffman_decode_buffer(const std::vector<uint8_t>& input) {
         return {};
     }
 
-    std::vector<std::array<DecodeEntry, 256>> table;
+    std::vector<std::array<DecodeEntry, compresskit::BYTE_VALUES>> table;
     build_decode_table(nodes, root, table);
 
     std::vector<uint8_t> out;

@@ -24,7 +24,7 @@ std::vector<uint8_t> rle_encode_buffer(const std::vector<uint8_t>& input) {
     uint8_t current = input[0];
     uint32_t count = 1;
     for (std::size_t i = 1; i < input.size(); ++i) {
-        if (input[i] == current && count < 0xFFFFFFFFu) {
+        if (input[i] == current && count < UINT32_MAX) {
             ++count;
         } else {
             compresskit::write_u32_le(out, count);
@@ -39,25 +39,25 @@ std::vector<uint8_t> rle_encode_buffer(const std::vector<uint8_t>& input) {
 }
 
 std::vector<uint8_t> rle_decode_buffer(const std::vector<uint8_t>& input) {
-    if (input.size() < 4) {
+    if (input.size() < compresskit::MAGIC_SIZE) {
         throw std::runtime_error("RLE: input too short for magic");
     }
-    if (std::memcmp(input.data(), compresskit::RLE_MAGIC, 4) != 0) {
+    if (std::memcmp(input.data(), compresskit::RLE_MAGIC, compresskit::MAGIC_SIZE) != 0) {
         throw std::runtime_error("RLE: bad magic");
     }
 
     std::vector<uint8_t> out;
-    std::size_t pos = 4;
+    std::size_t pos = compresskit::MAGIC_SIZE;
     while (pos < input.size()) {
-        if (pos + 5 > input.size()) {
+        if (pos + compresskit::RLE_PAIR_SIZE > input.size()) {
             throw std::runtime_error("RLE: truncated count+value pair");
         }
-        uint32_t count = static_cast<uint32_t>(input[pos]) |
-                         (static_cast<uint32_t>(input[pos + 1]) << 8) |
-                         (static_cast<uint32_t>(input[pos + 2]) << 16) |
-                         (static_cast<uint32_t>(input[pos + 3]) << 24);
-        uint8_t value = input[pos + 4];
-        pos += 5;
+        uint32_t count = 0;
+        for (std::size_t b = 0; b < compresskit::U32_SIZE; ++b) {
+            count |= static_cast<uint32_t>(input[pos + b]) << (b * compresskit::BITS_PER_BYTE);
+        }
+        uint8_t value = input[pos + compresskit::U32_SIZE];
+        pos += compresskit::RLE_PAIR_SIZE;
         if (count == 0) {
             throw std::runtime_error("RLE: count must not be 0");
         }

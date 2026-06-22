@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
 namespace compresskit {
@@ -11,6 +12,18 @@ constexpr uint32_t EOF_SYMBOL = SYMBOL_LIMIT - 1;
 // Security limits.
 constexpr uint64_t MAX_INPUT_SIZE = 4ULL * 1024 * 1024 * 1024;   // 4 GiB
 constexpr uint64_t MAX_OUTPUT_SIZE = 1ULL * 1024 * 1024 * 1024;  // 1 GiB
+
+// Binary format element sizes.
+constexpr std::size_t MAGIC_SIZE = 4;  // algorithm magic prefix length
+constexpr std::size_t U32_SIZE = 4;    // little-endian uint32 serialisation
+constexpr int BITS_PER_BYTE = 8;
+constexpr uint32_t BYTE_VALUES = 1u << BITS_PER_BYTE;  // 256
+constexpr std::size_t RLE_PAIR_SIZE = U32_SIZE + 1;    // count + value byte
+
+// I/O tuneables.
+constexpr std::size_t STREAM_READ_BUFFER_SIZE = 32 * 1024;
+constexpr std::size_t INITIAL_ENCODE_OVERHEAD = 2048;
+constexpr std::size_t INITIAL_DECODE_OVERHEAD = 1024;
 
 // Algorithm magic numbers (binary format identifiers, little-endian agnostic).
 // These MUST NOT change: they are the basis of binary compatibility.

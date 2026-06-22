@@ -10,7 +10,7 @@ namespace compresskit {
 namespace {
 
 bool write_u32_le(std::ostream& out, uint32_t value) {
-    const std::array<char, 4> bytes = {
+    const std::array<char, U32_SIZE> bytes = {
         static_cast<char>(value & 0xFFu),
         static_cast<char>((value >> 8) & 0xFFu),
         static_cast<char>((value >> 16) & 0xFFu),
@@ -21,7 +21,7 @@ bool write_u32_le(std::ostream& out, uint32_t value) {
 }
 
 bool read_u32_le(std::istream& in, uint32_t& value) {
-    std::array<unsigned char, 4> bytes{};
+    std::array<unsigned char, U32_SIZE> bytes{};
     in.read(reinterpret_cast<char*>(bytes.data()), static_cast<std::streamsize>(bytes.size()));
     if (!in) {
         return false;
@@ -72,7 +72,7 @@ FrequencyTableReadStatus read_frequency_table(std::istream& in, std::vector<uint
 
 FrequencyCountStatus accumulate_frequencies(std::istream& in, std::vector<uint32_t>& freq,
                                             uint32_t* overflow_symbol) {
-    std::array<unsigned char, 32 * 1024> buffer{};
+    std::array<unsigned char, STREAM_READ_BUFFER_SIZE> buffer{};
     for (;;) {
         in.read(reinterpret_cast<char*>(buffer.data()),
                 static_cast<std::streamsize>(buffer.size()));

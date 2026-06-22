@@ -163,13 +163,13 @@ std::vector<uint8_t> arithmetic_encode_buffer(const std::vector<uint8_t>& input)
 }
 
 std::vector<uint8_t> arithmetic_decode_buffer(const std::vector<uint8_t>& input) {
-    if (input.size() < 4) {
+    if (input.size() < compresskit::MAGIC_SIZE) {
         throw std::runtime_error("arithmetic: input too short");
     }
-    if (std::memcmp(input.data(), compresskit::ARITHMETIC_MAGIC, 4) != 0) {
+    if (std::memcmp(input.data(), compresskit::ARITHMETIC_MAGIC, compresskit::MAGIC_SIZE) != 0) {
         throw std::runtime_error("arithmetic: bad magic");
     }
-    std::size_t pos = 4;
+    std::size_t pos = compresskit::MAGIC_SIZE;
     std::vector<uint32_t> freq = compresskit::read_frequency_header(input, pos, "arithmetic");
     std::vector<uint32_t> cumulative = compresskit::build_cumulative(freq);
     if (cumulative.empty()) {

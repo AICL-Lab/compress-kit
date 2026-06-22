@@ -5,8 +5,13 @@
 namespace compresskit {
 namespace cli {
 
+namespace {
+// program + mode + input + output
+constexpr int EXPECTED_ARGC = 4;
+}  // namespace
+
 int run(const Algorithm& algo, int argc, char** argv) {
-    if (argc != 4) {
+    if (argc != EXPECTED_ARGC) {
         std::cerr << "Usage: " << argv[0] << " encode|decode input output\n";
         return 1;
     }

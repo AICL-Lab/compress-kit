@@ -28,6 +28,15 @@ style categories and uses semantic versioning for releases.
 - `CMakeLists.txt` with static library target, 4 algorithm executables, and CTest integration.
 - `algorithms/shared/cpp/include/compresskit/constants.hpp` for shared constants.
 - Shared `count_frequencies`, `scale_frequencies`, `build_cumulative` utilities in `frequency_table.hpp`.
+- Architecture Decision Records 0001, 0003, 0004, 0005 under `docs/adr/` (validation metadata module shape, range coder corpus cap policy, RLE buffered streaming stance, range C++ bench mode migration path).
+- `tests/metadata.py` validation metadata module (C++17-only: `LANGUAGE_ORDER = ("cpp",)`).
+
+### Changed (merge integration)
+
+- Merged remote `master` (PR #9 architecture-deepening) into the C++17-only tree.
+- Dropped ADR 0002 (cross-language semantic error alignment) and `docs/architecture/contract-inventory.md`: both depend on the removed Go/Rust implementations.
+- `CONTEXT.md` "参考资料" section rebuilt: keeps ADR 0001/0003/0004/0005 references, drops the 0002 link and the deleted `openspec/` spec links.
+- `docs/en/architecture/index.md` CLI section kept on the C++17-only single-binary contract (`./build/<algo>_cpp`); dropped multi-language `--lang` and `<algo>_<lang>` invocations.
 
 ## [1.0.0] - 2026-01-07
 

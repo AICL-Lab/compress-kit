@@ -181,6 +181,13 @@ C++ 实现的共享工具模块，位于 `algorithms/shared/cpp/`：
 | CHANGELOG.md | 用户可见变更 | 用户 |
 | CONTEXT.md | 领域词汇 | 贡献者/AI |
 
+## 参考资料
+
+- `docs/adr/0001-validation-metadata-module-shape.md` - 验证元数据模块形状决策
+- `docs/adr/0003-range-coder-corpus-cap-policy.md` - Range Coder 语料库上限策略决策
+- `docs/adr/0004-rle-buffered-streaming-stance.md` - RLE 缓冲流式语义决策
+- `docs/adr/0005-range-cpp-bench-mode-migration-path.md` - Range C++ bench 模式迁移路径决策
+
 ## 文档术语表
 
 本文节定义 Git Pages 文档（VitePress）中的术语翻译规范。

@@ -10,6 +10,7 @@ use compresskit_codec::codec::{
 const MAX_TOTAL: u32 = 1 << 24;
 const RENORM_THRESHOLD: u32 = 1 << 24;
 const MAX_OUTPUT_SIZE: usize = 1024 * 1024 * 1024;
+const MAX_INPUT_SIZE: usize = 4 * 1024 * 1024 * 1024;
 
 #[derive(Debug, Clone)]
 pub struct RangeError(&'static str);
@@ -169,6 +170,9 @@ impl<'a> RangeDecoder<'a> {
 }
 
 pub fn encode(input: &[u8]) -> Result<Vec<u8>, RangeError> {
+    if input.len() > MAX_INPUT_SIZE {
+        return Err(RangeError("range: input exceeds maximum size (4 GiB)"));
+    }
     let freq = build_scaled_frequencies(input, MAX_TOTAL);
     let cumulative = build_cumulative(&freq);
 
@@ -188,6 +192,9 @@ pub fn encode(input: &[u8]) -> Result<Vec<u8>, RangeError> {
 }
 
 pub fn decode(encoded: &[u8]) -> Result<Vec<u8>, RangeError> {
+    if encoded.len() > MAX_INPUT_SIZE {
+        return Err(RangeError("range: input exceeds maximum size (4 GiB)"));
+    }
     let mut pos: usize = 0;
     let freq = read_header(encoded, &mut pos)?;
     let cumulative = build_cumulative_strict(&freq, "range: invalid frequency table")
@@ -223,7 +230,7 @@ impl From<RangeError> for CodecError {
             || e.0.contains("unexpected symbol count")
         {
             CodecError::Corrupt
-        } else if e.0.contains("limit") {
+        } else if e.0.contains("limit") || e.0.contains("exceeds maximum") {
             CodecError::SizeLimit
         } else {
             CodecError::Other(e.0.to_string())

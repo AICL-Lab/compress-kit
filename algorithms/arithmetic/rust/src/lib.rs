@@ -5,10 +5,11 @@ use std::io;
 
 use compresskit_codec::codec::{
     build_cumulative, build_cumulative_strict, build_scaled_frequencies, read_frequencies_exact,
-    write_frequencies, BitWriter, EOF_SYMBOL, SYMBOL_LIMIT,
+    write_frequencies, BitReader, BitWriter, EOF_SYMBOL, SYMBOL_LIMIT,
 };
 const MAX_TOTAL: u32 = 1 << 24;
 const MAX_OUTPUT_SIZE: usize = 1024 * 1024 * 1024; // 1 GiB
+const MAX_INPUT_SIZE: usize = 4 * 1024 * 1024 * 1024; // 4 GiB
 const STATE_BITS: u64 = 32;
 const FULL_RANGE: u64 = 1u64 << STATE_BITS;
 const HALF_RANGE: u64 = FULL_RANGE >> 1;
@@ -16,10 +17,16 @@ const FIRST_QUARTER: u64 = HALF_RANGE >> 1;
 const THIRD_QUARTER: u64 = FIRST_QUARTER * 3;
 
 pub fn encode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
+    if input.len() > MAX_INPUT_SIZE {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "input exceeds maximum size (4 GiB)",
+        ));
+    }
     let freq = build_scaled_frequencies(input, MAX_TOTAL);
     let cumulative = build_cumulative(&freq);
 
-    let mut output = Vec::new();
+    let mut output = Vec::with_capacity(1032 + input.len());
     output.extend_from_slice(b"AENC");
     write_frequencies(&mut output, &freq);
 
@@ -103,6 +110,12 @@ fn encode_symbol(
 }
 
 pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
+    if input.len() > MAX_INPUT_SIZE {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "input exceeds maximum size (4 GiB)",
+        ));
+    }
     if input.len() < 8 {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
@@ -132,20 +145,10 @@ pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
     let mut high = FULL_RANGE - 1;
     let mut code = 0u64;
 
-    let mut bit_buffer = Vec::new();
-    for &byte in &input[pos..] {
-        for i in (0..8).rev() {
-            bit_buffer.push((byte >> i) & 1);
-        }
+    let mut bit_reader = BitReader::new(&input[pos..]);
+    for _ in 0..STATE_BITS {
+        code = (code << 1) | bit_reader.read_bit_u8() as u64;
     }
-
-    for i in 0..STATE_BITS {
-        code <<= 1;
-        if (i as usize) < bit_buffer.len() {
-            code |= bit_buffer[i as usize] as u64;
-        }
-    }
-    let mut bit_pos = STATE_BITS as usize;
 
     let mut output = Vec::new();
     loop {
@@ -153,13 +156,17 @@ pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
         let offset = code - low;
         let value = ((offset + 1) * total - 1) / range;
 
-        let mut sym = 0usize;
-        for i in 0..cumulative.len() - 1 {
-            if value >= cumulative[i] as u64 && value < cumulative[i + 1] as u64 {
-                sym = i;
-                break;
+        let mut lo: usize = 0;
+        let mut hi: usize = cumulative.len() - 1;
+        while lo + 1 < hi {
+            let mid = lo + (hi - lo) / 2;
+            if cumulative[mid] as u64 > value {
+                hi = mid;
+            } else {
+                lo = mid;
             }
         }
+        let sym = lo;
 
         if sym == EOF_SYMBOL as usize {
             break;
@@ -181,27 +188,15 @@ pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
             if high < HALF_RANGE {
                 low <<= 1;
                 high = (high << 1) | 1;
-                code <<= 1;
-                if bit_pos < bit_buffer.len() {
-                    code |= bit_buffer[bit_pos] as u64;
-                    bit_pos += 1;
-                }
+                code = (code << 1) | bit_reader.read_bit_u8() as u64;
             } else if low >= HALF_RANGE {
                 low = (low - HALF_RANGE) << 1;
                 high = ((high - HALF_RANGE) << 1) | 1;
-                code = (code - HALF_RANGE) << 1;
-                if bit_pos < bit_buffer.len() {
-                    code |= bit_buffer[bit_pos] as u64;
-                    bit_pos += 1;
-                }
+                code = ((code - HALF_RANGE) << 1) | bit_reader.read_bit_u8() as u64;
             } else if low >= FIRST_QUARTER && high < THIRD_QUARTER {
                 low = (low - FIRST_QUARTER) << 1;
                 high = ((high - FIRST_QUARTER) << 1) | 1;
-                code = (code - FIRST_QUARTER) << 1;
-                if bit_pos < bit_buffer.len() {
-                    code |= bit_buffer[bit_pos] as u64;
-                    bit_pos += 1;
-                }
+                code = ((code - FIRST_QUARTER) << 1) | bit_reader.read_bit_u8() as u64;
             } else {
                 break;
             }

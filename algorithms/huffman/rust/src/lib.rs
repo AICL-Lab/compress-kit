@@ -10,6 +10,7 @@ use compresskit_codec::codec::{
     SYMBOL_LIMIT,
 };
 const MAX_OUTPUT_SIZE: usize = 1024 * 1024 * 1024; // 1 GiB
+const MAX_INPUT_SIZE: usize = 4 * 1024 * 1024 * 1024; // 4 GiB
 
 struct Node {
     symbol: u32,
@@ -128,6 +129,12 @@ fn build_codes_bitvec(node: &Node, codes: &mut [Vec<bool>], prefix: &mut Vec<boo
 }
 
 pub fn encode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
+    if input.len() > MAX_INPUT_SIZE {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "input exceeds maximum size (4 GiB)",
+        ));
+    }
     let freq = build_frequencies(input)
         .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err.message))?;
 
@@ -136,7 +143,7 @@ pub fn encode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
     let mut prefix = Vec::new();
     build_codes_bitvec(&root, &mut codes, &mut prefix);
 
-    let mut output = Vec::new();
+    let mut output = Vec::with_capacity(1032 + input.len());
     output.extend_from_slice(b"HFMN");
     write_frequencies(&mut output, &freq);
 
@@ -157,6 +164,12 @@ pub fn encode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
 }
 
 pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
+    if input.len() > MAX_INPUT_SIZE {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "input exceeds maximum size (4 GiB)",
+        ));
+    }
     if input.len() < 8 {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,

@@ -72,6 +72,7 @@ DEFAULT_CORPUS = (
     "empty.bin",
     "single_byte.bin",
     "alternating.bin",
+    "all_same_byte.bin",
     "small_dictionary_like.bin",
 )
 

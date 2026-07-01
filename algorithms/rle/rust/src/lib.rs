@@ -4,12 +4,19 @@
 use std::io;
 
 const MAX_OUTPUT_SIZE: usize = 1024 * 1024 * 1024;
+const MAX_INPUT_SIZE: usize = 4 * 1024 * 1024 * 1024;
 
 /// Magic number for RLE format identification
 const RLE_MAGIC: &[u8; 4] = b"RLE\x00";
 
 pub fn encode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
-    let mut output = Vec::new();
+    if input.len() > MAX_INPUT_SIZE {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "input exceeds maximum size (4 GiB)",
+        ));
+    }
+    let mut output = Vec::with_capacity(input.len() / 8 + 4);
 
     // Write magic number
     output.extend_from_slice(RLE_MAGIC);
@@ -38,6 +45,12 @@ pub fn encode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
 }
 
 pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
+    if input.len() > MAX_INPUT_SIZE {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "input exceeds maximum size (4 GiB)",
+        ));
+    }
     // Verify magic number
     if input.len() < 4 {
         return Err(io::Error::new(
@@ -84,9 +97,7 @@ pub fn decode(input: &[u8]) -> Result<Vec<u8>, io::Error> {
             ));
         }
 
-        for _ in 0..count {
-            output.push(value);
-        }
+        output.resize(new_len, value);
     }
 
     Ok(output)

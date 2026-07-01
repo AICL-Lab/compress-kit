@@ -69,6 +69,7 @@ class BitReader {
 static const uint32_t SYMBOL_LIMIT = 257;
 static const uint32_t EOF_SYMBOL = SYMBOL_LIMIT - 1;
 static const uint64_t MAX_INPUT_SIZE = 4ULL * 1024 * 1024 * 1024;  // 4 GiB max
+static const uint64_t MAX_OUTPUT_SIZE = 1ULL * 1024 * 1024 * 1024;  // 1 GiB max
 
 struct Node {
     uint32_t symbol;
@@ -310,6 +311,7 @@ static bool decompress_file(const std::string& input_path, const std::string& ou
     Node* node = root.get();  // Raw pointer for traversal
     bool saw_eof = false;
     bool ok = true;
+    uint64_t total_written = 0;
     while (true) {
         int bit = bit_reader.read_bit();
         if (bit == 0) {
@@ -327,8 +329,14 @@ static bool decompress_file(const std::string& input_path, const std::string& ou
                 saw_eof = true;
                 break;
             }
+            if (total_written >= MAX_OUTPUT_SIZE) {
+                std::cerr << "Output size limit exceeded (max " << MAX_OUTPUT_SIZE << " bytes)\n";
+                ok = false;
+                break;
+            }
             unsigned char b = static_cast<unsigned char>(node->symbol);
             out.put(static_cast<char>(b));
+            total_written++;
             if (!out) {
                 std::cerr << "Failed to write output file\n";
                 ok = false;

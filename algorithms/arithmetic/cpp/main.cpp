@@ -199,6 +199,7 @@ static const uint32_t SYMBOL_LIMIT = 257;
 static const uint32_t EOF_SYMBOL = SYMBOL_LIMIT - 1;
 static const uint32_t MAX_TOTAL = 1u << 24;
 static const uint64_t MAX_INPUT_SIZE = 4ULL * 1024 * 1024 * 1024;  // 4 GiB max
+static const uint64_t MAX_OUTPUT_SIZE = 1ULL * 1024 * 1024 * 1024;  // 1 GiB max
 
 static void scale_frequencies(std::vector<uint32_t>& freq) {
     uint64_t total = 0;
@@ -375,13 +376,19 @@ static bool decompress_file(const std::string& input_path, const std::string& ou
     BitReader bit_reader(in);
     ArithmeticDecoder decoder(bit_reader);
 
+    uint64_t total_written = 0;
     for (;;) {
         uint32_t sym = decoder.decode_symbol(cumulative);
         if (sym == EOF_SYMBOL) {
             break;
         }
+        if (total_written >= MAX_OUTPUT_SIZE) {
+            std::cerr << "Output size limit exceeded (max " << MAX_OUTPUT_SIZE << " bytes)\n";
+            return false;
+        }
         unsigned char b = static_cast<unsigned char>(sym);
         out.put(static_cast<char>(b));
+        total_written++;
         if (!out) {
             std::cerr << "Failed to write output file\n";
             return false;

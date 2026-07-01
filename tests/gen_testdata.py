@@ -12,6 +12,7 @@ import random
 # - empty.bin              空文件
 # - single_byte.bin        单字节边界样本
 # - alternating.bin        交替字节模式
+# - all_same_byte.bin      全相同字节样本（RLE/Huffman 边界情况）
 # - small_dictionary_like.bin  小型重复词典风格样本
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -87,6 +88,7 @@ def main():
     generate_literal_file(DATA_DIR / "empty.bin", b"")
     generate_literal_file(DATA_DIR / "single_byte.bin", b"\x00")
     generate_literal_file(DATA_DIR / "alternating.bin", (b"\xAA\x55" * 512))
+    generate_literal_file(DATA_DIR / "all_same_byte.bin", (b"\x00" * 4096))
     generate_literal_file(
         DATA_DIR / "small_dictionary_like.bin",
         (b"compresskit-dict-alpha\n" * 128)

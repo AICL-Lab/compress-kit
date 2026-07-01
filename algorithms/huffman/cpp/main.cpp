@@ -124,13 +124,14 @@ void build_decode_table(const std::vector<Node>& nodes, int32_t root,
         for (uint32_t b = 0; b < compresskit::BYTE_VALUES; ++b) {
             DecodeEntry& e = table[node][b];
             int32_t cur = node;
+            bool corrupt = false;
             for (int bit = compresskit::BITS_PER_BYTE - 1; bit >= 0; --bit) {
                 int v = (b >> bit) & 1;
                 cur = (v == 0) ? nodes[cur].left : nodes[cur].right;
                 if (cur < 0) {
                     // Corrupt stream during table build: shouldn't happen for valid trees.
                     e.count = 0;
-                    e.next = root;
+                    corrupt = true;
                     break;
                 }
                 if (is_leaf(nodes, cur)) {
@@ -138,7 +139,7 @@ void build_decode_table(const std::vector<Node>& nodes, int32_t root,
                     cur = root;
                 }
             }
-            e.next = cur;
+            e.next = corrupt ? root : cur;
         }
     }
 }

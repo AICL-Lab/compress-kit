@@ -44,9 +44,10 @@ private:
 // MSB-first bit reader. Returns 0 for bits read past the end of the stream.
 class BitReader {
 public:
-    explicit BitReader(const std::vector<uint8_t>& data) : data_(data) {}
+    explicit BitReader(const std::vector<uint8_t>& data) : data_(data.data()), size_(data.size()) {}
+    BitReader(const uint8_t* data, std::size_t size) : data_(data), size_(size) {}
     int read_bit() {
-        if (byte_pos_ >= data_.size()) {
+        if (byte_pos_ >= size_) {
             return 0;
         }
         int bit = (data_[byte_pos_] >> ((BITS_PER_BYTE - 1) - bit_pos_)) & 1;
@@ -56,10 +57,11 @@ public:
         }
         return bit;
     }
-    bool eof() const { return byte_pos_ >= data_.size(); }
+    bool eof() const { return byte_pos_ >= size_; }
 
 private:
-    const std::vector<uint8_t>& data_;
+    const uint8_t* data_;
+    std::size_t size_;
     std::size_t byte_pos_ = 0;
     int bit_pos_ = 0;
 };

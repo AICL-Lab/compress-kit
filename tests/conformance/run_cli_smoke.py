@@ -25,6 +25,7 @@ CORPUS = (
     ROOT / "tests/data/empty.bin",
     ROOT / "tests/data/single_byte.bin",
     ROOT / "tests/data/alternating.bin",
+    ROOT / "tests/data/all_same_byte.bin",
     ROOT / "tests/data/small_dictionary_like.bin",
 )
 

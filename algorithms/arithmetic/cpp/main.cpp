@@ -147,6 +147,7 @@ std::vector<uint8_t> arithmetic_encode_buffer(const std::vector<uint8_t>& input)
     }
 
     std::vector<uint8_t> out;
+    out.reserve(input.size() + compresskit::INITIAL_ENCODE_OVERHEAD);
     compresskit::write_frequency_header(out, compresskit::ARITHMETIC_MAGIC, freq);
 
     compresskit::BitWriter writer;
@@ -176,11 +177,10 @@ std::vector<uint8_t> arithmetic_decode_buffer(const std::vector<uint8_t>& input)
         throw std::runtime_error("arithmetic: invalid frequency table");
     }
 
-    std::vector<uint8_t> payload(input.begin() + pos, input.end());
-    compresskit::BitReader reader(payload);
+    std::vector<uint8_t> out;
+    compresskit::BitReader reader(input.data() + pos, input.size() - pos);
     ArithmeticDecoder decoder(reader);
 
-    std::vector<uint8_t> out;
     for (;;) {
         uint32_t sym = decoder.decode_symbol(cumulative);
         if (sym == compresskit::EOF_SYMBOL) {

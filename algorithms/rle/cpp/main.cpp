@@ -15,6 +15,7 @@
 
 std::vector<uint8_t> rle_encode_buffer(const std::vector<uint8_t>& input) {
     std::vector<uint8_t> out;
+    out.reserve(input.size() / 8 + compresskit::MAGIC_SIZE + compresskit::RLE_PAIR_SIZE);
     compresskit::write_magic(out, compresskit::RLE_MAGIC);
 
     if (input.empty()) {

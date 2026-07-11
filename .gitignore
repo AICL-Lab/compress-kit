@@ -3,14 +3,9 @@
 **/cmake-build-*/
 **/target/
 
-# Benchmark temp
-reports/
-**/benchmark/tmp/
-
 # Test data
 tests/data/*.bin
 tests/.conformance-*/
-tests/bench/results/
 
 # Encoded output files
 **/*.enc
@@ -21,7 +16,6 @@ tests/bench/results/
 **/*.rcnc
 
 # Compiled files
-**/*.exe
 **/*.o
 **/*.a
 **/*.so
@@ -33,26 +27,10 @@ tests/bench/results/
 **/arithmetic_cpp
 **/rle_cpp
 **/rangecoder_cpp
-
-# Go executables
-**/huffman_go
-**/arithmetic_go
-**/rangecoder_go
-**/rle_go
-coverage.out
-
-# Rust executables
-**/huffman_rust
-**/arithmetic_rust
-**/rle_rust
-**/huffman_rust_test
-**/arithmetic_rust_test
-**/rle_rust_test
 **/test_lifecycle
 
 # Local environments
 .venv/
-.omc/
 
 # CMake generated files
 CMakeCache.txt
@@ -73,24 +51,6 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-# Node (VitePress docs)
-node_modules/
-docs/.vitepress/dist/
-docs/.vitepress/cache/
-
-# OpenSpec
-.openspec-cache/
-
-# Git worktrees
-.worktrees/
-
-# Migration backup (temporary)
-specs-backup-*.tar.gz
-
 # Logs & temp
 *.log
 *.tmp
-
-# BMad Method V6
-_bmad/
-_bmad-output/

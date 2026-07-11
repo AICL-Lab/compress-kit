@@ -13,6 +13,11 @@ style categories and uses semantic versioning for releases.
 - **BREAKING**: Build system migrated from raw g++ Makefile to CMake.
 - Removed OpenSpec, Cursor, and Claude skill meta-tooling directories.
 - Removed cross-language conformance matrix and streaming API contract tests.
+- **Simplification (Occam's razor)**: Removed VitePress documentation site, bilingual docs (en/zh), and root `package.json`/`docs/` tree. README is now single-language (Chinese).
+- **Simplification**: Removed governance docs (`CODE_OF_CONDUCT.md`, `SECURITY.md`, `CONTEXT.md`, `CONTRIBUTING.md`) and `.devcontainer/` — unnecessary for a hobby/learning project.
+- **Simplification**: Removed Streaming state-machine layer (`encoder.hpp` with `State`/`Encoder`/`Decoder` abstract classes, `BufferEncoder`/`BufferDecoder` wrappers). `encode_buffer`/`decode_buffer` now take a `BufferTransform` function pointer directly. Algorithms never used the streaming interface — the state machine was dead abstraction.
+- **Simplification**: Merged CI workflows into a single `ci.yml` (removed `ci-docs.yml`, `codeql.yml`, `docs-pages.yml`).
+- **Simplification**: Pruned `StatusCode` enum to only used values (`OK`/`ERR_CORRUPT`/`ERR_SIZE_LIMIT`); removed `INITIAL_DECODE_OVERHEAD` constant.
 - Buffer layer rewritten to use in-memory transforms instead of temporary files.
 - Huffman encoding now uses `uint64_t` code words instead of `std::string` for 8x density.
 - Huffman decoding now uses 8-bit lookup table per internal node (~8x faster than bit-by-bit tree walk).

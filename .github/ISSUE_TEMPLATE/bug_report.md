@@ -13,14 +13,13 @@ Describe the failure in one or two sentences.
 ## Scope
 
 - Algorithm: Huffman / Arithmetic / Range Coder / RLE / Shared
-- Language: C++17 / Python scripts / Docs
-- Surface: CLI / library API / streaming API / conformance / docs / CI
+- Surface: CLI / library API / conformance / CI
 
 ## Reproduction
 
 ```bash
 # Paste the smallest command sequence that reproduces the issue.
-make test-conformance
+make test
 ```
 
 If the issue depends on an input file, include:

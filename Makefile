@@ -25,7 +25,6 @@ test-data:
 
 clean:
 	rm -rf build tests/data
-	rm -rf docs/.vitepress/dist
 
 # ── Format & Lint ───────────────────────────────────────────────────────────
 

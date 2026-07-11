@@ -6,13 +6,8 @@ namespace compresskit {
 
 enum class StatusCode {
     OK = 0,
-    BUF_TOO_SMALL,
-    ERR_TRUNCATED,
     ERR_CORRUPT,
-    ERR_INVALID_STATE,
     ERR_SIZE_LIMIT,
-    ERR_VERSION_UNSUPPORTED,
-    ERR_UNKNOWN_ALGO,
 };
 
 template <typename T>

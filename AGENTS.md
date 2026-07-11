@@ -4,7 +4,6 @@
 
 - Product: **CompressKit** - C++17 compression laboratory
 - Repository: `LessUp/compress-kit`
-- Documentation: <https://lessup.github.io/compress-kit/>
 - Default branch: `master`
 
 ## Core Contract
@@ -27,7 +26,6 @@ Binary format compatibility is the primary constraint.
 | `make build` | Build all C++ CLIs (CMake) |
 | `make test` | Unit tests + CLI smoke tests |
 | `make lint` | clang-format dry-run |
-| `npm run docs:build` | Build documentation |
 
 ## Key Constraints
 

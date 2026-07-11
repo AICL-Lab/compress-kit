@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"npm run docs:build 2>&1\",\"timeout\":120000,\"description\":\"验证 VitePress 构建\"}",
-  "error": "Exit code 1\n\n> docs:build\n> vitepress build docs\n\n\n  vitepress v1.6.4\n\n- building client + server bundles...\n\n\n(!) Found dead link /guide/getting-started in file index.md\n(!) Found dead link /guide/algorithms in file index.md\n(!) Found dead link /api/go in file index.md\n(!) Found dead link /benchmarks/results in file index.md\n(!) Found dead link /guide/contributing in file index.md\n\nIf this is expected, you can disable this check via config. Refer: https://vitepress.dev/reference/site-config#ign...",
-  "timestamp": "2026-04-27T11:49:24.225Z",
-  "retry_count": 1
-}

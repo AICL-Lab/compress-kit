@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Propose a focused CompressKit algorithm, tooling, docs, or verification change
+about: Propose a focused CompressKit algorithm, tooling, or verification change
 title: "[FEATURE] "
 labels: enhancement
 assignees: ""
@@ -18,8 +18,7 @@ Describe the smallest useful change.
 ## Affected areas
 
 - Algorithm: Huffman / Arithmetic / Range Coder / RLE / Shared / N/A
-- Language: C++17 / Python scripts / Docs / CI
-- Contract impact: CLI / binary format / streaming API / conformance / none
+- Contract impact: CLI / binary format / conformance / none
 
 ## Verification plan
 

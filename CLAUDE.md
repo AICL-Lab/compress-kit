@@ -16,6 +16,5 @@ make test && make lint
 
 ## Documentation Stance
 
-- README: Short gateway
-- Git Pages: Product portal
+- README: 项目入口（中文）
 - Changelog: User-facing changes only

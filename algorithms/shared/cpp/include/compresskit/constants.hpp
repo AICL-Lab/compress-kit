@@ -23,7 +23,6 @@ constexpr std::size_t RLE_PAIR_SIZE = U32_SIZE + 1;    // count + value byte
 // I/O tuneables.
 constexpr std::size_t STREAM_READ_BUFFER_SIZE = 32 * 1024;
 constexpr std::size_t INITIAL_ENCODE_OVERHEAD = 2048;
-constexpr std::size_t INITIAL_DECODE_OVERHEAD = 1024;
 
 // Algorithm magic numbers (binary format identifiers, little-endian agnostic).
 // These MUST NOT change: they are the basis of binary compatibility.

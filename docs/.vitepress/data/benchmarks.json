@@ -1,0 +1,50 @@
+{
+  "generated": "2026-05-16",
+  "version": "1.0.0",
+  "results": [
+    {
+      "algorithm": "huffman",
+      "language": "cpp",
+      "dataset": "textlike_10MiB",
+      "encodeTime": 644.3,
+      "decodeTime": 2231.2,
+      "encodeSpeed": 15.5,
+      "decodeSpeed": 4.5,
+      "compressionRatio": 0.746,
+      "throughput": "low"
+    },
+    {
+      "algorithm": "arithmetic",
+      "language": "cpp",
+      "dataset": "textlike_10MiB",
+      "encodeTime": 1502.2,
+      "decodeTime": 3785.4,
+      "encodeSpeed": 6.7,
+      "decodeSpeed": 2.6,
+      "compressionRatio": 0.743,
+      "throughput": "low"
+    },
+    {
+      "algorithm": "range",
+      "language": "cpp",
+      "dataset": "small_dictionary_like",
+      "encodeTime": 7.3,
+      "decodeTime": 9.0,
+      "encodeSpeed": 1.1,
+      "decodeSpeed": 0.9,
+      "compressionRatio": 0.615,
+      "throughput": "low"
+    },
+    {
+      "algorithm": "rle",
+      "language": "cpp",
+      "dataset": "repetitive_10MiB",
+      "encodeTime": 207.6,
+      "decodeTime": 578.0,
+      "encodeSpeed": 48.2,
+      "decodeSpeed": 17.3,
+      "compressionRatio": 0.002,
+      "throughput": "medium"
+    }
+  ]
+}

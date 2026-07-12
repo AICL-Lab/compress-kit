@@ -1,13 +1,13 @@
-# Changelog
+# 更新日志
+
+此页面记录 CompressKit 每个版本的变更。
 
 All notable user-facing changes to CompressKit are tracked here.
 
 The project follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 style categories and uses semantic versioning for releases.
 
-## [Unreleased]
-
-### Changed
+## Unreleased
 
 - **BREAKING**: Project refactored to C++17-only. Go and Rust implementations removed.
 - **BREAKING**: Build system migrated from raw g++ Makefile to CMake.
@@ -28,8 +28,6 @@ style categories and uses semantic versioning for releases.
 - Centralized constants (`SYMBOL_LIMIT`, `EOF_SYMBOL`, magic bytes, size limits) in `constants.hpp`.
 - VitePress documentation pruned of Go/Rust content; bilingual (en/zh) structure retained.
 - Issue templates pruned of Go/Rust/OpenSpec/cross-language references; Language scope reduced to C++17 / Python scripts / Docs (feature template adds CI).
-
-### Added
 
 - `CMakeLists.txt` with static library target, 4 algorithm executables, and CTest integration.
 - `algorithms/shared/cpp/include/compresskit/constants.hpp` for shared constants.
@@ -74,9 +72,7 @@ style categories and uses semantic versioning for releases.
 - Converted stream-based `write_u32_le` / `read_u32_le` in `frequency_table.cpp` from unrolled byte shifts to `U32_SIZE` loops (matches `serialization.hpp` style).
 - Replaced bare `<<8` / `>>24` in range coder byte-renormalisation with `<< BITS_PER_BYTE` / `>> TOP_BYTE_SHIFT`; added local `TOP_BYTE_SHIFT = (STATE_BYTES - 1) * BITS_PER_BYTE` constant.
 
-## [1.0.0] - 2026-01-07
-
-### Added
+## 1.0.0 (2026-01-07)
 
 - Huffman Coding, Arithmetic Coding, Range Coder, and Run-Length Encoding implementations.
 - C++17, Go, and Rust command-line tools for all four algorithms.

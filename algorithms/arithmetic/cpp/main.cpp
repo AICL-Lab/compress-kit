@@ -191,13 +191,7 @@ std::vector<uint8_t> arithmetic_decode_buffer(const std::vector<uint8_t>& input)
 #include "compresskit/cli_launcher.hpp"
 
 int main(int argc, char** argv) {
-    compresskit::cli::Algorithm algo{
-        [](const std::string& in, const std::string& out) {
-            return compresskit::encode_file_via_buffer(arithmetic_encode_buffer, in, out);
-        },
-        [](const std::string& in, const std::string& out) {
-            return compresskit::decode_file_via_buffer(arithmetic_decode_buffer, in, out);
-        }};
+    compresskit::cli::Algorithm algo{arithmetic_encode_buffer, arithmetic_decode_buffer};
     return compresskit::cli::run(algo, argc, argv);
 }
 #endif

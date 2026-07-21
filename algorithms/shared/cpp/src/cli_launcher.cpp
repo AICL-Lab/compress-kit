@@ -23,9 +23,9 @@ int run(const Algorithm& algo, int argc, char** argv) {
     bool ok = true;
 
     if (mode == "encode") {
-        ok = algo.encode(input_path, output_path);
+        ok = encode_file_via_buffer(algo.encode, input_path, output_path);
     } else if (mode == "decode") {
-        ok = algo.decode(input_path, output_path);
+        ok = decode_file_via_buffer(algo.decode, input_path, output_path);
     } else {
         std::cerr << "unknown mode, expected encode or decode\n";
         return 1;

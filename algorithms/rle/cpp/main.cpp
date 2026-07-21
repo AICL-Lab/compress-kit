@@ -74,13 +74,7 @@ std::vector<uint8_t> rle_decode_buffer(const std::vector<uint8_t>& input) {
 #include "compresskit/cli_launcher.hpp"
 
 int main(int argc, char** argv) {
-    compresskit::cli::Algorithm algo{
-        [](const std::string& in, const std::string& out) {
-            return compresskit::encode_file_via_buffer(rle_encode_buffer, in, out);
-        },
-        [](const std::string& in, const std::string& out) {
-            return compresskit::decode_file_via_buffer(rle_decode_buffer, in, out);
-        }};
+    compresskit::cli::Algorithm algo{rle_encode_buffer, rle_decode_buffer};
     return compresskit::cli::run(algo, argc, argv);
 }
 #endif

@@ -92,4 +92,12 @@ std::vector<uint32_t> build_cumulative(const std::vector<uint32_t>& freq) {
     return cumulative;
 }
 
+std::vector<uint32_t> build_entropy_frequencies(const std::vector<uint8_t>& data,
+                                                uint32_t max_total) {
+    std::vector<uint32_t> freq = count_frequencies(data);
+    freq[EOF_SYMBOL] = 1;
+    scale_frequencies(freq, max_total);
+    return freq;
+}
+
 }  // namespace compresskit

@@ -100,20 +100,13 @@ private:
     uint32_t low_, high_, code_;
 };
 
-std::vector<uint32_t> build_frequencies(const std::vector<uint8_t>& data) {
-    std::vector<uint32_t> freq = compresskit::count_frequencies(data);
-    freq[compresskit::EOF_SYMBOL] = 1;
-    compresskit::scale_frequencies(freq, MAX_TOTAL);
-    return freq;
-}
-
 }  // namespace
 
 std::vector<uint8_t> rangecoder_encode_buffer(const std::vector<uint8_t>& input) {
     if (input.size() > compresskit::MAX_INPUT_SIZE) {
         throw std::runtime_error("range: input too large");
     }
-    std::vector<uint32_t> freq = build_frequencies(input);
+    std::vector<uint32_t> freq = compresskit::build_entropy_frequencies(input, MAX_TOTAL);
     std::vector<uint32_t> cumulative = compresskit::build_cumulative(freq);
     if (cumulative.empty()) {
         throw std::runtime_error("range: empty frequency table");

@@ -18,4 +18,9 @@ void scale_frequencies(std::vector<uint32_t>& freq, uint32_t max_total);
 // Returns empty vector on all-zero input (caller must reject).
 std::vector<uint32_t> build_cumulative(const std::vector<uint32_t>& freq);
 
+// Builds the entropy-coder frequency table: byte counts + EOF marker, scaled
+// to fit `max_total`. Shared by arithmetic and range coders.
+std::vector<uint32_t> build_entropy_frequencies(const std::vector<uint8_t>& data,
+                                                uint32_t max_total);
+
 }  // namespace compresskit

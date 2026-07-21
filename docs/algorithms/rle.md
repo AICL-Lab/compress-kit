@@ -98,6 +98,6 @@ RLE 常作为更复杂压缩流程的预处理步骤：
 
 ## 延伸阅读
 
-- [算法对比](/zh/guide/algorithms) — 完整对比矩阵
-- [基准测试](/zh/benchmarks/results) — 性能数据
+- [算法对比](/guide/algorithms) — 完整对比矩阵
+- [基准测试](/benchmarks/results) — 性能数据
 - [Burrows-Wheeler 变换](https://en.wikipedia.org/wiki/Burrows%E2%80%93Wheeler_transform) — 常与 RLE 配合使用

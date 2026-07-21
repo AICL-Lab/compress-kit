@@ -66,17 +66,17 @@ description: 深入理解压缩算法的原理与实现
 
 ### 初级：理解基础
 
-1. [霍夫曼编码](/zh/algorithms/huffman) - 从贪心算法到最优前缀码
-2. [行程编码](/zh/algorithms/rle) - 最简单但实用的压缩方法
+1. [霍夫曼编码](/algorithms/huffman) - 从贪心算法到最优前缀码
+2. [行程编码](/algorithms/rle) - 最简单但实用的压缩方法
 
 ### 中级：掌握原理
 
-3. [算术编码](/zh/algorithms/arithmetic) - 区间划分与精度处理
-4. [区间编码](/zh/algorithms/range) - 整数实现的工程智慧
+3. [算术编码](/algorithms/arithmetic) - 区间划分与精度处理
+4. [区间编码](/algorithms/range) - 整数实现的工程智慧
 
 ### 高级：系统设计
 
-5. [系统架构](/zh/architecture/) - 系统架构总览
+5. [系统架构](/architecture/) - 系统架构总览
 
 ## 算法选择决策树
 
@@ -121,4 +121,4 @@ $$
 
 ## 下一步
 
-选择一个算法开始深入学习，或者直接查看 [快速开始指南](/zh/guide/getting-started)。
+选择一个算法开始深入学习，或者直接查看 [快速开始指南](/guide/getting-started)。

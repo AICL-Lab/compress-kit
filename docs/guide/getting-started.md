@@ -125,7 +125,7 @@ make bench
 |------|------|
 | `reports/*.txt` | 每次运行的原始基准日志 |
 | `docs/.vitepress/data/benchmarks.json` | 文档基准图表读取的生成快照 |
-| `/zh/benchmarks/results` | 面向读者的生成 JSON 视图 |
+| `/benchmarks/results` | 面向读者的生成 JSON 视图 |
 
 当前仓库快照中的基准事实应以生成的 JSON 文件和图表为准。
 
@@ -172,6 +172,6 @@ dd if=tests/data/random_10MiB.bin of=small.bin bs=1024 count=100
 
 ## 下一步
 
-- 了解 [算法详解](/zh/guide/algorithms) 及其差异
-- 阅读 [架构总览](/zh/guide/architecture)
+- 了解 [算法详解](/guide/algorithms) 及其差异
+- 阅读 [架构总览](/guide/architecture)
 - 查看 [CHANGELOG](https://github.com/LessUp/compress-kit/blob/master/CHANGELOG.md) 了解最新更新

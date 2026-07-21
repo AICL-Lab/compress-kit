@@ -76,8 +76,8 @@ void encode(const vector<uint8_t>& data,
 
 ## 延伸阅读
 
-- [Arithmetic](/zh/algorithms/arithmetic) — 浮点数等价实现
-- [基准测试](/zh/benchmarks/results) — 性能对比
+- [Arithmetic](/algorithms/arithmetic) — 浮点数等价实现
+- [基准测试](/benchmarks/results) — 性能对比
 
 ## 已知限制
 

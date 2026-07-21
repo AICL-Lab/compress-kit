@@ -2,14 +2,14 @@ const localeOrEnglish = locale => (locale === 'zh' ? 'zh' : 'en')
 
 const localize = (value, locale) => value[localeOrEnglish(locale)] ?? value.en
 
+// Root-locale site: links are relative to the docs root, no locale prefix.
 const withLocale = (locale, link) => {
   if (/^https?:\/\//.test(link)) {
     return link
   }
 
   const normalized = link === '/' ? '/' : `/${link.replace(/^\/+/, '')}`
-  const prefix = `/${localeOrEnglish(locale)}`
-  return normalized === '/' ? `${prefix}/` : `${prefix}${normalized}`
+  return normalized
 }
 
 export const algorithmCatalog = [
@@ -152,31 +152,31 @@ const navCatalog = [
     id: 'home',
     text: { en: 'Home', zh: '首页' },
     link: '/',
-    activeMatch: { en: '^/en/$', zh: '^/zh/$' },
+    activeMatch: { en: '^/en/$', zh: '^/$' },
   },
   {
     id: 'guide',
     text: { en: 'Get Started', zh: '开始' },
     link: '/guide/getting-started',
-    activeMatch: { en: '/en/guide/', zh: '/zh/guide/' },
+    activeMatch: { en: '/en/guide/', zh: '/guide/' },
   },
   {
     id: 'algorithms',
     text: { en: 'Algorithms', zh: '算法' },
     link: '/guide/algorithms',
-    activeMatch: { en: '/en/algorithms/', zh: '/zh/algorithms/' },
+    activeMatch: { en: '/en/algorithms/', zh: '/algorithms/' },
   },
   {
     id: 'api',
     text: { en: 'API', zh: 'API' },
     link: '/api/cpp',
-    activeMatch: { en: '/en/api/', zh: '/zh/api/' },
+    activeMatch: { en: '/en/api/', zh: '/api/' },
   },
   {
     id: 'benchmarks',
     text: { en: 'Benchmarks', zh: '基准' },
     link: '/benchmarks/results',
-    activeMatch: { en: '/en/benchmarks/', zh: '/zh/benchmarks/' },
+    activeMatch: { en: '/en/benchmarks/', zh: '/benchmarks/' },
   },
 ]
 

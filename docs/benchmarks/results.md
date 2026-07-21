@@ -52,5 +52,5 @@ npm run docs:build
 
 ## 另见
 
-- [如何运行基准测试](/zh/benchmarks/how-to-run) — 详细说明
-- [算法指南](/zh/guide/algorithms) — 对比和选择指南
+- [如何运行基准测试](/benchmarks/how-to-run) — 详细说明
+- [算法指南](/guide/algorithms) — 对比和选择指南

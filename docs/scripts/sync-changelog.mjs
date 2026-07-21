@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Sync CHANGELOG.md to docs/en/release-notes/changelog.md
+ * Sync CHANGELOG.md to docs/release-notes/changelog.md
  *
  * This script copies the content from the root CHANGELOG.md to the docs site,
  * with only formatting changes (title format).
@@ -17,18 +17,10 @@ const docsDir = join(__dirname, "..");
 const rootDir = join(docsDir, "..");
 
 const sourcePath = join(rootDir, "CHANGELOG.md");
-const targetPathEn = join(docsDir, "en/release-notes/changelog.md");
-const targetPathZh = join(docsDir, "zh/release-notes/changelog.md");
+const targetPath = join(docsDir, "release-notes/changelog.md");
 
-// Ensure target directories exist
-mkdirSync(dirname(targetPathEn), { recursive: true });
-mkdirSync(dirname(targetPathZh), { recursive: true });
-
-const HEADER_EN = `# Changelog
-
-This page documents the changes in each CompressKit release.
-
-`;
+// Ensure target directory exists
+mkdirSync(dirname(targetPath), { recursive: true });
 
 const HEADER_ZH = `# 更新日志
 
@@ -60,18 +52,10 @@ content = content.replace(
 // Remove subsection headers like ### Added, ### Changed, ### Fixed
 content = content.replace(/^### (Added|Changed|Fixed|Improved|Tools|SDK|添加|变更|修复|改进)\n+/gm, "");
 
-// Write the target file (English)
+// Write the target file (Chinese)
 try {
-  writeFileSync(targetPathEn, HEADER_EN + content.trim() + "\n");
-  console.log(`Synced changelog to ${targetPathEn}`);
-} catch (err) {
-  console.warn(`Failed to write English changelog: ${err.message}`);
-}
-
-// Write the target file (Chinese - same content, just different header)
-try {
-  writeFileSync(targetPathZh, HEADER_ZH + content.trim() + "\n");
-  console.log(`Synced changelog to ${targetPathZh}`);
+  writeFileSync(targetPath, HEADER_ZH + content.trim() + "\n");
+  console.log(`Synced changelog to ${targetPath}`);
 } catch (err) {
   console.warn(`Failed to write Chinese changelog: ${err.message}`);
 }

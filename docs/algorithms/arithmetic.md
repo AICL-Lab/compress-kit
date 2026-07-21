@@ -69,6 +69,6 @@ Arithmetic 需要管理精度以避免下溢：
 
 ## 延伸阅读
 
-- [Range Coder](/zh/algorithms/range) — 用于生产环境的整数实现
-- [Huffman](/zh/algorithms/huffman) — 更简单的替代方案
-- [基准测试](/zh/benchmarks/results)
+- [Range Coder](/algorithms/range) — 用于生产环境的整数实现
+- [Huffman](/algorithms/huffman) — 更简单的替代方案
+- [基准测试](/benchmarks/results)

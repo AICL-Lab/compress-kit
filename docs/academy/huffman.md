@@ -222,9 +222,9 @@ graph TD
 
 ## 扩展阅读
 
-- [算术编码](/zh/algorithms/arithmetic) - 逼近熵极限的方法
-- [区间编码](/zh/algorithms/range) - 整数实现的算术编码
-- [架构设计](/zh/guide/architecture) - 算法如何接入 buffer 层
+- [算术编码](/algorithms/arithmetic) - 逼近熵极限的方法
+- [区间编码](/algorithms/range) - 整数实现的算术编码
+- [架构设计](/guide/architecture) - 算法如何接入 buffer 层
 
 ## 参考文献
 

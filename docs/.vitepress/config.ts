@@ -16,7 +16,7 @@ export default withMermaid(defineConfig({
   base,
   title: 'CompressKit',
   titleTemplate: ':title | CompressKit',
-  description: 'Classic lossless compression algorithms in C++17.',
+  description: '使用 C++17 实现的经典无损压缩算法。',
   cleanUrls: true,
   lastUpdated: true,
   appearance: true,
@@ -27,57 +27,8 @@ export default withMermaid(defineConfig({
 
   locales: {
     root: {
-      label: 'English',
-      lang: 'en-US',
-      link: '/en/',
-      themeConfig: {
-        nav: buildNav('en'),
-        sidebar: buildSidebar('en'),
-        editLink: {
-          pattern: 'https://github.com/LessUp/compress-kit/edit/master/docs/:path',
-          text: 'Edit this page on GitHub',
-        },
-        footer: false,
-        outline: {
-          level: [2, 3],
-          label: 'On this page',
-        },
-        lastUpdated: {
-          text: 'Last updated',
-        },
-        docFooter: {
-          prev: 'Previous page',
-          next: 'Next page',
-        },
-        returnToTopLabel: 'Return to top',
-        sidebarMenuLabel: 'Menu',
-        darkModeSwitchLabel: 'Theme',
-        search: {
-          provider: 'local',
-          options: {
-            translations: {
-              button: {
-                buttonText: 'Search',
-                buttonAriaLabel: 'Search documentation',
-              },
-              modal: {
-                noResultsText: 'No results found',
-                resetButtonTitle: 'Clear search',
-                footer: {
-                  selectText: 'to select',
-                  navigateText: 'to navigate',
-                  closeText: 'to close',
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-    zh: {
       label: '简体中文',
       lang: 'zh-CN',
-      link: '/zh/',
       themeConfig: {
         nav: buildNav('zh'),
         sidebar: buildSidebar('zh'),
@@ -160,9 +111,9 @@ export default withMermaid(defineConfig({
     ['meta', { name: 'author', content: 'CompressKit Team' }],
     ['meta', { name: 'robots', content: 'index, follow' }],
     ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:locale', content: 'en_US' }],
-    ['meta', { property: 'og:title', content: 'CompressKit | Compression Algorithms Collection' }],
-    ['meta', { property: 'og:description', content: 'Classic lossless compression algorithms in C++17.' }],
+    ['meta', { property: 'og:locale', content: 'zh_CN' }],
+    ['meta', { property: 'og:title', content: 'CompressKit | 经典无损压缩算法集' }],
+    ['meta', { property: 'og:description', content: '使用 C++17 实现的经典无损压缩算法。' }],
     ['meta', { property: 'og:url', content: 'https://lessup.github.io/compress-kit/' }],
     ['meta', { property: 'og:site_name', content: 'CompressKit' }],
     ['meta', { property: 'og:image', content: '/compress-kit/og-image.svg' }],

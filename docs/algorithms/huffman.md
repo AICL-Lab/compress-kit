@@ -78,6 +78,6 @@ void buildHuffmanTree(const vector<uint32_t>& freq) {
 
 ## 延伸阅读
 
-- [Arithmetic](/zh/algorithms/arithmetic) — 使用分数位的更优压缩
-- [Range Coder](/zh/algorithms/range) — 生产级优化实现
-- [算法对比](/zh/guide/algorithms)
+- [Arithmetic](/algorithms/arithmetic) — 使用分数位的更优压缩
+- [Range Coder](/algorithms/range) — 生产级优化实现
+- [算法对比](/guide/algorithms)

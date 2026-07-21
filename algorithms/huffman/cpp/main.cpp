@@ -19,6 +19,7 @@
 // - Decode uses an 8-bit lookup table per internal node (~8x faster than
 //   bit-by-bit tree walk).
 
+namespace compresskit {
 namespace {
 
 // Huffman code: bits stored with the first emitted bit at position (len-1).
@@ -222,11 +223,14 @@ std::vector<uint8_t> huffman_decode_buffer(const std::vector<uint8_t>& input) {
     return out;
 }
 
+}  // namespace compresskit
+
 #ifndef COMPRESSKIT_NO_MAIN
 #include "compresskit/cli_launcher.hpp"
 
 int main(int argc, char** argv) {
-    compresskit::cli::Algorithm algo{huffman_encode_buffer, huffman_decode_buffer};
+    compresskit::cli::Algorithm algo{compresskit::huffman_encode_buffer,
+                                     compresskit::huffman_decode_buffer};
     return compresskit::cli::run(algo, argc, argv);
 }
 #endif

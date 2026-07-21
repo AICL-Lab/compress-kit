@@ -12,6 +12,8 @@
 // - Magic: 4 bytes "RLE\x00"
 // - (count: uint32 LE, value: byte) pairs until EOF; count must be > 0.
 
+namespace compresskit {
+
 std::vector<uint8_t> rle_encode_buffer(const std::vector<uint8_t>& input) {
     std::vector<uint8_t> out;
     out.reserve(input.size() / 8 + compresskit::MAGIC_SIZE + compresskit::RLE_PAIR_SIZE);
@@ -64,11 +66,14 @@ std::vector<uint8_t> rle_decode_buffer(const std::vector<uint8_t>& input) {
     return out;
 }
 
+}  // namespace compresskit
+
 #ifndef COMPRESSKIT_NO_MAIN
 #include "compresskit/cli_launcher.hpp"
 
 int main(int argc, char** argv) {
-    compresskit::cli::Algorithm algo{rle_encode_buffer, rle_decode_buffer};
+    compresskit::cli::Algorithm algo{compresskit::rle_encode_buffer,
+                                     compresskit::rle_decode_buffer};
     return compresskit::cli::run(algo, argc, argv);
 }
 #endif

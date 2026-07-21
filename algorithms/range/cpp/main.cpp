@@ -10,6 +10,7 @@
 // Range coder (32-bit state, byte-renormalisation, static model).
 // Format: "RCNC" + frequency table (LE) + range-coded byte stream.
 
+namespace compresskit {
 namespace {
 
 constexpr uint32_t MAX_TOTAL = 1u << 24;
@@ -151,11 +152,14 @@ std::vector<uint8_t> rangecoder_decode_buffer(const std::vector<uint8_t>& input)
     return out;
 }
 
+}  // namespace compresskit
+
 #ifndef COMPRESSKIT_NO_MAIN
 #include "compresskit/cli_launcher.hpp"
 
 int main(int argc, char** argv) {
-    compresskit::cli::Algorithm algo{rangecoder_encode_buffer, rangecoder_decode_buffer};
+    compresskit::cli::Algorithm algo{compresskit::rangecoder_encode_buffer,
+                                     compresskit::rangecoder_decode_buffer};
     return compresskit::cli::run(algo, argc, argv);
 }
 #endif

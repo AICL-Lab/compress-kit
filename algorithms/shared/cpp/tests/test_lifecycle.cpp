@@ -30,10 +30,11 @@ void test_roundtrip(const AlgorithmCase& algorithm) {
 
 int main() {
     const AlgorithmCase algorithms[] = {
-        {"Huffman", huffman_encode_buffer, huffman_decode_buffer},
-        {"Arithmetic", arithmetic_encode_buffer, arithmetic_decode_buffer},
-        {"Range", rangecoder_encode_buffer, rangecoder_decode_buffer},
-        {"RLE", rle_encode_buffer, rle_decode_buffer},
+        {"Huffman", compresskit::huffman_encode_buffer, compresskit::huffman_decode_buffer},
+        {"Arithmetic", compresskit::arithmetic_encode_buffer,
+         compresskit::arithmetic_decode_buffer},
+        {"Range", compresskit::rangecoder_encode_buffer, compresskit::rangecoder_decode_buffer},
+        {"RLE", compresskit::rle_encode_buffer, compresskit::rle_decode_buffer},
     };
 
     for (const AlgorithmCase& algorithm : algorithms) {

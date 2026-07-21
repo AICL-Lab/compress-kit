@@ -6,6 +6,11 @@ Arithmetic 是一种无损数据压缩算法，将**整个消息编码为区间 
 
 与 Huffman 为每个符号分配整数位长的编码不同，Arithmetic 可以分配**分数位长的编码**，使其更接近理论熵极限。
 
+::: tip 示例说明
+以下伪代码使用浮点数演示算术编码的**原理**。CompressKit 的 C++17 实现使用
+固定宽度整数运算（带缩放与重归一化）以避免浮点精度问题，与下方伪代码不直接对应。
+:::
+
 ```cpp
 void encode(const vector<uint8_t>& data, 
             const vector<double>& probs) {

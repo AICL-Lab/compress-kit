@@ -76,8 +76,6 @@ export default withMermaid(defineConfig({
   },
 
   themeConfig: {
-    outline: [2, 3],
-    search: { provider: 'local' },
     socialLinks: [
       { icon: 'github', link: 'https://github.com/LessUp/compress-kit' },
     ],

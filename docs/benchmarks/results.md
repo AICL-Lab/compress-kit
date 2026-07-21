@@ -3,8 +3,8 @@
 本页面用于展示随文档一起提交的生成型基准快照。
 
 ::: tip 以本地结果为准
-交互式图表直接读取 `docs/.vitepress/data/benchmarks.json`，该文件会由
-`make bench` 重新生成。当前仓库快照中的基准事实，应以这个生成 JSON 文件和
+交互式图表直接读取 `docs/.vitepress/data/benchmarks.json`，该文件为仓库
+维护的基准快照。当前仓库快照中的基准事实，应以这个生成 JSON 文件和
 下方图表为准。
 :::
 
@@ -41,13 +41,15 @@
 
 ## 刷新事实来源
 
+基准快照由维护者手工生成并提交。如需本地复现并刷新快照，请参考
+[如何运行基准测试](/benchmarks/how-to-run) 中的手动流程，更新
+`docs/.vitepress/data/benchmarks.json` 后执行：
+
 ```bash
-make bench
-npm run docs:build
+cd docs && npm run build
 ```
 
-- `make bench` 会重写 `reports/` 和 `docs/.vitepress/data/benchmarks.json`
-- `npm run docs:build` 用于验证文档站可以正确渲染刷新后的数据集
+- `npm run build` 会先同步 changelog，再构建文档站以验证刷新后的数据集
 - 如果需要提交基准更新，请提交生成的 JSON 文件，而不是手工改写本页叙述数字
 
 ## 另见

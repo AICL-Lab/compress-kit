@@ -48,29 +48,6 @@ git clone https://github.com/LessUp/compress-kit.git
 cd compress-kit
 ```
 
-### 使用 Dev Container（推荐）
-
-仓库内置了 `.devcontainer/`，提供项目支持的 C++ / Node
-工具链。请在 VS Code 或 Codespaces 中打开仓库后选择 **Reopen in
-Container**，即可获得与项目文档一致的基线环境。
-
-容器创建时会自动执行可复现的安装路径：
-
-```bash
-npm ci
-(cd docs && npm ci)
-```
-
-### 本地可复现的文档工具链
-
-如果您仍在宿主机上工作，请在构建文档前执行同样的
-锁文件安装：
-
-```bash
-npm ci
-(cd docs && npm ci)
-```
-
 ### 构建所有实现
 
 ```bash
@@ -78,15 +55,6 @@ make build
 ```
 
 `make build` 封装了 CMake 调用（`cmake -S . -B build && cmake --build build`），将所有算法实现编译到 `build/` 目录。
-
-### 构建特定算法
-
-```bash
-make build-huffman      # Huffman
-make build-arithmetic   # Arithmetic
-make build-range        # Range Coder
-make build-rle          # RLE
-```
 
 ### 手动编译
 
@@ -108,40 +76,19 @@ make test
 
 这将运行共享生命周期测试以及各算法特定测试套件。
 
-## 运行基准测试
-
-### 运行所有基准测试
-
-```bash
-make bench
-```
-
-这会生成测试数据、运行已验证的基准矩阵，并把原始报告写入 `reports/`，
-同时刷新交互式文档图表使用的 `docs/.vitepress/data/benchmarks.json`。
-
-### 基准测试产物
-
-| 产物 | 用途 |
-|------|------|
-| `reports/*.txt` | 每次运行的原始基准日志 |
-| `docs/.vitepress/data/benchmarks.json` | 文档基准图表读取的生成快照 |
-| `/benchmarks/results` | 面向读者的生成 JSON 视图 |
-
-当前仓库快照中的基准事实应以生成的 JSON 文件和图表为准。
-
 ## Makefile 命令参考
 
 | 命令 | 描述 |
 |------|------|
 | `make build` | 构建所有算法实现（封装 CMake） |
-| `make build-huffman` | 仅构建 Huffman 实现 |
-| `make build-arithmetic` | 仅构建 Arithmetic 实现 |
-| `make build-range` | 仅构建 Range Coder 实现 |
-| `make build-rle` | 仅构建 RLE 实现 |
-| `make test` | 运行单元和生命周期测试 |
-| `make bench` | 生成测试数据并运行基准测试 |
-| `make test-data` | 仅生成测试数据 |
-| `make clean` | 删除所有构建产物和报告 |
+| `make test` | 运行单元测试、生命周期测试与 CLI smoke 测试 |
+| `make test-conformance` | 运行 CLI smoke 一致性测试 |
+| `make test-cli-smoke` | 同上，仅 CLI smoke |
+| `make test-data` | 生成测试语料到 `tests/data/` |
+| `make format` | 用 clang-format 格式化所有 C++ 代码 |
+| `make lint` | clang-format dry-run 检查 |
+| `make clean` | 删除 `build/` 与 `tests/data/` |
+| `make help` | 列出所有可用目标 |
 
 ## 故障排除
 

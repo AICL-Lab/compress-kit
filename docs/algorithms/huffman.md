@@ -78,6 +78,12 @@ void buildHuffmanTree(const vector<uint32_t>& freq) {
 
 ## 延伸阅读
 
+- [霍夫曼编码深度解析](/academy/huffman) - 算法学院：原理、证明与实现细节
+- [算术编码](/algorithms/arithmetic) - 分数位编码，更接近熵极限
+- [区间编码](/algorithms/range) - 整数实现的工程变体
+- [算法对比](/guide/algorithms) - 四种算法的选择指南
+- [基准测试](/benchmarks/results) - 实测性能数据
+
 - [Arithmetic](/algorithms/arithmetic) — 使用分数位的更优压缩
 - [Range Coder](/algorithms/range) — 生产级优化实现
 - [算法对比](/guide/algorithms)

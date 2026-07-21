@@ -17,6 +17,7 @@ void encode(const vector<uint8_t>& data,
         uint32_t symLow = cumFreq[symbol];
         uint32_t symHigh = cumFreq[symbol + 1];
         
+        // total 必须非零：空频率表是非法输入，需在编码前校验
         range /= total;
         low += symLow * range;
         range *= (symHigh - symLow);
@@ -37,13 +38,23 @@ void encode(const vector<uint8_t>& data,
 
 | 方面 | Arithmetic | Range Coder |
 |------|----------|----------|
-|------|----------|----------|
 | 运算 | 浮点数 | 固定宽度整数 |
 | 输出单位 | 位 | 字节 |
 | I/O 效率 | 较低 | 较高 |
 | 压缩率 | 几乎相同 | 几乎相同 |
 | 专利状态 | 历史上有专利 | 无限制 |
 | 生产使用 | 学术 | 工业标准 |
+
+## 文件格式
+
+| 字段 | 大小 | 描述 |
+|------|------|------|
+| 魔数 | 4 字节 | `RCNC` (0x52 0x43 0x4E 0x43) |
+| 频率表大小 | 4 字节 | 小端 uint32（始终 257） |
+| 频率表 | 257 × 4 字节 | 小端 uint32 数组（符号 0-255 + EOF） |
+| 编码数据 | 可变 | 字节流（重归一化区间输出） |
+
+通用结构参见 [架构设计 - 二进制格式规范](/architecture/#各算法格式)。
 
 ## 复杂度
 

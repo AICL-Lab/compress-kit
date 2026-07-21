@@ -1,5 +1,6 @@
 #include "compresskit/buffer_api.hpp"
 
+#include <cstdio>
 #include <fstream>
 #include <stdexcept>
 
@@ -50,7 +51,8 @@ Result<std::vector<uint8_t>> encode_buffer(BufferTransform transform,
     try {
         std::vector<uint8_t> out = transform(input);
         return {StatusCode::OK, std::move(out)};
-    } catch (const std::exception&) {
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "encode failed: %s\n", e.what());
         return {StatusCode::ERR_CORRUPT, {}};
     }
 }
@@ -66,7 +68,8 @@ Result<std::vector<uint8_t>> decode_buffer(BufferTransform transform,
             return {StatusCode::ERR_SIZE_LIMIT, {}};
         }
         return {StatusCode::OK, std::move(out)};
-    } catch (const std::exception&) {
+    } catch (const std::exception& e) {
+        std::fprintf(stderr, "decode failed: %s\n", e.what());
         return {StatusCode::ERR_CORRUPT, {}};
     }
 }

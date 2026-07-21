@@ -1,5 +1,4 @@
 #include <cstdint>
-#include <cstring>
 #include <stdexcept>
 #include <vector>
 
@@ -126,14 +125,9 @@ std::vector<uint8_t> rangecoder_encode_buffer(const std::vector<uint8_t>& input)
 }
 
 std::vector<uint8_t> rangecoder_decode_buffer(const std::vector<uint8_t>& input) {
-    if (input.size() < compresskit::MAGIC_SIZE) {
-        throw std::runtime_error("range: input too short");
-    }
-    if (std::memcmp(input.data(), compresskit::RANGE_MAGIC, compresskit::MAGIC_SIZE) != 0) {
-        throw std::runtime_error("range: bad magic");
-    }
-    std::size_t pos = compresskit::MAGIC_SIZE;
-    std::vector<uint32_t> freq = compresskit::read_frequency_header(input, pos, "range");
+    std::size_t pos = 0;
+    std::vector<uint32_t> freq =
+        compresskit::read_magic_and_frequency_header(input, pos, compresskit::RANGE_MAGIC, "range");
     std::vector<uint32_t> cumulative = compresskit::build_cumulative(freq);
     if (cumulative.empty()) {
         throw std::runtime_error("range: invalid frequency table");

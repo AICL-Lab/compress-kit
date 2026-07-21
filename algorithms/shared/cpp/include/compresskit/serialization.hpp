@@ -1,9 +1,10 @@
 #pragma once
 
 // In-memory little-endian serialization helpers shared by the buffer-based
-// algorithm implementations. Stream-based variants live in frequency_table.
+// algorithm implementations.
 
 #include <cstdint>
+#include <cstring>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -37,6 +38,19 @@ inline void write_frequency_header(std::vector<uint8_t>& out, const char* magic,
     }
 }
 
+// Verifies the leading magic prefix. On success, advances `pos` past it.
+// Throws std::runtime_error with `<algo_name>: ...` on mismatch or truncation.
+inline void verify_magic(const std::vector<uint8_t>& input, std::size_t& pos,
+                         const char* expected_magic, const char* algo_name) {
+    if (input.size() < MAGIC_SIZE) {
+        throw std::runtime_error(std::string(algo_name) + ": input too short");
+    }
+    if (std::memcmp(input.data(), expected_magic, MAGIC_SIZE) != 0) {
+        throw std::runtime_error(std::string(algo_name) + ": bad magic");
+    }
+    pos = MAGIC_SIZE;
+}
+
 // Reads a frequency table following the magic prefix.
 // `pos` starts after the magic; `algo_name` prefixes error messages.
 inline std::vector<uint32_t> read_frequency_header(const std::vector<uint8_t>& input,
@@ -65,6 +79,16 @@ inline std::vector<uint32_t> read_frequency_header(const std::vector<uint8_t>& i
         pos += U32_SIZE;
     }
     return freq;
+}
+
+// Convenience: verify magic and read the trailing frequency table in one call.
+// `pos` starts at 0 and is advanced past magic + frequency table on success.
+inline std::vector<uint32_t> read_magic_and_frequency_header(const std::vector<uint8_t>& input,
+                                                             std::size_t& pos,
+                                                             const char* expected_magic,
+                                                             const char* algo_name) {
+    verify_magic(input, pos, expected_magic, algo_name);
+    return read_frequency_header(input, pos, algo_name);
 }
 
 }  // namespace compresskit

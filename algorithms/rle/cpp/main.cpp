@@ -1,6 +1,5 @@
 #include <algorithm>
 #include <cstdint>
-#include <cstring>
 #include <stdexcept>
 #include <vector>
 
@@ -40,15 +39,10 @@ std::vector<uint8_t> rle_encode_buffer(const std::vector<uint8_t>& input) {
 }
 
 std::vector<uint8_t> rle_decode_buffer(const std::vector<uint8_t>& input) {
-    if (input.size() < compresskit::MAGIC_SIZE) {
-        throw std::runtime_error("RLE: input too short for magic");
-    }
-    if (std::memcmp(input.data(), compresskit::RLE_MAGIC, compresskit::MAGIC_SIZE) != 0) {
-        throw std::runtime_error("RLE: bad magic");
-    }
+    std::size_t pos = 0;
+    compresskit::verify_magic(input, pos, compresskit::RLE_MAGIC, "RLE");
 
     std::vector<uint8_t> out;
-    std::size_t pos = compresskit::MAGIC_SIZE;
     while (pos < input.size()) {
         if (pos + compresskit::RLE_PAIR_SIZE > input.size()) {
             throw std::runtime_error("RLE: truncated count+value pair");

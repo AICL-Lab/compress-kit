@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
-#include <cstring>
 #include <queue>
 #include <stdexcept>
 #include <vector>
@@ -181,14 +180,9 @@ std::vector<uint8_t> huffman_encode_buffer(const std::vector<uint8_t>& input) {
 }
 
 std::vector<uint8_t> huffman_decode_buffer(const std::vector<uint8_t>& input) {
-    if (input.size() < compresskit::MAGIC_SIZE) {
-        throw std::runtime_error("huffman: input too short");
-    }
-    if (std::memcmp(input.data(), compresskit::HUFFMAN_MAGIC, compresskit::MAGIC_SIZE) != 0) {
-        throw std::runtime_error("huffman: bad magic");
-    }
-    std::size_t pos = compresskit::MAGIC_SIZE;
-    std::vector<uint32_t> freq = compresskit::read_frequency_header(input, pos, "huffman");
+    std::size_t pos = 0;
+    std::vector<uint32_t> freq = compresskit::read_magic_and_frequency_header(
+        input, pos, compresskit::HUFFMAN_MAGIC, "huffman");
 
     std::vector<Node> nodes;
     nodes.reserve(MAX_TREE_NODES);
